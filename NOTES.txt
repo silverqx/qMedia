@@ -1,0 +1,81 @@
+Example code which heavily uses win32 api:
+------------------------------------------
+
+    BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
+    {
+        // For reference, very important:
+        // https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/july/c-using-stl-strings-at-win32-api-boundaries
+        const int windowTextLength = ::GetWindowTextLength(hwnd) + 1;
+        auto windowText = std::make_unique<wchar_t[]>(windowTextLength);
+//        std::vector<wchar_t> windowText(windowTextLength);
+//        std::wstring windowText;
+//        windowText.resize(windowTextLength);
+
+        ::GetWindowText(hwnd, windowText.get(), windowTextLength);
+//        ::GetWindowText(hwnd, const_cast<wchar_t *>(windowText.c_str()), windowTextLength);
+        std::wstring text(windowText.get());
+//        windowText.resize(windowTextLength - 1);
+
+        if (::wcsstr(windowText.get(), L"qBittorrent"))
+            qDebug() << "xx";
+
+        // Example: [D: 0 B/s, U: 1,3 MiB/s] qBittorrent v4.2.5
+        const std::wregex re(L"^(\\[\\D: .*\\, U\\: .*\\] )?qBittorrent (v\\d+\\.\\d+\\.\\d+([a-zA-Z]+\\d{0,2})?)$");
+        if (!std::regex_match(windowText.get(), re))
+//        if (::!wcsstr(windowText.get(), L"qBittorrent"))
+            return true;
+
+//        wchar_t className[MAX_PATH];
+//        ::GetClassName(hwnd, className, ARRAYSIZE(className));
+//        if (!::wcscmp(className, L"Qt5QWindowIcon") != 0)
+//            return true;
+
+        DWORD pid;
+        ::GetWindowThreadProcessId(hwnd, &pid);
+        const HANDLE processHandle = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+        if (processHandle == NULL) {
+            qDebug() << "OpenProcess() in EnumWindows() failed : " << ::GetLastError();
+            return true;
+        }
+
+        wchar_t moduleFilePath[MAX_PATH];
+        ::GetModuleFileNameEx(processHandle, NULL, moduleFilePath, ARRAYSIZE(moduleFilePath));
+        // More instances of qBittorrent can run, so find proper one
+#ifdef QT_DEBUG
+        // String has to start with moduleFileName
+        if (::wcsstr(moduleFilePath, L"E:\\c\\qbittorrent_64-dev\\qBittorrent\\qBittorrent-builds")
+            != &moduleFilePath[0])
+            return true;
+#else
+        if (::wcsstr(moduleFileName, L"C:\\Program Files\\qBittorrent") != &moduleFileName[0])
+            return true;
+#endif
+//        ::PathStripPath(moduleFileName);
+        const QString moduleFileName = Utils::Fs::fileName(QString::fromWCharArray(moduleFilePath));
+        ::CloseHandle(processHandle);
+        if (moduleFileName == "qbittorrent.exe")
+//        if (::wcscmp(moduleFilePath, L"qbittorrent.exe") != 0)
+            return true;
+
+        qDebug() << "HWND for qBittorrent window found : " << hwnd;
+        l_mainWindow->setQBittorrentHwnd(hwnd);
+
+        return false;
+    }
+
+
+QProgressBar in qTableView:
+---------------------------
+
+//    QProxyStyle fusionStyle {"windowsvista"};
+
+painter->save();
+//    QPalette p = newopt.palette;
+//    p.setColor(QPalette::Window, QColor(0, 0, 0, 0));
+//    newopt.palette = p;
+// Draw progressbar without border / groove
+style->drawControl(QStyle::CE_ProgressBarContents, &newopt, painter);
+style->drawControl(QStyle::CE_ProgressBarLabel, &newopt, painter);
+//    style->drawControl(QStyle::CE_ProgressBarGroove, &newopt, painter);
+//    style->drawControl(QStyle::CE_ProgressBar, &newopt, painter);
+painter->restore();
