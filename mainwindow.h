@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QHash>
 #include <QMainWindow>
 
 class QLabel;
@@ -66,7 +67,7 @@ private:
     /*!
        \brief Contains torrent files by torrent id.
      */
-    QHash<quint64, QVector<QSqlRecord> *> *m_torrentFilesCache;
+    QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
     QLabel *m_torrentsCountLabel;
     QLabel *m_torrentFilesCountLabel;
     QToolButton *m_searchButton;
