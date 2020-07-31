@@ -90,8 +90,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->setupUi(this);
 
-    m_torrentFilesCache = new QHash<quint64, QVector<QSqlRecord> *>;
-
     // MainWindow
     setWindowTitle("qMedia v0.0.1");
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
@@ -149,10 +147,9 @@ MainWindow::~MainWindow()
     if (m_qbittorrentHwnd != nullptr)
         ::PostMessage(m_qbittorrentHwnd, MSG_QMEDIA_DOWN, NULL, NULL);
 
-    foreach (auto torrentFiles, *m_torrentFilesCache)
+    foreach (auto torrentFiles, m_torrentFilesCache)
         delete torrentFiles;
 
-    delete m_torrentFilesCache;
     delete ui;
 }
 
@@ -296,8 +293,8 @@ void MainWindow::showEvent(QShowEvent *event)
 QVector<QSqlRecord> *MainWindow::selectTorrentFilesById(quint64 id)
 {
     // Return from cache
-    if (m_torrentFilesCache->contains(id))
-        return m_torrentFilesCache->value(id);
+    if (m_torrentFilesCache.contains(id))
+        return m_torrentFilesCache.value(id);
 
     QSqlQuery query;
     query.prepare("SELECT * FROM torrents_previewable_files WHERE torrent_id = ?");
@@ -320,7 +317,7 @@ QVector<QSqlRecord> *MainWindow::selectTorrentFilesById(quint64 id)
         return torrentFiles;
     }
 
-    m_torrentFilesCache->insert(id, torrentFiles);
+    m_torrentFilesCache.insert(id, torrentFiles);
 
     return torrentFiles;
 }
@@ -441,8 +438,6 @@ void MainWindow::previewSelectedTorrent()
 
 void MainWindow::reloadTorrentModel()
 {
-    qInfo() << "Torrent model reloaded";
-
     // TODO remember selected torrent by InfoHash, not by row silverqx
     // Remember currently selected row or first row, if was nothing selected
     int selectRow = 0;
@@ -452,6 +447,7 @@ void MainWindow::reloadTorrentModel()
 
     // Reload model
     m_model->select();
+    qInfo() << "Torrent model reloaded";
 
     // This situation can occur, when torrents was deleted and was selected one of the last rows
     const int rowCount = m_model->rowCount();
@@ -466,6 +462,12 @@ void MainWindow::reloadTorrentModel()
 void MainWindow::displayListMenu(const QPoint &position)
 {
     Q_UNUSED(position);
+
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Do not displaying context menu, because any torrent is selected.";
+        return;
+    }
 
     auto *listMenu = new QMenu(ui->tableView);
     listMenu->setAttribute(Qt::WA_DeleteOnClose);
