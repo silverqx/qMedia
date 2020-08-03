@@ -18,6 +18,7 @@ enum UserMessages
     MSG_QMEDIA_DOWN          = WM_USER + 102,
 };
 
+// TODO In qBittorent was this comment, investigaste: Make it inline in C++17 silverqx
 static const QString QB_EXT {QStringLiteral(".!qB")};
 
 static const char C_NON_BREAKING_SPACE[] = " ";

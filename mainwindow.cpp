@@ -455,6 +455,7 @@ void MainWindow::reloadTorrentModel()
         selectRow = rowCount;
 
     // Reselect remembered row
+    // TODO doesn't work well, selection works, but when I press up or down, then navigation starts from modelindex(0,0), don't know why :/, also tried | QItemSelectionModel::Current, but didn't help silverqx
     ui->tableView->selectionModel()->select(m_model->index(selectRow, 0),
                                             QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }
