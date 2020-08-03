@@ -105,7 +105,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->lineEdit, &QLineEdit::textChanged, this, &MainWindow::filterTextChanged);
     connect(ui->tableView, &QAbstractItemView::doubleClicked, this, &MainWindow::previewSelectedTorrent);
     connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::reloadTorrentModel);
-    connect(this, &MainWindow::torrentsChanged, this, &MainWindow::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsChanged, this, &MainWindow::updateChangedTorrents);
 
     // Hotkeys
     // tableview
@@ -334,7 +335,7 @@ void MainWindow::createStatusBar()
                                       .arg(m_model->rowCount()), this);
     m_torrentFilesCountLabel = new QLabel(QStringLiteral("Video Files: <strong>%1</strong>")
                                           .arg(selectTorrentFilesCount()), this);
-    connect(this, &MainWindow::torrentsChanged, this, &MainWindow::refreshStatusBar);
+    connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::refreshStatusBar);
 
     // Create needed splitters
     auto splitter1 = new QFrame(statusBar());
@@ -544,6 +545,13 @@ void MainWindow::showImdbDetail()
         return;
 
     qDebug() << "Show IMDB detail :" << torrent.value("name").toString();
+}
+
+void MainWindow::updateChangedTorrents(const QVector<QString> &torrentInfoHashes)
+{
+    foreach (const auto infoHash, torrentInfoHashes)
+        m_model->selectRow(dynamic_cast<TorrentSqlTableModel *const>(m_model)
+                           ->getTorrentRowByInfoHash(infoHash));
 }
 
 void MainWindow::focusSearchFilter()
