@@ -111,3 +111,12 @@ QModelIndex selectedIndex = selectedIndexes.first();
 if (!selectedIndex.isValid())
     return;
 m_model->setData(m_proxyModel->mapToSource(selectedIndex), "ahoj");
+
+
+Performance measure timer:
+--------------------------
+
+#include <QElapsedTimer>
+QElapsedTimer timer;
+timer.start();
+qDebug() << "Elapsed for handleTorrentsUpdated :" << timer.elapsed();
