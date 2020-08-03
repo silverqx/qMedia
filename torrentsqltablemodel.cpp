@@ -1,6 +1,7 @@
 #include "torrentsqltablemodel.h"
 
 #include <QDateTime>
+#include <QDebug>
 #include <QLocale>
 #include <QSqlField>
 #include <QSqlRecord>
@@ -45,6 +46,22 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &idx, const int role) cons
     return QSqlTableModel::data(idx, role);
 }
 
+int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) {
+    if (!m_torrentMap.contains(infoHash)) {
+        qDebug() << "Torrent with this info hash doesn't exist:" << infoHash;
+        return -1;
+    }
+
+    return m_torrentMap[infoHash];
+}
+
+bool TorrentSqlTableModel::select()
+{
+    bool retVal = QSqlTableModel::select();
+    createInfoHashToRowTorrentMap();
+    return retVal;
+}
+
 QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const int column) const
 {
     bool hideValues = false;
@@ -73,4 +90,12 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const 
     }
 
     return {};
+}
+
+void TorrentSqlTableModel::createInfoHashToRowTorrentMap()
+{
+    for (int i = 0; i < rowCount() ; ++i) {
+        const QString torrentHash = data(index(i, TR_HASH), UnderlyingDataRole).toString();
+        m_torrentMap[torrentHash] = i;
+    }
 }

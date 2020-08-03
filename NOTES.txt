@@ -79,3 +79,35 @@ style->drawControl(QStyle::CE_ProgressBarLabel, &newopt, painter);
 //    style->drawControl(QStyle::CE_ProgressBarGroove, &newopt, painter);
 //    style->drawControl(QStyle::CE_ProgressBar, &newopt, painter);
 painter->restore();
+
+
+WM_COPYDATA torrent ids as std::vector<quint64>:
+------------------------------------------------
+
+const COPYDATASTRUCT copyData = *reinterpret_cast<PCOPYDATASTRUCT>(msg->lParam);
+switch (static_cast<int>(msg->wParam)) {
+case MSG_QBT_TORRENTS_CHANGED:
+    // Put together std::vector of torrentId
+    const int dataSize = static_cast<int>(copyData.cbData);
+    const quint64 *const begin = static_cast<const quint64 *>(copyData.lpData);
+    const quint64 *const end = begin + (dataSize / sizeof(quint64));
+    const std::vector<quint64> torrentIds(begin, end);
+
+    qDebug() << "IPC qBittorrent : Changed torrents copyData size :" << dataSize;
+    qDebug() << "IPC qBittorrent : Changed torrents ids :" << torrentIds;
+
+    emit m_mainWindow->torrentsChanged(torrentIds);
+    return true;
+}
+
+
+Directly update model:
+----------------------
+
+QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows(1);
+if (selectedIndexes.isEmpty())
+    return;
+QModelIndex selectedIndex = selectedIndexes.first();
+if (!selectedIndex.isValid())
+    return;
+m_model->setData(m_proxyModel->mapToSource(selectedIndex), "ahoj");

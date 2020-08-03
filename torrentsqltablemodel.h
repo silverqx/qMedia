@@ -27,10 +27,21 @@ public:
     };
 
     explicit TorrentSqlTableModel(QObject *parent = nullptr, const QSqlDatabase db = QSqlDatabase());
+
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
+    int getTorrentRowByInfoHash(const QString &infoHash);
+
+public slots:
+    bool select() override;
 
 private:
     QString displayValue(const QModelIndex &modelIndex, int column) const;
+    void createInfoHashToRowTorrentMap();
+
+    /*!
+       \brief Map a torrent info hash to the table row.
+     */
+    QHash<QString, int> m_torrentMap;
 };
 
 #endif // TORRENTSQLTABLEMODEL_H

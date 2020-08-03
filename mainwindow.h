@@ -31,7 +31,8 @@ public slots:
     void previewFile(const QString &filePath);
 
 signals:
-    void torrentsChanged();
+    void torrentsAddedOrRemoved();
+    void torrentsChanged(const QVector<QString> &torrentInfoHashes);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -85,6 +86,7 @@ private slots:
     void deleteSelectedTorrent();
     void showCsfdDetail();
     void showImdbDetail();
+    void updateChangedTorrents(const QVector<QString> &torrentInfoHashes);
 };
 
 #endif // MAINWINDOW_H
