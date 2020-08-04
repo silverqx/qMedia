@@ -13,8 +13,10 @@ public:
     {
         TR_ID,
         TR_NAME,
-        TR_SIZE,
         TR_PROGRESS,
+        TR_ETA,
+        TR_SIZE,
+        TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
 

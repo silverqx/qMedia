@@ -33,6 +33,9 @@ namespace Utils {
         int friendlyUnitPrecision(SizeUnit unit);
 
         bool isPreviewable(const QString &extension);
+
+        /*! Take a number of seconds and return a user-friendly time duration like "1d 2h 10m". */
+        QString userFriendlyDuration(qlonglong seconds, qlonglong maxCap = -1);
     }
 }
 

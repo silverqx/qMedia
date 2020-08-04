@@ -22,8 +22,11 @@ enum UserMessages
 static const QString QB_EXT {QStringLiteral(".!qB")};
 /*! Info hash size in bytes. */
 static const int INFOHASH_SIZE = 40;
+/*! Above this cap show ∞ symbol. */
+static const qint64 MAX_ETA = 8640000;
 
 static const char C_NON_BREAKING_SPACE[] = " ";
 static const char C_THIN_SPACE[] = " ";
+static const char C_INFINITY[] = "∞";
 
 #endif // COMMON_H

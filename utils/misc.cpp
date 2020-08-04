@@ -127,3 +127,34 @@ bool Utils::Misc::isPreviewable(const QString &extension)
     };
     return multimediaExtensions.contains(extension.toUpper());
 }
+
+QString Utils::Misc::userFriendlyDuration(const qlonglong seconds, const qlonglong maxCap)
+{
+    if (seconds == 0)
+        return QString::fromUtf8(C_INFINITY);
+    if ((maxCap >= 0) && (seconds >= maxCap))
+        return QString::fromUtf8(C_INFINITY);
+
+    if (seconds < 60)
+        return QStringLiteral("< 1m");
+
+    qlonglong minutes = (seconds / 60);
+    if (minutes < 60)
+        return QStringLiteral("%1m").arg(QString::number(minutes));
+
+    qlonglong hours = (minutes / 60);
+    if (hours < 24) {
+        minutes -= (hours * 60);
+        return QStringLiteral("%1h %2m").arg(QString::number(hours), QString::number(minutes));
+    }
+
+    qlonglong days = (hours / 24);
+    if (days < 365) {
+        hours -= (days * 24);
+        return QStringLiteral("%1d %2h").arg(QString::number(days), QString::number(hours));
+    }
+
+    const qlonglong years = (days / 365);
+    days -= (years * 365);
+    return QStringLiteral("%1y %2d").arg(QString::number(years), QString::number(days));
+}

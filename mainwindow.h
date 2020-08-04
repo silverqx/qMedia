@@ -26,6 +26,7 @@ public:
     ~MainWindow();
 
     void setQBittorrentHwnd(const HWND hwnd);
+    inline HWND getQBittorrentHwnd() const { return m_qbittorrentHwnd; }
 
 public slots:
     void previewFile(const QString &filePath);
@@ -43,8 +44,10 @@ private:
     {
         TR_ID,
         TR_NAME,
-        TR_SIZE,
         TR_PROGRESS,
+        TR_ETA,
+        TR_SIZE,
+        TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
 

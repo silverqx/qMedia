@@ -156,6 +156,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::setQBittorrentHwnd(const HWND hwnd)
 {
+    // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
+    if (m_qbittorrentHwnd != nullptr && hwnd == nullptr)
+        reloadTorrentModel();
+
     m_qbittorrentHwnd = hwnd;
 }
 
@@ -200,8 +204,10 @@ void MainWindow::initTorrentTableView()
     m_model->select();
     m_model->setHeaderData(TR_ID, Qt::Horizontal, QStringLiteral("Id"));
     m_model->setHeaderData(TR_NAME, Qt::Horizontal, QStringLiteral("Name"));
-    m_model->setHeaderData(TR_SIZE, Qt::Horizontal, QStringLiteral("Size"));
     m_model->setHeaderData(TR_PROGRESS, Qt::Horizontal, QStringLiteral("Done"));
+    m_model->setHeaderData(TR_ETA, Qt::Horizontal, QStringLiteral("ETA"));
+    m_model->setHeaderData(TR_SIZE, Qt::Horizontal, QStringLiteral("Size"));
+    m_model->setHeaderData(TR_AMOUNT_LEFT, Qt::Horizontal, QStringLiteral("Remaining"));
     m_model->setHeaderData(TR_ADDED_ON, Qt::Horizontal, QStringLiteral("Added on"));
 
     m_proxyModel = new TorrentTableSortModel(this);
@@ -267,19 +273,29 @@ void MainWindow::showEvent(QShowEvent *event)
     // Increase size section size about 40%
     const int progressSize = tableViewHeader->sectionSize(TR_PROGRESS);
     tableViewHeader->resizeSection(TR_PROGRESS, progressSize + (progressSize * 0.4));
+    // Increase ETA section size about 30%
+    const int etaSize = tableViewHeader->sectionSize(TR_ETA);
+    tableViewHeader->resizeSection(TR_ETA, etaSize + (etaSize * 0.3));
+    // Remaining section do not need resize
     // Increase added on section size about 10%
     const int addedOnSize = tableViewHeader->sectionSize(TR_ADDED_ON);
     tableViewHeader->resizeSection(TR_ADDED_ON, addedOnSize + (addedOnSize * 0.1));
+
+    // TODO also set minimum size for each section, based on above computed sizes silverqx
 
     // Compute name section size
     int nameColWidth = ui->tableView->width();
     const QScrollBar *const vScrollBar = ui->tableView->verticalScrollBar();
     if (vScrollBar->isVisible())
         nameColWidth -= vScrollBar->width();
-    nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
     nameColWidth -= tableViewHeader->sectionSize(TR_PROGRESS);
+    nameColWidth -= tableViewHeader->sectionSize(TR_ETA);
+    nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
+    nameColWidth -= tableViewHeader->sectionSize(TR_AMOUNT_LEFT);
     nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
     nameColWidth -= 2; // Borders
+
+    // TODO and at the end set mainwindow width and height based on tableview ( inteligently 😎 ) silverqx
 
     tableViewHeader->resizeSection(TR_NAME, nameColWidth);
     ui->tableView->horizontalHeader()->setStretchLastSection(true);

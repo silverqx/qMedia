@@ -6,6 +6,8 @@
 #include <QSqlField>
 #include <QSqlRecord>
 
+#include "common.h"
+#include "mainwindow.h"
 #include "utils/misc.h"
 
 TorrentSqlTableModel::TorrentSqlTableModel(QObject *parent, const QSqlDatabase db)
@@ -29,7 +31,9 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &idx, const int role) cons
         case TR_ID:
         case TR_PROGRESS:
             return QVariant {Qt::AlignCenter};
+        case TR_ETA:
         case TR_SIZE:
+        case TR_AMOUNT_LEFT:
         case TR_ADDED_ON:
         case TR_HASH:
             return QVariant {Qt::AlignRight | Qt::AlignVCenter};
@@ -83,9 +87,15 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const 
         return rawData.toString();
     case TR_PROGRESS:
         return QString::number(rawData.toReal() / 10) + '%';
+    case TR_ETA:
+        // If qBittorrent is not running, show ∞ for every torrent
+        if (dynamic_cast<const MainWindow *const>(parent())->getQBittorrentHwnd() == nullptr)
+            return QString::fromUtf8(C_INFINITY);
+        return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), MAX_ETA);
     case TR_ADDED_ON:
         return QLocale::system().toString(rawData.toDateTime(), QLocale::ShortFormat);
     case TR_SIZE:
+    case TR_AMOUNT_LEFT:
         return unitString(rawData.toLongLong());
     }
 
