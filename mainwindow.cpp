@@ -246,8 +246,11 @@ void MainWindow::initFilterLineEdit()
 
 bool MainWindow::event(QEvent *event)
 {
+    // Do not want autoreload in development
+#ifndef QT_DEBUG
     if (event->type() == QEvent::WindowActivate)
         reloadTorrentModel();
+#endif
 
     return QMainWindow::event(event);
 }
