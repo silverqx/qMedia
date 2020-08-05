@@ -89,6 +89,7 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const 
         return QString::number(rawData.toReal() / 10) + '%';
     case TR_ETA:
         // If qBittorrent is not running, show ∞ for every torrent
+        // TODO don't rely on parent(), get mainwindow instance from qapp or make it global :/ silverqx
         if (dynamic_cast<const MainWindow *const>(parent())->getQBittorrentHwnd() == nullptr)
             return QString::fromUtf8(C_INFINITY);
         return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), MAX_ETA);
