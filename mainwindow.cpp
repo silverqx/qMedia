@@ -252,6 +252,18 @@ bool MainWindow::event(QEvent *event)
         reloadTorrentModel();
 #endif
 
+    // TODO message updates only when fully invisible silverqx
+    /* Here is more advanced solution to decide, if window is partially visible, I can
+       use this to decide, if window is fully invisible, so updates will keep running if
+       partially visible and updates will be disabled, if fully invisible:
+       https://stackoverflow.com/questions/3154214/can-i-detect-if-a-window-is-partly-hidden */
+
+    // Inform qBittorrent about qMedia is in foreground
+    if (event->type() == QEvent::WindowActivate)
+        ::PostMessage(m_qbittorrentHwnd, MSG_QMD_WINDOW_ACTIVATED, NULL, NULL);
+    if (event->type() == QEvent::WindowDeactivate)
+        ::PostMessage(m_qbittorrentHwnd, MSG_QMD_WINDOW_DEACTIVATED, NULL, NULL);
+
     return QMainWindow::event(event);
 }
 
