@@ -95,6 +95,9 @@ MainWindow::MainWindow(QWidget *parent)
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
 
+    // Initial position
+    move(1920 - width() - 10, 10);
+
     connectToDb();
     initTorrentTableView();
     initFilterLineEdit();
