@@ -91,7 +91,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // MainWindow
-    setWindowTitle("qMedia v0.0.1");
+    setWindowTitle(" qMedia v0.0.1");
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
 
@@ -229,7 +229,7 @@ void MainWindow::initTorrentTableView()
 void MainWindow::initFilterLineEdit()
 {
     m_searchButton = new QToolButton(ui->lineEdit);
-    const QIcon searchIcon(QStringLiteral(":/icons/search.svg"));
+    const QIcon searchIcon(QStringLiteral(":/icons/search_w.svg"));
     m_searchButton->setIcon(searchIcon);
     m_searchButton->setCursor(Qt::ArrowCursor);
     m_searchButton->setStyleSheet(QStringLiteral("QToolButton {border: none; padding: 2px 0 2px 4px;}"));
@@ -368,10 +368,19 @@ void MainWindow::createStatusBar()
                                           .arg(selectTorrentFilesCount()), this);
     connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::refreshStatusBar);
 
+    // TODO when I set font size on qapplication isntance, then font is not inherited from containers? I can not set font size on container silverqx
+    // Set smaller font size by 1pt
+    QFont font = m_torrentsCountLabel->font();
+    font.setPointSize(8);
+    m_torrentsCountLabel->setFont(font);
+    m_torrentFilesCountLabel->setFont(font);
+
     // Create needed splitters
     auto splitter1 = new QFrame(statusBar());
     splitter1->setFrameStyle(QFrame::VLine);
-    splitter1->setFrameShadow(QFrame::Raised);
+    splitter1->setFrameShadow(QFrame::Plain);
+    // Make splitter little darker
+    splitter1->setStyleSheet("QFrame { color: #8c8c8c; }");
 
     layout->addWidget(m_torrentsCountLabel);
     layout->addWidget(splitter1);
@@ -506,14 +515,14 @@ void MainWindow::displayListMenu(const QPoint &position)
     listMenu->setAttribute(Qt::WA_DeleteOnClose);
 
     // Create actions
-    auto *actionShowCsfdDetail = new QAction(QIcon(":/icons/csfd.svg"), QStringLiteral("Show &csfd detail..."), listMenu);
+    auto *actionShowCsfdDetail = new QAction(QIcon(":/icons/csfd_w.svg"), QStringLiteral("Show &csfd detail..."), listMenu);
     connect(actionShowCsfdDetail, &QAction::triggered, this, &MainWindow::showCsfdDetail);
-    auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
+    auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb_w.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
     connect(actionShowImdbDetail, &QAction::triggered, this, &MainWindow::showImdbDetail);
-    auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video.svg"), QStringLiteral("&Preview file..."), listMenu);
+    auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video_w.svg"), QStringLiteral("&Preview file..."), listMenu);
     actionPreviewTorrent->setShortcut(Qt::Key_F3);
     connect(actionPreviewTorrent, &QAction::triggered, this, &MainWindow::previewSelectedTorrent);
-    auto *actionDeleteTorrent = new QAction(QIcon(":/icons/delete.svg"), QStringLiteral("&Delete torrent"), listMenu);
+    auto *actionDeleteTorrent = new QAction(QIcon(":/icons/delete_w.svg"), QStringLiteral("&Delete torrent"), listMenu);
     actionDeleteTorrent->setShortcuts(QKeySequence::Delete);
     connect(actionDeleteTorrent, &QAction::triggered, this, &MainWindow::deleteSelectedTorrent);
 

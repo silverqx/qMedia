@@ -7,5 +7,11 @@
         <file>icons/ondemand_video.svg</file>
         <file>icons/qmedia.svg</file>
         <file>icons/search.svg</file>
+        <file>icons/cached_w.svg</file>
+        <file>icons/csfd_w.svg</file>
+        <file>icons/imdb_w.svg</file>
+        <file>icons/ondemand_video_w.svg</file>
+        <file>icons/search_w.svg</file>
+        <file>icons/delete_w.svg</file>
     </qresource>
 </RCC>

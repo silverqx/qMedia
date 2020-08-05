@@ -45,7 +45,7 @@
         </property>
         <property name="icon">
          <iconset resource="images/qMedia.qrc">
-          <normaloff>:/icons/cached.svg</normaloff>:/icons/cached.svg</iconset>
+          <normaloff>:/icons/cached_w.svg</normaloff>:/icons/cached_w.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -100,6 +100,11 @@
     </item>
     <item>
      <widget class="QTableView" name="tableView">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="styleSheet">
        <string notr="true"/>
       </property>
@@ -142,8 +147,11 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
-      <attribute name="verticalHeaderDefaultSectionSize">
+      <attribute name="verticalHeaderMinimumSectionSize">
        <number>30</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>34</number>
       </attribute>
       <attribute name="verticalHeaderHighlightSections">
        <bool>false</bool>

@@ -1,5 +1,4 @@
 #include <QApplication>
-//#include <QSettings>
 
 #include <qt_windows.h>
 
@@ -8,7 +7,7 @@
 #endif
 #include "mainwindow.h"
 
-//void enableDarkTheme(QApplication &a);
+void enableDarkTheme(QApplication &a);
 
 int main(int argc, char *argv[])
 {
@@ -19,7 +18,12 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-//    enableDarkTheme(a);
+    // Set font size bigger by 1pt
+    QFont font = app.font();
+    font.setPointSize(9);
+    app.setFont(font);
+
+    enableDarkTheme(app);
 
     MainWindow w;
     w.show();
@@ -33,37 +37,44 @@ int main(int argc, char *argv[])
     return retVal;
 }
 
-//void enableDarkTheme(QApplication &a)
-//{
-//#ifdef Q_OS_WIN
-//    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
-//                       "Themes\\Personalize",
-//                       QSettings::NativeFormat);
-//    if (settings.value("AppsUseLightTheme") == 0){
-//        QPalette darkPalette;
-//        QColor darkColor = QColor(45, 45, 45);
-//        QColor disabledColor = QColor(127, 127, 127);
-//        darkPalette.setColor(QPalette::Window, darkColor);
-//        darkPalette.setColor(QPalette::WindowText, Qt::white);
-//        darkPalette.setColor(QPalette::Base, QColor(18, 18, 18));
-//        darkPalette.setColor(QPalette::AlternateBase, darkColor);
-//        darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-//        darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-//        darkPalette.setColor(QPalette::Text, Qt::white);
-//        darkPalette.setColor(QPalette::Disabled, QPalette::Text, disabledColor);
-//        darkPalette.setColor(QPalette::Button, darkColor);
-//        darkPalette.setColor(QPalette::ButtonText, Qt::white);
-//        darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledColor);
-//        darkPalette.setColor(QPalette::BrightText, Qt::red);
-//        darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+void enableDarkTheme(QApplication &a)
+{
+#ifdef Q_OS_WIN
+    QPalette darkPalette;
+    const QColor darkColor = QColor(45, 45, 45);
+    const QColor disabledColor = QColor(127, 127, 127);
+    const QColor textColor = QColor(212, 212, 212);
+    darkPalette.setColor(QPalette::Window, darkColor);
+    darkPalette.setColor(QPalette::WindowText, QColor(190, 190, 190));
+    darkPalette.setColor(QPalette::Base, QColor(26, 27, 28));
+    darkPalette.setColor(QPalette::AlternateBase, darkColor);
+    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, textColor);
+    darkPalette.setColor(QPalette::Disabled, QPalette::Text, disabledColor);
+    darkPalette.setColor(QPalette::Button, darkColor);
+    darkPalette.setColor(QPalette::ButtonText, textColor);
+    darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledColor);
+    darkPalette.setColor(QPalette::BrightText, textColor);
+    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::PlaceholderText, QColor(140, 140, 140));
 
-//        darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-//        darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-//        darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, disabledColor);
+    // Blue
+//    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+//    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+    // Dark pastel green
+//    darkPalette.setColor(QPalette::Highlight, QColor(29, 84, 92));
+//    darkPalette.setColor(QPalette::HighlightedText, textColor);
+    // Dark orange
+//    darkPalette.setColor(QPalette::Highlight, QColor(255, 139, 0));
+//    darkPalette.setColor(QPalette::HighlightedText, textColor);
+    // Dark pastel orange
+    darkPalette.setColor(QPalette::Highlight, QColor(138, 96, 44));
+    darkPalette.setColor(QPalette::HighlightedText, textColor);
+    darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, disabledColor);
 
-//        a.setStyle("fusion");
-//        a.setPalette(darkPalette);
-//        a.setStyleSheet("QToolTip { color: black; background-color: #ffffe1; border: 1px solid black; }");
-//    }
-//#endif
-//}
+    a.setStyle("fusion");
+    a.setPalette(darkPalette);
+    a.setStyleSheet("QToolTip { color: black; background-color: #ffffe1; border: 1px solid black; }");
+#endif
+}
