@@ -64,6 +64,7 @@ SOURCES += \
     main.cpp \
     maineventfilter_win.cpp \
     mainwindow.cpp \
+    previewlistdelegate.cpp \
     previewselectdialog.cpp \
     torrentsqltablemodel.cpp \
     torrenttabledelegate.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     common.h \
     maineventfilter_win.h \
     mainwindow.h \
+    previewlistdelegate.h \
     previewselectdialog.h \
     torrentsqltablemodel.h \
     torrenttabledelegate.h \

@@ -22,7 +22,7 @@
   <property name="minimumSize">
    <size>
     <width>800</width>
-    <height>0</height>
+    <height>280</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -44,12 +44,6 @@
    </item>
    <item>
     <widget class="QTreeView" name="previewList">
-     <property name="styleSheet">
-      <string notr="true">QTreeView::item {
-    padding: 4px 0px;
-}
-</string>
-     </property>
      <property name="lineWidth">
       <number>1</number>
      </property>
@@ -66,7 +60,7 @@
       <bool>true</bool>
      </property>
      <property name="textElideMode">
-      <enum>Qt::ElideLeft</enum>
+      <enum>Qt::ElideRight</enum>
      </property>
      <property name="indentation">
       <number>25</number>
