@@ -32,6 +32,7 @@
 #include <QDialog>
 #include <QtSql/QSqlRecord>
 
+class PreviewListDelegate;
 class QStandardItemModel;
 
 QT_BEGIN_NAMESPACE
@@ -44,16 +45,6 @@ class PreviewSelectDialog final : public QDialog
     Q_DISABLE_COPY(PreviewSelectDialog)
 
 public:
-    PreviewSelectDialog(QWidget *parent, QSqlRecord torrent, const QVector<QSqlRecord> *const torrentFiles);
-    ~PreviewSelectDialog();
-
-signals:
-    void readyToPreviewFile(QString);
-
-protected:
-    void showEvent(QShowEvent *event) override;
-
-private:
     enum PreviewColumn
     {
         TR_NAME,
@@ -64,6 +55,16 @@ private:
         NB_COLUMNS
     };
 
+    PreviewSelectDialog(QWidget *parent, QSqlRecord torrent, const QVector<QSqlRecord> *const torrentFiles);
+    ~PreviewSelectDialog();
+
+signals:
+    void readyToPreviewFile(QString);
+
+protected:
+    void showEvent(QShowEvent *event) override;
+
+private:
     void populatePreviewListModel();
 
     Ui::PreviewSelectDialog *ui;
@@ -71,6 +72,7 @@ private:
     const QSqlRecord m_torrent;
     const QVector<QSqlRecord> *m_torrentFiles;
     bool m_showEventInitialized = false;
+    PreviewListDelegate *m_listDelegate;
 
 private slots:
     void previewButtonClicked();

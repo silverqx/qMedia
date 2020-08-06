@@ -29,7 +29,7 @@ void TorrentTableDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
     newopt.textVisible = true;
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
-    QProxyStyle fusionStyle {"fusion"};
+    QProxyStyle fusionStyle("fusion");
     QStyle *style = &fusionStyle;
 #else
     QStyle *style = option.widget ? option.widget->style() : QApplication::style();

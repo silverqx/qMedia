@@ -9,6 +9,7 @@
 #include <QStandardItemModel>
 
 #include "common.h"
+#include "previewlistdelegate.h"
 #include "utils/fs.h"
 #include "utils/misc.h"
 
@@ -34,6 +35,10 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(ui->previewList, &QAbstractItemView::doubleClicked, this, &PreviewSelectDialog::previewButtonClicked);
 
+    // Create and apply delegate
+    m_listDelegate = new PreviewListDelegate(this);
+    ui->previewList->setItemDelegate(m_listDelegate);
+
     // Preview list model
     m_previewListModel = new QStandardItemModel(0, NB_COLUMNS, this);
     m_previewListModel->setHeaderData(TR_NAME, Qt::Horizontal, QStringLiteral("Name"));
@@ -50,6 +55,11 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
     // Setup initial sorting
     m_previewListModel->sort(TR_NAME);
     ui->previewList->header()->setSortIndicator(0, Qt::AscendingOrder);
+
+    // Header alignment
+    ui->previewList->header()->setDefaultAlignment(Qt::AlignCenter);
+
+    // TODO set height on the base of num rows, set min. and max. height silverqx
 
     // Initial focus
     ui->previewList->setFocus();
