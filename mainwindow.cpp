@@ -445,6 +445,18 @@ QSqlRecord MainWindow::getSelectedTorrentRecord() const
     );
 }
 
+void MainWindow::removeRecordFromTorrentFilesCache(const quint64 torrentId)
+{
+    if (!m_torrentFilesCache.contains(torrentId)) {
+        qDebug() << "Torrent files cache doesn't contain torrent :" << torrentId;
+        return;
+    }
+
+    const auto torrentFiles = m_torrentFilesCache[torrentId];
+    m_torrentFilesCache.remove(torrentId);
+    delete torrentFiles;
+}
+
 void MainWindow::filterTextChanged(const QString &name)
 {
     m_proxyModel->setFilterRegExp(
@@ -592,9 +604,18 @@ void MainWindow::showImdbDetail()
 
 void MainWindow::updateChangedTorrents(const QVector<QString> &torrentInfoHashes)
 {
-    foreach (const auto infoHash, torrentInfoHashes)
-        m_model->selectRow(dynamic_cast<TorrentSqlTableModel *const>(m_model)
-                           ->getTorrentRowByInfoHash(infoHash));
+    const auto model = dynamic_cast<TorrentSqlTableModel *const>(m_model);
+    quint64 torrentId;
+
+    foreach (const auto infoHash, torrentInfoHashes) {
+        // Update row by row id
+        model->selectRow(model->getTorrentRowByInfoHash(infoHash));
+
+        // If torrent is save in torrent files cache, then remove it
+        torrentId = model->getTorrentIdByInfoHash(infoHash);
+        if (m_torrentFilesCache.contains(torrentId))
+            removeRecordFromTorrentFilesCache(torrentId);
+    }
 }
 
 void MainWindow::focusSearchFilter()

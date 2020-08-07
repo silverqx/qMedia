@@ -59,6 +59,17 @@ int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) {
     return m_torrentMap[infoHash];
 }
 
+quint64 TorrentSqlTableModel::getTorrentIdByInfoHash(const QString &infoHash)
+{
+    // TODO investigate return value 0 and alternatives like exception and similar, or nullable type silverqx
+    if (!m_torrentIdMap.contains(infoHash)) {
+        qDebug() << "Torrent with this info hash doesn't exist:" << infoHash;
+        return 0;
+    }
+
+    return m_torrentIdMap[infoHash];
+}
+
 bool TorrentSqlTableModel::select()
 {
     bool retVal = QSqlTableModel::select();
@@ -108,5 +119,6 @@ void TorrentSqlTableModel::createInfoHashToRowTorrentMap()
     for (int i = 0; i < rowCount() ; ++i) {
         const QString torrentHash = data(index(i, TR_HASH), UnderlyingDataRole).toString();
         m_torrentMap[torrentHash] = i;
+        m_torrentIdMap[torrentHash] = data(index(i, TR_ID), UnderlyingDataRole).toULongLong();
     }
 }
