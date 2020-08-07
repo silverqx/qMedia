@@ -61,7 +61,7 @@ int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) {
 
 quint64 TorrentSqlTableModel::getTorrentIdByInfoHash(const QString &infoHash)
 {
-    // TODO investigate return value 0 and alternatives like exception and similar, or nullable type silverqx
+    // TODO investigate return value 0 and alternatives like exception and similar, or nullable type, std::optional is right solution, leaving it for now, may be refactor later silverqx
     if (!m_torrentIdMap.contains(infoHash)) {
         qDebug() << "Torrent with this info hash doesn't exist:" << infoHash;
         return 0;
@@ -100,8 +100,7 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const 
         return QString::number(rawData.toReal() / 10) + '%';
     case TR_ETA:
         // If qBittorrent is not running, show ∞ for every torrent
-        // TODO don't rely on parent(), get mainwindow instance from qapp or make it global :/ silverqx
-        if (dynamic_cast<const MainWindow *const>(parent())->getQBittorrentHwnd() == nullptr)
+        if (MainWindow::instance()->getQBittorrentHwnd() == nullptr)
             return QString::fromUtf8(C_INFINITY);
         return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), MAX_ETA);
     case TR_ADDED_ON:

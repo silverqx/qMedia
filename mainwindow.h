@@ -28,6 +28,8 @@ public:
     void setQBittorrentHwnd(const HWND hwnd);
     inline HWND getQBittorrentHwnd() const { return m_qbittorrentHwnd; }
 
+    static MainWindow *instance();
+
 public slots:
     void previewFile(const QString &filePath);
 

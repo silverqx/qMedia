@@ -166,6 +166,11 @@ void MainWindow::setQBittorrentHwnd(const HWND hwnd)
     m_qbittorrentHwnd = hwnd;
 }
 
+MainWindow *MainWindow::instance()
+{
+    return l_mainWindow;
+}
+
 void MainWindow::previewFile(const QString &filePath)
 {
     Utils::Gui::openPath(filePath);
@@ -191,7 +196,6 @@ void MainWindow::connectToDb() const
 
     bool ok = db.open();
     if (!ok)
-        // TODO qt insert spaces automatically, so remove redundant spaces silverqx
         qDebug() << "Connect to database failed :" << db.lastError().text();
 }
 
