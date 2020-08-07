@@ -63,6 +63,7 @@ private:
     uint selectTorrentFilesCount() const;
     QModelIndex getSelectedTorrentIndex() const;
     QSqlRecord getSelectedTorrentRecord() const;
+    void removeRecordFromTorrentFilesCache(quint64 torrentId);
 
     Ui::MainWindow *ui;
     QSqlTableModel *m_model;

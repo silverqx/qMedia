@@ -32,6 +32,7 @@ public:
 
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
     int getTorrentRowByInfoHash(const QString &infoHash);
+    quint64 getTorrentIdByInfoHash(const QString &infoHash);
 
 public slots:
     bool select() override;
@@ -44,6 +45,10 @@ private:
        \brief Map a torrent info hash to the table row.
      */
     QHash<QString, int> m_torrentMap;
+    /*!
+       \brief Map a torrent info hash to the torrent id.
+     */
+    QHash<QString, quint64> m_torrentIdMap;
 };
 
 #endif // TORRENTSQLTABLEMODEL_H
