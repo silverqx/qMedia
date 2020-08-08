@@ -3,29 +3,20 @@
 
 #include <QDebug>
 #include <QLabel>
-#include <QMessageBox>
-#include <QScrollBar>
 #include <QShortcut>
-#include <QShowEvent>
 #include <QToolButton>
-#include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
-#include <QtSql/QSqlRecord>
-#include <QWindow>
 
 #include <qt_windows.h>
 #include <Psapi.h>
 
+#include <QScreen>
 #include <regex>
 
 #include "common.h"
-#include "previewselectdialog.h"
-#include "torrentsqltablemodel.h"
-#include "torrenttabledelegate.h"
-#include "torrenttablesortmodel.h"
+#include "torrenttransfertableview.h"
 #include "utils/fs.h"
-#include "utils/gui.h"
 
 namespace {
     // Needed in EnumWindowsProc()
@@ -96,31 +87,24 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(appIcon);
 
     // Initial position
-    move(1920 - width() - 10, 10);
+    move(screen()->availableSize().width() - width() - 10, 10);
 
     connectToDb();
-    initTorrentTableView();
-    initFilterLineEdit();
 
+    // Create and initialize widgets
+    m_tableView = new TorrentTransferTableView(m_qBittorrentHwnd, ui->centralwidget);
+    ui->verticalLayout->addWidget(m_tableView);
+    initFilterLineEdit();
     // StatusBar
     createStatusBar();
 
-    connect(ui->lineEdit, &QLineEdit::textChanged, this, &MainWindow::filterTextChanged);
-    connect(ui->tableView, &QAbstractItemView::doubleClicked, this, &MainWindow::previewSelectedTorrent);
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::reloadTorrentModel);
-    connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::reloadTorrentModel);
-    connect(this, &MainWindow::torrentsChanged, this, &MainWindow::updateChangedTorrents);
+    // Connect events
+    connect(ui->lineEdit, &QLineEdit::textChanged, m_tableView, &TorrentTransferTableView::filterTextChanged);
+    connect(ui->pushButton, &QPushButton::clicked, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsAddedOrRemoved, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsChanged, m_tableView, &TorrentTransferTableView::updateChangedTorrents);
 
     // Hotkeys
-    // tableview
-    const auto *doubleClickHotkeyReturn = new QShortcut(Qt::Key_Return, ui->tableView, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyReturn, &QShortcut::activated, this, &MainWindow::previewSelectedTorrent);
-    const auto *doubleClickHotkeyEnter = new QShortcut(Qt::Key_Enter, ui->tableView, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyEnter, &QShortcut::activated, this, &MainWindow::previewSelectedTorrent);
-    const auto *doubleClickHotkeyF3 = new QShortcut(Qt::Key_F3, ui->tableView, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyF3, &QShortcut::activated, this, &MainWindow::previewSelectedTorrent);
-    const auto *doubleClickHotkeyDelete = new QShortcut(Qt::Key_Delete, ui->tableView, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyDelete, &QShortcut::activated, this, &MainWindow::deleteSelectedTorrent);
     // lineedit
     const auto *doubleClickHotkeyF2 = new QShortcut(Qt::Key_F2, this, nullptr, nullptr, Qt::WindowShortcut);
     connect(doubleClickHotkeyF2, &QShortcut::activated, this, &MainWindow::focusSearchFilter);
@@ -132,27 +116,28 @@ MainWindow::MainWindow(QWidget *parent)
     connect(doubleClickHotkeyEsc, &QShortcut::activated, ui->lineEdit, &QLineEdit::clear);
     // Reload model from DB
     const auto *doubleClickHotkeyF5 = new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::ApplicationShortcut);
-    connect(doubleClickHotkeyF5, &QShortcut::activated, this, &MainWindow::reloadTorrentModel);
+    connect(doubleClickHotkeyF5, &QShortcut::activated, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     const auto *doubleClickCtrlR = new QShortcut(Qt::CTRL + Qt::Key_R, this, nullptr, nullptr, Qt::ApplicationShortcut);
-    connect(doubleClickCtrlR, &QShortcut::activated, this, &MainWindow::reloadTorrentModel);
+    connect(doubleClickCtrlR, &QShortcut::activated, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+
+    // Tab order
+    setTabOrder(m_tableView, ui->lineEdit);
+    setTabOrder(ui->lineEdit, ui->pushButton);
 
     // Initial focus
-    ui->tableView->setFocus();
+    m_tableView->setFocus();
 
     // Find qBittorent's main window HWND
     ::EnumWindows(EnumWindowsProc, NULL);
     // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
-    if (m_qbittorrentHwnd != nullptr)
-        ::PostMessage(m_qbittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
+    if (m_qBittorrentHwnd != nullptr)
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
 }
 
 MainWindow::~MainWindow()
 {
-    if (m_qbittorrentHwnd != nullptr)
-        ::PostMessage(m_qbittorrentHwnd, MSG_QMEDIA_DOWN, NULL, NULL);
-
-    foreach (auto torrentFiles, m_torrentFilesCache)
-        delete torrentFiles;
+    if (m_qBittorrentHwnd != nullptr)
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_DOWN, NULL, NULL);
 
     delete ui;
 }
@@ -160,20 +145,15 @@ MainWindow::~MainWindow()
 void MainWindow::setQBittorrentHwnd(const HWND hwnd)
 {
     // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
-    if (m_qbittorrentHwnd != nullptr && hwnd == nullptr)
-        reloadTorrentModel();
+    if (m_qBittorrentHwnd != nullptr && hwnd == nullptr)
+        m_tableView->reloadTorrentModel();
 
-    m_qbittorrentHwnd = hwnd;
+    m_qBittorrentHwnd = hwnd;
 }
 
 MainWindow *MainWindow::instance()
 {
     return l_mainWindow;
-}
-
-void MainWindow::previewFile(const QString &filePath)
-{
-    Utils::Gui::openPath(filePath);
 }
 
 void MainWindow::refreshStatusBar()
@@ -199,40 +179,6 @@ void MainWindow::connectToDb() const
         qDebug() << "Connect to database failed :" << db.lastError().text();
 }
 
-void MainWindow::initTorrentTableView()
-{
-    // Create and apply delegate
-    m_tableDelegate = new TorrentTableDelegate(this);
-    ui->tableView->setItemDelegate(m_tableDelegate);
-
-    m_model = new TorrentSqlTableModel(this);
-    m_model->setTable(QStringLiteral("torrents"));
-    m_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    m_model->select();
-    m_model->setHeaderData(TR_ID, Qt::Horizontal, QStringLiteral("Id"));
-    m_model->setHeaderData(TR_NAME, Qt::Horizontal, QStringLiteral("Name"));
-    m_model->setHeaderData(TR_PROGRESS, Qt::Horizontal, QStringLiteral("Done"));
-    m_model->setHeaderData(TR_ETA, Qt::Horizontal, QStringLiteral("ETA"));
-    m_model->setHeaderData(TR_SIZE, Qt::Horizontal, QStringLiteral("Size"));
-    m_model->setHeaderData(TR_AMOUNT_LEFT, Qt::Horizontal, QStringLiteral("Remaining"));
-    m_model->setHeaderData(TR_ADDED_ON, Qt::Horizontal, QStringLiteral("Added on"));
-
-    m_proxyModel = new TorrentTableSortModel(this);
-    m_proxyModel->setSourceModel(m_model);
-    m_proxyModel->setFilterKeyColumn(TR_NAME);
-    m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-
-    ui->tableView->setModel(m_proxyModel);
-    ui->tableView->hideColumn(TR_ID);
-    ui->tableView->hideColumn(TR_HASH);
-    ui->tableView->sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
-
-    // Init torrent context menu
-    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->tableView, &QWidget::customContextMenuRequested, this, &MainWindow::displayListMenu);
-}
-
 void MainWindow::initFilterLineEdit()
 {
     m_searchButton = new QToolButton(ui->lineEdit);
@@ -240,6 +186,7 @@ void MainWindow::initFilterLineEdit()
     m_searchButton->setIcon(searchIcon);
     m_searchButton->setCursor(Qt::ArrowCursor);
     m_searchButton->setStyleSheet(QStringLiteral("QToolButton {border: none; padding: 2px 0 2px 4px;}"));
+    m_searchButton->setFocusPolicy(Qt::NoFocus);
 
     // Padding between text and widget borders
     ui->lineEdit->setStyleSheet(QString::fromLatin1("QLineEdit {padding-left: %1px;}")
@@ -256,7 +203,7 @@ bool MainWindow::event(QEvent *event)
     // Do not want autoreload in development
 #ifndef QT_DEBUG
     if (event->type() == QEvent::WindowActivate)
-        reloadTorrentModel();
+        m_tableView->reloadTorrentModel();
 #endif
 
     // TODO message updates only when fully invisible silverqx
@@ -267,98 +214,11 @@ bool MainWindow::event(QEvent *event)
 
     // Inform qBittorrent about qMedia is in foreground
     if (event->type() == QEvent::WindowActivate)
-        ::PostMessage(m_qbittorrentHwnd, MSG_QMD_WINDOW_ACTIVATED, NULL, NULL);
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_WINDOW_ACTIVATED, NULL, NULL);
     if (event->type() == QEvent::WindowDeactivate)
-        ::PostMessage(m_qbittorrentHwnd, MSG_QMD_WINDOW_DEACTIVATED, NULL, NULL);
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_WINDOW_DEACTIVATED, NULL, NULL);
 
     return QMainWindow::event(event);
-}
-
-void MainWindow::showEvent(QShowEvent *event)
-{
-    // Event originated from system
-    if (event->spontaneous())
-        return QMainWindow::showEvent(event);
-
-    if (m_showEventInitialized)
-        return;
-
-    // Pixel perfectly sized tableView header
-    // Set Name column width to all remaining area
-    // Have to be called after show(), because tableView width is needed
-    QHeaderView *const tableViewHeader = ui->tableView->horizontalHeader();
-    tableViewHeader->resizeSections(QHeaderView::ResizeToContents);
-
-    // Increase progress section size about 10%
-    const int sizeSize = tableViewHeader->sectionSize(TR_SIZE);
-    tableViewHeader->resizeSection(TR_SIZE, sizeSize + (sizeSize * 0.1));
-    // Increase size section size about 40%
-    const int progressSize = tableViewHeader->sectionSize(TR_PROGRESS);
-    tableViewHeader->resizeSection(TR_PROGRESS, progressSize + (progressSize * 0.4));
-    // Increase ETA section size about 30%
-    const int etaSize = tableViewHeader->sectionSize(TR_ETA);
-    tableViewHeader->resizeSection(TR_ETA, etaSize + (etaSize * 0.3));
-    // Remaining section do not need resize
-    // Increase added on section size about 10%
-    const int addedOnSize = tableViewHeader->sectionSize(TR_ADDED_ON);
-    tableViewHeader->resizeSection(TR_ADDED_ON, addedOnSize + (addedOnSize * 0.1));
-
-    // TODO also set minimum size for each section, based on above computed sizes silverqx
-
-    // Compute name section size
-    int nameColWidth = ui->tableView->width();
-    const QScrollBar *const vScrollBar = ui->tableView->verticalScrollBar();
-    if (vScrollBar->isVisible())
-        nameColWidth -= vScrollBar->width();
-    nameColWidth -= tableViewHeader->sectionSize(TR_PROGRESS);
-    nameColWidth -= tableViewHeader->sectionSize(TR_ETA);
-    nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
-    nameColWidth -= tableViewHeader->sectionSize(TR_AMOUNT_LEFT);
-    nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
-    nameColWidth -= 2; // Borders
-
-    // TODO and at the end set mainwindow width and height based on tableview ( inteligently 😎 ) silverqx
-
-    tableViewHeader->resizeSection(TR_NAME, nameColWidth);
-    ui->tableView->horizontalHeader()->setStretchLastSection(true);
-
-    // Finally, I like this
-    tableViewHeader->setSectionResizeMode(QHeaderView::Interactive);
-    tableViewHeader->setCascadingSectionResizes(true);
-
-    m_showEventInitialized = true;
-}
-
-QVector<QSqlRecord> *MainWindow::selectTorrentFilesById(quint64 id)
-{
-    // Return from cache
-    if (m_torrentFilesCache.contains(id))
-        return m_torrentFilesCache.value(id);
-
-    QSqlQuery query;
-    query.prepare("SELECT * FROM torrents_previewable_files WHERE torrent_id = ?");
-    query.addBindValue(id);
-
-    const bool ok = query.exec();
-    if (!ok) {
-        qDebug() << QString("Select of torrent(ID%1) files failed :").arg(id)
-                 << query.lastError().text();
-        return {};
-    }
-
-    QVector<QSqlRecord> *torrentFiles = new QVector<QSqlRecord>;
-    while (query.next())
-        torrentFiles->append(query.record());
-
-    if (torrentFiles->isEmpty()) {
-        qDebug() << QString("No torrent files in DB for torrent(ID%1), this should never happen :/")
-                    .arg(id);
-        return torrentFiles;
-    }
-
-    m_torrentFilesCache.insert(id, torrentFiles);
-
-    return torrentFiles;
 }
 
 void MainWindow::createStatusBar()
@@ -370,7 +230,7 @@ void MainWindow::createStatusBar()
 
     // Create widgets displayed statusbar
     m_torrentsCountLabel = new QLabel(QStringLiteral("Torrents: <strong>%1</strong>")
-                                      .arg(m_model->rowCount()), this);
+                                      .arg(m_tableView->getModelRowCount()), this);
     m_torrentFilesCountLabel = new QLabel(QStringLiteral("Video Files: <strong>%1</strong>")
                                           .arg(selectTorrentFilesCount()), this);
     connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::refreshStatusBar);
@@ -426,202 +286,6 @@ uint MainWindow::selectTorrentFilesCount() const
     return query.value(0).toUInt();
 }
 
-QModelIndex MainWindow::getSelectedTorrentIndex() const
-{
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
-    if (selectedIndexes.isEmpty())
-        return {};
-    QModelIndex selectedIndex = selectedIndexes.first();
-    if (!selectedIndex.isValid())
-        return {};
-
-    return selectedIndex;
-}
-
-QSqlRecord MainWindow::getSelectedTorrentRecord() const
-{
-    QModelIndex selectedIndex = getSelectedTorrentIndex();
-    if (!selectedIndex.isValid())
-        return {};
-
-    return m_model->record(
-        m_proxyModel->mapToSource(selectedIndex).row()
-    );
-}
-
-void MainWindow::removeRecordFromTorrentFilesCache(const quint64 torrentId)
-{
-    if (!m_torrentFilesCache.contains(torrentId)) {
-        qDebug() << "Torrent files cache doesn't contain torrent :" << torrentId;
-        return;
-    }
-
-    const auto torrentFiles = m_torrentFilesCache[torrentId];
-    m_torrentFilesCache.remove(torrentId);
-    delete torrentFiles;
-}
-
-void MainWindow::filterTextChanged(const QString &name)
-{
-    m_proxyModel->setFilterRegExp(
-        QRegExp(name, Qt::CaseInsensitive, QRegExp::WildcardUnix));
-}
-
-void MainWindow::previewSelectedTorrent()
-{
-    QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
-        return;
-
-    qDebug() << "Torrent doubleclicked :" << torrent.value("name").toString();
-
-    const QVector<QSqlRecord> *const torrentFiles = selectTorrentFilesById(torrent.value("id").toULongLong());
-    if (torrentFiles->isEmpty()) {
-        QMessageBox::critical(this, tr("Preview impossible"),
-                              tr("Torrent <strong>%1</strong> does not contain any previewable files.")
-                              .arg(torrent.value("name").toString()));
-        return;
-    }
-
-    // If torrent contains only one file, do not show preview dialog
-    if (torrentFiles->size() == 1) {
-        previewFile(torrentFiles->first().value("filepath").toString());
-        return;
-    }
-
-    auto *const dialog = new PreviewSelectDialog(this, torrent, torrentFiles);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    connect(dialog, &PreviewSelectDialog::readyToPreviewFile, this, &MainWindow::previewFile);
-    dialog->show();
-    // TODO set current selection to selected model, because after preview dialog is closed, current selection is at 0,0 silverqx
-}
-
-void MainWindow::reloadTorrentModel()
-{
-    // TODO remember selected torrent by InfoHash, not by row silverqx
-    // Remember currently selected row or first row, if was nothing selected
-    int selectRow = 0;
-    auto selectedRows = ui->tableView->selectionModel()->selectedRows();
-    if (!selectedRows.isEmpty())
-        selectRow = selectedRows.first().row();
-
-    // Reload model
-    m_model->select();
-    qInfo() << "Torrent model reloaded";
-
-    // This situation can occur, when torrents was deleted and was selected one of the last rows
-    const int rowCount = m_model->rowCount();
-    if (selectRow > rowCount)
-        selectRow = rowCount;
-
-    // Reselect remembered row
-    // TODO doesn't work well, selection works, but when I press up or down, then navigation starts from modelindex(0,0), don't know why :/, also tried | QItemSelectionModel::Current, but didn't help silverqx
-    ui->tableView->selectionModel()->select(m_model->index(selectRow, 0),
-                                            QItemSelectionModel::Select | QItemSelectionModel::Rows);
-}
-
-void MainWindow::displayListMenu(const QPoint &position)
-{
-    Q_UNUSED(position);
-
-    QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty()) {
-        qDebug() << "Do not displaying context menu, because any torrent is selected.";
-        return;
-    }
-
-    auto *listMenu = new QMenu(ui->tableView);
-    listMenu->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Create actions
-    auto *actionShowCsfdDetail = new QAction(QIcon(":/icons/csfd_w.svg"), QStringLiteral("Show &csfd detail..."), listMenu);
-    connect(actionShowCsfdDetail, &QAction::triggered, this, &MainWindow::showCsfdDetail);
-    auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb_w.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
-    connect(actionShowImdbDetail, &QAction::triggered, this, &MainWindow::showImdbDetail);
-    auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video_w.svg"), QStringLiteral("&Preview file..."), listMenu);
-    actionPreviewTorrent->setShortcut(Qt::Key_F3);
-    connect(actionPreviewTorrent, &QAction::triggered, this, &MainWindow::previewSelectedTorrent);
-    auto *actionDeleteTorrent = new QAction(QIcon(":/icons/delete_w.svg"), QStringLiteral("&Delete torrent"), listMenu);
-    actionDeleteTorrent->setShortcuts(QKeySequence::Delete);
-    connect(actionDeleteTorrent, &QAction::triggered, this, &MainWindow::deleteSelectedTorrent);
-
-    // Add actions to menu
-    listMenu->addAction(actionShowCsfdDetail);
-    listMenu->addAction(actionShowImdbDetail);
-    listMenu->addSeparator();
-    listMenu->addAction(actionPreviewTorrent);
-    listMenu->addAction(actionDeleteTorrent);
-
-    listMenu->popup(QCursor::pos());
-    // Show context menu next to selected row
-    // TODO only use this, if popup was triggered by keyboard, I need to subclass QTableView and override conextMenuEvent(), than I will have access to reason() silverqx
-//    auto selectedTorrentIndex = getSelectedTorrentIndex();
-//    auto x = ui->tableView->columnViewportPosition(TR_SIZE);
-//    auto y = ui->tableView->rowViewportPosition(selectedTorrentIndex.row());
-//    // +70 because it is centered by default
-//    listMenu->popup(mapToGlobal(QPoint(x, y + 70)));
-    // This is other method, position is passed as parameter
-//    auto p = QPoint(position.x(), position.y() + 70);
-//    listMenu->popup(mapToGlobal(p));
-}
-
-void MainWindow::deleteSelectedTorrent()
-{
-    // qBittorrent is not running, so nothing to send
-    if (m_qbittorrentHwnd == nullptr) {
-        QMessageBox::information(this, QStringLiteral("Delete impossible"),
-                                 QStringLiteral("qBittorrent is not running."));
-        return;
-    }
-
-    QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
-        return;
-
-    qDebug() << "Delete selected torrent :" << torrent.value("name").toString();
-
-    QByteArray infoHash = torrent.value("hash").toByteArray();
-    COPYDATASTRUCT torrentInfoHash;
-    torrentInfoHash.lpData = infoHash.data();
-    torrentInfoHash.cbData = infoHash.size();
-    torrentInfoHash.dwData = NULL;
-    ::SendMessage(m_qbittorrentHwnd, WM_COPYDATA, (WPARAM) MSG_QMD_DELETE_TORRENT, (LPARAM) (LPVOID) &torrentInfoHash);
-}
-
-void MainWindow::showCsfdDetail()
-{
-    QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
-        return;
-
-    qDebug() << "Show CSFD detail :" << torrent.value("name").toString();
-}
-
-void MainWindow::showImdbDetail()
-{
-    QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
-        return;
-
-    qDebug() << "Show IMDB detail :" << torrent.value("name").toString();
-}
-
-void MainWindow::updateChangedTorrents(const QVector<QString> &torrentInfoHashes)
-{
-    const auto model = dynamic_cast<TorrentSqlTableModel *const>(m_model);
-    quint64 torrentId;
-
-    foreach (const auto infoHash, torrentInfoHashes) {
-        // Update row by row id
-        model->selectRow(model->getTorrentRowByInfoHash(infoHash));
-
-        // If torrent is save in torrent files cache, then remove it
-        torrentId = model->getTorrentIdByInfoHash(infoHash);
-        if (m_torrentFilesCache.contains(torrentId))
-            removeRecordFromTorrentFilesCache(torrentId);
-    }
-}
-
 void MainWindow::focusSearchFilter()
 {
     ui->lineEdit->setFocus();
@@ -630,5 +294,5 @@ void MainWindow::focusSearchFilter()
 
 void MainWindow::focusTableView()
 {
-    ui->tableView->setFocus();
+    m_tableView->setFocus();
 }

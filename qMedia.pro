@@ -69,6 +69,7 @@ SOURCES += \
     torrentsqltablemodel.cpp \
     torrenttabledelegate.cpp \
     torrenttablesortmodel.cpp \
+    torrenttransfertableview.cpp \
     utils/fs.cpp \
     utils/gui.cpp \
     utils/misc.cpp \
@@ -83,6 +84,7 @@ HEADERS += \
     torrentsqltablemodel.h \
     torrenttabledelegate.h \
     torrenttablesortmodel.h \
+    torrenttransfertableview.h \
     utils/fs.h \
     utils/gui.h \
     utils/misc.h \
