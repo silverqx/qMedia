@@ -1,16 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QHash>
 #include <QMainWindow>
 
 class QLabel;
-class QSortFilterProxyModel;
-class QSqlRecord;
-class QSqlTableModel;
 class QToolButton;
 
-class TorrentTableDelegate;
+class TorrentTransferTableView;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,77 +18,39 @@ class MainWindow final : public QMainWindow
     Q_DISABLE_COPY(MainWindow)
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
     void setQBittorrentHwnd(const HWND hwnd);
-    inline HWND getQBittorrentHwnd() const { return m_qbittorrentHwnd; }
+    inline HWND getQBittorrentHwnd() const { return m_qBittorrentHwnd; }
 
     static MainWindow *instance();
-
-public slots:
-    void previewFile(const QString &filePath);
 
 signals:
     void torrentsAddedOrRemoved();
     void torrentsChanged(const QVector<QString> &torrentInfoHashes);
 
 protected:
-    void showEvent(QShowEvent *event) override;
     bool event(QEvent *event) override;
 
 private:
-    enum TorrentColumn
-    {
-        TR_ID,
-        TR_NAME,
-        TR_PROGRESS,
-        TR_ETA,
-        TR_SIZE,
-        TR_AMOUNT_LEFT,
-        TR_ADDED_ON,
-        TR_HASH,
-
-        NB_COLUMNS
-    };
-
     void connectToDb() const;
-    void initTorrentTableView();
     void initFilterLineEdit();
-    QVector<QSqlRecord> *selectTorrentFilesById(quint64 id);
     void createStatusBar();
     uint selectTorrentsCount() const;
     uint selectTorrentFilesCount() const;
-    QModelIndex getSelectedTorrentIndex() const;
-    QSqlRecord getSelectedTorrentRecord() const;
-    void removeRecordFromTorrentFilesCache(quint64 torrentId);
 
     Ui::MainWindow *ui;
-    QSqlTableModel *m_model;
-    QSortFilterProxyModel *m_proxyModel;
-    TorrentTableDelegate *m_tableDelegate;
-    /*!
-       \brief Contains torrent files by torrent id.
-     */
-    QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
     QLabel *m_torrentsCountLabel;
     QLabel *m_torrentFilesCountLabel;
     QToolButton *m_searchButton;
-    bool m_showEventInitialized = false;
-    HWND m_qbittorrentHwnd = nullptr;
+    HWND m_qBittorrentHwnd = nullptr;
+    TorrentTransferTableView *m_tableView;
 
 private slots:
-    void filterTextChanged(const QString &name);
-    void previewSelectedTorrent();
     void focusSearchFilter();
     void focusTableView();
     void refreshStatusBar();
-    void reloadTorrentModel();
-    void displayListMenu(const QPoint &);
-    void deleteSelectedTorrent();
-    void showCsfdDetail();
-    void showImdbDetail();
-    void updateChangedTorrents(const QVector<QString> &torrentInfoHashes);
 };
 
 #endif // MAINWINDOW_H
