@@ -35,7 +35,7 @@ protected:
 
 private:
     void connectToDb() const;
-    void initFilterLineEdit();
+    void initFilterTorrentsLineEdit();
     void createStatusBar();
     uint selectTorrentsCount() const;
     uint selectTorrentFilesCount() const;
@@ -48,8 +48,8 @@ private:
     TorrentTransferTableView *m_tableView;
 
 private slots:
-    void focusSearchFilter();
-    void focusTableView();
+    void focusTorrentsFilterLineEdit();
+    void focusTorrentsTableView();
     void refreshStatusBar();
 };
 
