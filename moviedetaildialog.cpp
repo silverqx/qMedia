@@ -133,6 +133,8 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     prepareTitlesSection();
     // movie info section - genre, shot places, year and length
     prepareMovieInfoSection();
+    // Score section
+    ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
     // creators section
     prepareCreatorsSection();
     // storyline section
@@ -159,22 +161,25 @@ void MovieDetailDialog::prepareMovieInfoSection()
     // movie info section - genre, shot places, year and length
     // line 1
     // genre
-    const QString genre = joinJsonStringArray(m_movieDetail["genre"].toArray(), delimiterSlash);
+    const auto genre = joinJsonStringArray(m_movieDetail["genre"].toArray(), delimiterSlash);
     // line 2
     // shot places
-    const QString shotPlaces = joinJsonStringArray(m_movieDetail["shotPlaces"].toArray(),
+    const auto shotPlaces = joinJsonStringArray(m_movieDetail["shotPlaces"].toArray(),
             delimiterSlash);
+    // length
+    const auto length = "<span style='color: palette(link);'>" +
+                        QString::number(m_movieDetail["length"].toInt()) + " min</span>";
     QStringList movieInfoLine2List;
     movieInfoLine2List << shotPlaces
                        << QString::number(m_movieDetail["year"].toInt())
-                       << QString::number(m_movieDetail["length"].toInt()) + " min";
+                       << length;
     const auto movieInfoLine2 = joinStringList(movieInfoLine2List, delimiterComma);
 
     // Assemble movie info section
     QStringList movieInfoList;
     movieInfoList << genre
                   << movieInfoLine2;
-    const auto movieInfo = joinStringList(movieInfoList, delimiterNewLine);
+    const auto movieInfo = joinStringList(movieInfoList, delimiterHtmlNewLine);
     ui->movieInfo->setText(movieInfo);
 }
 
