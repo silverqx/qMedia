@@ -24,6 +24,9 @@ public:
     /*! Prepare data and populate ui with them. */
     void prepareData(const QSqlRecord &torrent);
 
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
 private:
     void prepareMoviePosterSection();
     void prepareTitlesSection();
@@ -34,9 +37,12 @@ private:
     MovieDetail m_movieDetail;
     // TODO implement QNetworkDiskCache silverqx
     QNetworkAccessManager m_networkManager;
+    QTimer *m_resizeTimer;
+    bool m_firstResizeCall = true;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply);
+    void resizeTimeout();
 };
 
 #endif // MOVIEDETAILDIALOG_H

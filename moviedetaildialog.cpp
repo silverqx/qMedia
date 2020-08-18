@@ -3,7 +3,10 @@
 
 #include <QJsonArray>
 #include <QNetworkReply>
+#include <QTimer>
 #include <QUrl>
+
+#include "utils/gui.h"
 
 namespace {
     // Popular delimiters
@@ -107,8 +110,17 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Ensure recenter of the dialog after resize
+    m_resizeTimer = new QTimer(this);
+    m_resizeTimer->setSingleShot(true);
+    m_resizeTimer->setInterval(1000);
+    connect(m_resizeTimer, &QTimer::timeout, this, &MovieDetailDialog::resizeTimeout);
+
     // Connect events
     connect(&m_networkManager, &QNetworkAccessManager::finished, this, &MovieDetailDialog::finishedMoviePoster);
+
+    // Center on active screen
+    Utils::Gui::centerDialog(this);
 }
 
 MovieDetailDialog::~MovieDetailDialog()
@@ -139,6 +151,12 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     prepareCreatorsSection();
     // storyline section
     ui->storyline->setText(m_movieDetail["content"].toString());
+}
+
+void MovieDetailDialog::resizeEvent(QResizeEvent *event)
+{
+    QDialog::resizeEvent(event);
+    m_resizeTimer->start();
 }
 
 void MovieDetailDialog::prepareMoviePosterSection()
@@ -225,4 +243,15 @@ void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply)
     // TODO try to avoid this, best would be scaled at loadFromData() right away silverqx
     moviePoster = moviePoster.scaledToWidth(ui->poster->maximumWidth(), Qt::SmoothTransformation);
     ui->poster->setPixmap(moviePoster);
+}
+
+void MovieDetailDialog::resizeTimeout()
+{
+    // Resize event is also triggered, when the dialog is shown, this prevents unwanted resize
+    if (m_firstResizeCall) {
+        m_firstResizeCall = false;
+        return;
+    }
+
+    Utils::Gui::centerDialog(this);
 }
