@@ -184,7 +184,8 @@ void MovieDetailDialog::prepareCreatorsSection()
     // directors
     const auto keyName = QStringLiteral("name");
     const auto keyId = QStringLiteral("id");
-    const auto wrapInLink = "<a href='https://www.csfd.cz/tvurce/%2'>%1</a>";
+    const auto wrapInLink = "<a href='https://www.csfd.cz/tvurce/%2' "
+                            "style='text-decoration: none;'>%1</a>";
 
     const QString directors = joinJsonObjectArrayWithWrap(m_movieDetail["directors"].toArray(),
             delimiterComma, wrapInLink, keyName, keyId);

@@ -227,3 +227,20 @@ csfd-api movie scrapper:
 missing:
  - SE special edition length ( eg. aliens movie )
  - kamera ( aliens )
+
+
+app colors:
+-----------
+
+    // Blue
+//    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+
+    // Blue
+//    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+//    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+    // Dark pastel green
+//    darkPalette.setColor(QPalette::Highlight, QColor(29, 84, 92));
+//    darkPalette.setColor(QPalette::HighlightedText, textColor);
+    // Dark orange
+//    darkPalette.setColor(QPalette::Highlight, QColor(255, 139, 0));
+//    darkPalette.setColor(QPalette::HighlightedText, textColor);
