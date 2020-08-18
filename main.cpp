@@ -63,18 +63,9 @@ void enableDarkTheme(QApplication &a)
     darkPalette.setColor(QPalette::ButtonText, textColor);
     darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledColor);
     darkPalette.setColor(QPalette::BrightText, textColor);
-    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::Link, QColor(204, 128, 56));
     darkPalette.setColor(QPalette::PlaceholderText, QColor(140, 140, 140));
 
-    // Blue
-//    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-//    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-    // Dark pastel green
-//    darkPalette.setColor(QPalette::Highlight, QColor(29, 84, 92));
-//    darkPalette.setColor(QPalette::HighlightedText, textColor);
-    // Dark orange
-//    darkPalette.setColor(QPalette::Highlight, QColor(255, 139, 0));
-//    darkPalette.setColor(QPalette::HighlightedText, textColor);
     // Dark pastel orange
     darkPalette.setColor(QPalette::Highlight, QColor(138, 96, 44));
     darkPalette.setColor(QPalette::HighlightedText, textColor);
