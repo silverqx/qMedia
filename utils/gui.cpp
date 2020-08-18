@@ -1,7 +1,8 @@
 #include "gui.h"
 
 #include <QDesktopServices>
-#include <QGuiApplication>
+#include <QDesktopWidget>
+#include <QApplication>
 #include <QRect>
 #include <QScreen>
 #include <QUrl>
@@ -21,9 +22,13 @@ bool Utils::Gui::openPath(const QString &absolutePath)
 
 void Utils::Gui::centerDialog(QWidget *const widget)
 {
-    // TODO detect active screen silverqx
-    const auto screenGeometry = QGuiApplication::screens()[0]->geometry();
+    const auto currentScreen = QApplication::desktop()->screenNumber();
+    const auto screenGeometry = QApplication::screens()[currentScreen]->geometry();
     const int x = (screenGeometry.width() - widget->frameGeometry().width()) / 2;
-    const int y = (screenGeometry.height() - widget->frameGeometry().height()) / 2;
-    widget->move(x, y);
+    int y = (screenGeometry.height() - widget->frameGeometry().height()) / 2;
+    // Move a little to the top, better for an eye
+    if (y > 40)
+        y = y - 14;
+    // Also prevent to move out of the screen
+    widget->move(x < 0 ? 0 : x, y < 0 ? 0 : y);
 }
