@@ -244,3 +244,9 @@ app colors:
     // Dark orange
 //    darkPalette.setColor(QPalette::Highlight, QColor(255, 139, 0));
 //    darkPalette.setColor(QPalette::HighlightedText, textColor);
+
+
+detect resize event ended:
+--------------------------
+
+https://stackoverflow.com/questions/7753795/qt-user-resize-event-ends-stops
