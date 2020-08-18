@@ -1,1 +1,4 @@
 /qMedia.pro.user
+node_modules/
+.idea/
+

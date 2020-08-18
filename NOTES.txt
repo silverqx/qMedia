@@ -131,3 +131,99 @@ QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVers
                    QSettings::NativeFormat);
 if (settings.value("AppsUseLightTheme") == 0) {
 }
+
+
+imdb movie detail:
+------------------
+
+class AbstractMovieDetailService:
+signals:
+    void searchPageFetched();
+    void movieDetailPageFetched();
+    
+protected:
+    virtual QString getMovieDetailUrl(QString searchPage) = 0;
+
+    QString prepareSearchQueryString(const QSqlRecord &torrent) const;
+
+    MovieDetail m_movieDetail;
+    QHash<quint64, MovieDetail> m_movieDetailsCache;
+
+private:
+    enum CurrentlyProcessing
+    {
+        PROCESSING_NOTHING,
+        PROCESSING_SEARCH_PAGE,
+        PROESSING_MOVIE_DETAIL_PAGE,
+    };
+
+    MovieDetail selectMovieDetailByTorrentId(quint64 id);
+    void fetchPageByUrl(QString searchQuery);
+    void fetchPageFinished(QNetworkReply *reply);
+    void insertMovieDetailToDb(const MovieDetail &movieDetail);
+
+    QString m_searchPage;
+    QString m_movieDetailPage;
+    int m_currentlyProcessing = PROCESSING_NOTHING;
+    QNetworkAccessManager m_networkManager;
+
+
+was in AbstractMovieDetailService::getMovieDetail():
+    // Fetch movie detail from internet
+//    {
+//        QString searchQuery = prepareSearchQueryString(torrent);
+//        m_currentlyProcessing = PROCESSING_SEARCH_PAGE;
+//        fetchPageByUrl(searchQuery);
+//        QEventLoop eventLoop;
+//        eventLoop.connect(this, &AbstractMovieDetailService::searchPageFetched, &eventLoop, &QEventLoop::quit);
+//        eventLoop.exec();
+//    }
+//    {
+//        QString movieDetailUrl = getMovieDetailUrl(m_searchPage);
+//        m_currentlyProcessing = PROESSING_MOVIE_DETAIL_PAGE;
+//        fetchPageByUrl(movieDetailUrl);
+//        QEventLoop eventLoop1;
+//        eventLoop1.connect(this, &AbstractMovieDetailService::movieDetailPageFetched, &eventLoop1, &QEventLoop::quit);
+//        eventLoop1.exec();
+//    }
+
+AbstractMovieDetailService::AbstractMovieDetailService(QObject *parent)
+    : QObject(parent)
+{
+    //
+    connect(&m_networkManager, &QNetworkAccessManager::finished, this, &AbstractMovieDetailService::fetchPageFinished);
+}
+
+void AbstractMovieDetailService::fetchPageByUrl(QString searchQuery)
+{
+    // TODO error handling silverqx
+    QString searchUrlString = "https://www.csfd.cz/hledat/?q=" + searchQuery;
+    m_networkManager.get(QNetworkRequest(QUrl(searchUrlString)));
+}
+
+void AbstractMovieDetailService::fetchPageFinished(QNetworkReply *reply)
+{
+    QString pageContent = QString::fromStdString(reply->readAll().toStdString());
+
+    switch (m_currentlyProcessing) {
+    case PROCESSING_SEARCH_PAGE:
+        m_searchPage = pageContent;
+        emit searchPageFetched();
+        break;
+    case PROESSING_MOVIE_DETAIL_PAGE:
+        m_movieDetailPage = pageContent;
+        emit movieDetailPageFetched();
+        break;
+    }
+}
+
+was in CsfdMovieDetail:
+    QString getMovieDetailUrl(QString searchPage) override;
+
+
+csfd-api movie scrapper:
+------------------------
+
+missing:
+ - SE special edition length ( eg. aliens movie )
+ - kamera ( aliens )
