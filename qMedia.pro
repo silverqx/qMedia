@@ -1,4 +1,4 @@
-QT += core gui widgets sql
+QT += core gui widgets sql network
 
 # Configuration
 # ---
@@ -61,9 +61,12 @@ win32-msvc* {
 # Application files
 # ---
 SOURCES += \
+    abstractmoviedetailservice.cpp \
+    csfddetailservice.cpp \
     main.cpp \
     maineventfilter_win.cpp \
     mainwindow.cpp \
+    moviedetaildialog.cpp \
     previewlistdelegate.cpp \
     previewselectdialog.cpp \
     torrentsqltablemodel.cpp \
@@ -76,9 +79,12 @@ SOURCES += \
     utils/string.cpp \
 
 HEADERS += \
+    abstractmoviedetailservice.h \
     common.h \
+    csfddetailservice.h \
     maineventfilter_win.h \
     mainwindow.h \
+    moviedetaildialog.h \
     previewlistdelegate.h \
     previewselectdialog.h \
     torrentsqltablemodel.h \
@@ -92,6 +98,7 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui \
+    moviedetaildialog.ui \
     previewselectdialog.ui \
 
 RESOURCES += \

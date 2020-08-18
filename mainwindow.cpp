@@ -132,6 +132,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
     if (m_qBittorrentHwnd != nullptr)
         ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
+    // TODO node.exe on path checker in qtimer 1sec after start, may be also nodejs version silverqx
 }
 
 MainWindow::~MainWindow()

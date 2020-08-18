@@ -2,12 +2,15 @@
 
 #include <qt_windows.h>
 
+#include "csfddetailservice.h"
+
 #ifdef Q_OS_WIN32
 #include "maineventfilter_win.h"
 #endif
 #include "mainwindow.h"
 
 void enableDarkTheme(QApplication &a);
+void applicationCleanup();
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +36,10 @@ int main(int argc, char *argv[])
 #endif
 
     int retVal = app.exec();
+
+    applicationCleanup();
     CloseHandle(ghMutex);
+
     return retVal;
 }
 
@@ -41,12 +47,13 @@ void enableDarkTheme(QApplication &a)
 {
 #ifdef Q_OS_WIN
     QPalette darkPalette;
-    const QColor darkColor = QColor(45, 45, 45);
-    const QColor disabledColor = QColor(127, 127, 127);
-    const QColor textColor = QColor(212, 212, 212);
+    const auto baseColor = QColor(26, 27, 28);
+    const auto darkColor = QColor(45, 45, 45);
+    const auto disabledColor = QColor(127, 127, 127);
+    const auto textColor = QColor(212, 212, 212);
     darkPalette.setColor(QPalette::Window, darkColor);
     darkPalette.setColor(QPalette::WindowText, QColor(190, 190, 190));
-    darkPalette.setColor(QPalette::Base, QColor(26, 27, 28));
+    darkPalette.setColor(QPalette::Base, baseColor);
     darkPalette.setColor(QPalette::AlternateBase, darkColor);
     darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
     darkPalette.setColor(QPalette::ToolTipText, Qt::white);
@@ -73,8 +80,16 @@ void enableDarkTheme(QApplication &a)
     darkPalette.setColor(QPalette::HighlightedText, textColor);
     darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, disabledColor);
 
+    // Shadow for disabled text
+    darkPalette.setColor(QPalette::Disabled, QPalette::Light, baseColor);
+
     a.setStyle("fusion");
     a.setPalette(darkPalette);
     a.setStyleSheet("QToolTip { color: black; background-color: #ffffe1; border: 1px solid black; }");
 #endif
+}
+
+void applicationCleanup()
+{
+    CsfdDetailService::freeInstance();
 }

@@ -14,6 +14,7 @@
 #include <qt_windows.h>
 
 #include "common.h"
+#include "moviedetaildialog.h"
 #include "previewselectdialog.h"
 #include "torrentsqltablemodel.h"
 #include "torrenttabledelegate.h"
@@ -186,6 +187,7 @@ QVector<QSqlRecord> *TorrentTransferTableView::selectTorrentFilesById(quint64 id
     if (m_torrentFilesCache.contains(id))
         return m_torrentFilesCache.value(id);
 
+    // TODO set setForwardOnly(true) for all queries for better performance silverqx
     QSqlQuery query;
     query.prepare("SELECT * FROM torrents_previewable_files WHERE torrent_id = ?");
     query.addBindValue(id);
@@ -250,6 +252,7 @@ void TorrentTransferTableView::removeRecordFromTorrentFilesCache(const quint64 t
 void TorrentTransferTableView::filterTextChanged(const QString &name)
 {
     m_proxyModel->setFilterRegExp(
+        // TODO port to QRegularExpression silverqx
         QRegExp(name, Qt::CaseInsensitive, QRegExp::WildcardUnix));
 }
 
@@ -379,6 +382,13 @@ void TorrentTransferTableView::showCsfdDetail()
         return;
 
     qDebug() << "Show CSFD detail :" << torrent.value("name").toString();
+
+    auto *const dialog = new MovieDetailDialog(this);
+    // TODO measure with and w/o Qt::WA_DeleteOnClose, idea is to reuse dialog and not to create and destroy everytime silverqx
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->prepareData(torrent);
+    // TODO wait until ui is populated, to avoid ui flickering silverqx
+    dialog->show();
 }
 
 void TorrentTransferTableView::showImdbDetail()
