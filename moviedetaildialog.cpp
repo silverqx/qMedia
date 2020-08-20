@@ -1,10 +1,13 @@
 #include "moviedetaildialog.h"
 #include "ui_moviedetaildialog.h"
 
+#include <QIcon>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QNetworkReply>
 #include <QTimer>
 #include <QUrl>
+#include <QUrlQuery>
 
 #include "utils/gui.h"
 
@@ -102,6 +105,44 @@ namespace {
             result.chop(delimiter.size());
         return result;
     };
+
+    // Code below is for my prefered sorting for the movie titles and for a flag lookup
+    struct titlesValue
+    {
+        uint priority;
+        QString flag;
+    };
+    // TODO populate missing flags silverqx
+    static const QHash<QString, titlesValue> titlesHash
+    {
+        {"Československo", { 1, "cz"}},
+        {"Česko",          { 2, "cz"}},
+        {"USA",            { 3, "us"}},
+        {"Slovensko",      { 4, "sk"}},
+        {"Velká Británie", { 5, "gb"}},
+        {"Kanada",         { 6, "ca"}},
+        {"Německo",        { 7, "de"}},
+        {"Francie",        { 8, "fr"}},
+        {"Nový Zéland",    { 9, "nz"}},
+        {"Austrálie",      {10, "au"}},
+    };
+    static const auto titlesPriorityHashNew = titlesHash.size() + 1;
+    const auto compareTitlesByLang = [](const QJsonValue &left, const QJsonValue &right) -> bool
+    {
+        // TODO if two keys are same and one is pracovní název, so flag it and give him titlesPriorityHashNew priority, see eg how to train dragon 3 silverqx
+        const auto leftTmp = titlesHash[left["language"].toString()].priority;
+        const auto rightTmp = titlesHash[right["language"].toString()].priority;
+        return (leftTmp == 0 ? titlesPriorityHashNew : leftTmp)
+            < (rightTmp == 0 ? titlesPriorityHashNew : rightTmp);
+    };
+}
+
+// TODO check if std::move() can be used for swap silverqx
+inline void swap(QJsonValueRef v1, QJsonValueRef v2)
+{
+    QJsonValue temp(v1);
+    v1 = QJsonValue(v2);
+    v2 = temp;
 }
 
 MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
@@ -139,17 +180,17 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     const auto movieTitle = m_movieDetail["title"].toString();
     setWindowTitle(" Detail filmu " + movieTitle + "  ( čsfd.cz )");
 
-    // title section
+    // Title section
     ui->title->setText(movieTitle);
-    // titles section
+    // Titles section
     prepareTitlesSection();
-    // movie info section - genre, shot places, year and length
+    // Movie info section - genre, shot places, year and length
     prepareMovieInfoSection();
     // Score section
     ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
-    // creators section
+    // Creators section
     prepareCreatorsSection();
-    // storyline section
+    // Storyline section
     ui->storyline->setText(m_movieDetail["content"].toString());
 }
 
@@ -162,29 +203,77 @@ void MovieDetailDialog::resizeEvent(QResizeEvent *event)
 void MovieDetailDialog::prepareMoviePosterSection()
 {
     // TODO handle errors silverqx
-    m_networkManager.get(QNetworkRequest(QUrl(m_movieDetail["poster"].toString())));
+    auto url = QUrl(m_movieDetail["poster"].toString(), QUrl::StrictMode);
+    url.setQuery(QUrlQuery({{"w250", nullptr}}));
+    m_networkManager.get(QNetworkRequest(url));
 }
 
 void MovieDetailDialog::prepareTitlesSection()
 {
-    // titles section
-    const auto titlesArr = m_movieDetail["titles"].toArray();
-    ui->titles->setText(titlesArr[0]["title"].toString() + delimiterNewLine +
-            titlesArr[1]["title"].toString());
-    ui->storyline->setWordWrap(true);
+    // Titles section
+    auto titlesArr = m_movieDetail["titles"].toArray();
+    // My prefered sort
+    std::sort(titlesArr.begin(), titlesArr.end(), compareTitlesByLang);
+
+    // Create grid for flags and titles
+    auto gridLayoutTitles = new QGridLayout;
+    const int flagWidth = 21;
+    gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
+    gridLayoutTitles->setColumnStretch(1, 1);
+    gridLayoutTitles->setHorizontalSpacing(9);
+    gridLayoutTitles->setVerticalSpacing(0);
+    ui->verticalLayoutTitles->addLayout(gridLayoutTitles);
+
+    // Populate grid layout with flags and titles
+    QLabel *labelFlag;
+    QLabel *labelTitle;
+    QJsonObject titleObject;
+    QString titleLanguage;
+    QIcon flagIcon;
+    QPixmap flag;
+    QFont titlesFont = this->font();
+    titlesFont.setFamily(QStringLiteral("Arial"));
+    titlesFont.setPointSize(12);
+    titlesFont.setBold(true);
+    titlesFont.setKerning(true);
+    for (int i = 0; i < titlesArr.size() ; ++i) {
+        titleObject = titlesArr[i].toObject();
+        titleLanguage = titleObject["language"].toString();
+        // Flag
+        labelFlag = new QLabel;
+        if (titlesHash.contains(titleLanguage)) {
+            flagIcon = getFlagIcon(titlesHash[titleLanguage].flag);
+            flag = flagIcon.pixmap(flagIcon.actualSize(QSize(flagWidth, 16)));
+            labelFlag->setPixmap(flag);
+        } else {
+            qDebug() << "titlesHash doesn't contain this language :"
+                     << titleLanguage;
+        }
+        labelFlag->setToolTip(titleLanguage);
+        labelFlag->setToolTipDuration(2000);
+        // Title
+        labelTitle = new QLabel;
+        labelTitle->setTextInteractionFlags(Qt::TextSelectableByMouse |
+                                            Qt::TextSelectableByKeyboard);
+        labelTitle->setFont(titlesFont);
+        labelTitle->setText(titleObject["title"].toString());
+
+        gridLayoutTitles->addWidget(labelFlag, i, 0);
+        gridLayoutTitles->addWidget(labelTitle, i, 1);
+    }
 }
 
 void MovieDetailDialog::prepareMovieInfoSection()
 {
-    // movie info section - genre, shot places, year and length
-    // line 1
-    // genre
+    // Movie info section - genre, shot places, year and length
+    // Line 1
+    // Genre
     const auto genre = joinJsonStringArray(m_movieDetail["genre"].toArray(), delimiterSlash);
-    // line 2
-    // shot places
+    // Line 2
+    // Shot places
     const auto shotPlaces = joinJsonStringArray(m_movieDetail["shotPlaces"].toArray(),
             delimiterSlash);
-    // length
+    // Length
     const auto length = "<span style='color: palette(link);'>" +
                         QString::number(m_movieDetail["length"].toInt()) + " min</span>";
     QStringList movieInfoLine2List;
@@ -203,8 +292,8 @@ void MovieDetailDialog::prepareMovieInfoSection()
 
 void MovieDetailDialog::prepareCreatorsSection()
 {
-    // creators section
-    // directors
+    // Creators section
+    // Directors
     const auto keyName = QStringLiteral("name");
     const auto keyId = QStringLiteral("id");
     const auto wrapInLink = "<a href='https://www.csfd.cz/tvurce/%2' "
@@ -212,14 +301,14 @@ void MovieDetailDialog::prepareCreatorsSection()
 
     const QString directors = joinJsonObjectArrayWithWrap(m_movieDetail["directors"].toArray(),
             delimiterComma, wrapInLink, keyName, keyId);
-    // screenplay
+    // Screenplay
     const QString screenplay = joinJsonObjectArrayWithWrap(m_movieDetail["screenplay"].toArray(),
             delimiterComma, wrapInLink, keyName, keyId);
     // TODO camera is missing silverqx
-    // music
+    // Music
     const QString music = joinJsonObjectArrayWithWrap(m_movieDetail["music"].toArray(),
             delimiterComma, wrapInLink, keyName, keyId);
-    // actors
+    // Actors
     const QString actors = joinJsonObjectArrayWithWrap(m_movieDetail["actors"].toArray(),
             delimiterComma, wrapInLink, keyName, keyId);
 
@@ -235,8 +324,26 @@ void MovieDetailDialog::prepareCreatorsSection()
     ui->creators->setText(creators);
 }
 
+QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
+{
+    if (countryIsoCode.isEmpty()) return {};
+
+    const QString key = countryIsoCode.toLower();
+    // Return from flag cache
+    const auto iter = m_flagCache.find(key);
+    if (iter != m_flagCache.end())
+        return *iter;
+
+    const QIcon icon {QLatin1String(":/icons/flags/") + key + QLatin1String(".svg")};
+    // Save to flag cache
+    m_flagCache[key] = icon;
+    return icon;
+}
+
 void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply)
 {
+    // TODO handle network errors silverqx
+    // TODO avangers poster not downloaded silverqx
     const auto moviePosterData = reply->readAll();
     QPixmap moviePoster;
     moviePoster.loadFromData(moviePosterData);

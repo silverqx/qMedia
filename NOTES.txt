@@ -227,7 +227,7 @@ csfd-api movie scrapper:
 missing:
  - SE special edition length ( eg. aliens movie )
  - kamera ( aliens )
-
+ - pracovní název for titles ( How to Train Your Dragon 3 )
 
 app colors:
 -----------

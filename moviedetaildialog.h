@@ -32,6 +32,7 @@ private:
     void prepareTitlesSection();
     void prepareMovieInfoSection();
     void prepareCreatorsSection();
+    QIcon getFlagIcon(const QString &countryIsoCode) const;
 
     Ui::MovieDetailDialog *ui;
     MovieDetail m_movieDetail;
@@ -39,6 +40,8 @@ private:
     QNetworkAccessManager m_networkManager;
     QTimer *m_resizeTimer;
     bool m_firstResizeCall = true;
+    // TODO use mutable where appropriate silverqx
+    mutable QHash<QString, QIcon> m_flagCache;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply);

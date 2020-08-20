@@ -36,9 +36,15 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>250</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
-         <width>260</width>
+         <width>250</width>
          <height>16777215</height>
         </size>
        </property>
@@ -49,7 +55,10 @@
         </font>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
       </widget>
      </item>
@@ -61,7 +70,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayoutTitles" stretch="26,3,3">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayoutTitles" stretch="0,0">
+          <layout class="QVBoxLayout" name="verticalLayoutTitles" stretch="0">
            <item>
             <widget class="QLabel" name="title">
              <property name="font">
@@ -83,24 +92,6 @@
              </property>
              <property name="indent">
               <number>0</number>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="titles">
-             <property name="font">
-              <font>
-               <family>Arial</family>
-               <pointsize>12</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>TextLabel</string>
              </property>
              <property name="textInteractionFlags">
               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -136,7 +127,7 @@
             <string>90%</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignHCenter|Qt::AlignTop</set>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -246,7 +237,7 @@
           <x>0</x>
           <y>0</y>
           <width>917</width>
-          <height>611</height>
+          <height>630</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
