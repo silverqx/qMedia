@@ -34,8 +34,16 @@ namespace Utils {
 
         bool isPreviewable(const QString &extension);
 
+        enum class DURATION_INPUT
+        {
+            SECONDS,
+            MINUTES,
+        };
         /*! Take a number of seconds and return a user-friendly time duration like "1d 2h 10m". */
-        QString userFriendlyDuration(qlonglong seconds, qlonglong maxCap = -1);
+        QString userFriendlyDuration(qlonglong duration, qlonglong maxCap = -1,
+                                     DURATION_INPUT input = DURATION_INPUT::SECONDS);
+        QString userFriendlyDuration(qlonglong duration,
+                                     DURATION_INPUT input = DURATION_INPUT::SECONDS);
     }
 }
 

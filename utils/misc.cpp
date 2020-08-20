@@ -128,19 +128,31 @@ bool Utils::Misc::isPreviewable(const QString &extension)
     return multimediaExtensions.contains(extension.toUpper());
 }
 
-QString Utils::Misc::userFriendlyDuration(const qlonglong seconds, const qlonglong maxCap)
+QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlonglong maxCap,
+                                          const DURATION_INPUT input)
 {
-    if (seconds == 0)
+    if (duration == 0)
         return QString::fromUtf8(C_INFINITY);
-    if ((maxCap >= 0) && (seconds >= maxCap))
+    if ((maxCap >= 0) && (duration >= maxCap))
         return QString::fromUtf8(C_INFINITY);
 
-    if (seconds < 60)
-        return QStringLiteral("< 1m");
+    qlonglong seconds;
+    qlonglong minutes;
 
-    qlonglong minutes = (seconds / 60);
-    if (minutes < 60)
-        return QStringLiteral("%1m").arg(QString::number(minutes));
+    switch (input) {
+    case DURATION_INPUT::SECONDS:
+        seconds = duration;
+        if (seconds < 60)
+            return QStringLiteral("< 1m");
+
+        minutes = (seconds / 60);
+        if (minutes < 60)
+            return QStringLiteral("%1m").arg(QString::number(minutes));
+        break;
+    case DURATION_INPUT::MINUTES:
+        minutes = duration;
+        break;
+    }
 
     qlonglong hours = (minutes / 60);
     if (hours < 24) {
@@ -157,4 +169,10 @@ QString Utils::Misc::userFriendlyDuration(const qlonglong seconds, const qlonglo
     const qlonglong years = (days / 365);
     days -= (years * 365);
     return QStringLiteral("%1y %2d").arg(QString::number(years), QString::number(days));
+}
+
+QString Utils::Misc::userFriendlyDuration(const qlonglong duration,
+                                          const Utils::Misc::DURATION_INPUT input)
+{
+    return userFriendlyDuration(duration, -1, input);
 }
