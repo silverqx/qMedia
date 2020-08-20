@@ -10,6 +10,7 @@
 #include <QUrlQuery>
 
 #include "utils/gui.h"
+#include "utils/misc.h"
 
 namespace {
     // Popular delimiters
@@ -274,8 +275,13 @@ void MovieDetailDialog::prepareMovieInfoSection()
     const auto shotPlaces = joinJsonStringArray(m_movieDetail["shotPlaces"].toArray(),
             delimiterSlash);
     // Length
+    const auto lengthValue = m_movieDetail["length"].toInt();
+    const auto lengthString = (lengthValue > 180)
+        ? Utils::Misc::userFriendlyDuration(
+              lengthValue, Utils::Misc::DURATION_INPUT::MINUTES)
+        : QString::number(lengthValue) + " min";
     const auto length = "<span style='color: palette(link);'>" +
-                        QString::number(m_movieDetail["length"].toInt()) + " min</span>";
+                        lengthString + "</span>";
     QStringList movieInfoLine2List;
     movieInfoLine2List << shotPlaces
                        << QString::number(m_movieDetail["year"].toInt())
