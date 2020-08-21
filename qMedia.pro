@@ -53,7 +53,7 @@ DEFINES += NOMINMAX
 win32-msvc* {
     LIBS += User32.lib
 
-    QMAKE_CXXFLAGS += "/guard:cf"
+    QMAKE_CXXFLAGS += "/guard:cf /utf-8"
     QMAKE_LFLAGS += "/guard:cf"
     QMAKE_LFLAGS_RELEASE += "/OPT:REF /OPT:ICF"
 }

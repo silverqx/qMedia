@@ -6,7 +6,9 @@
 
 #include "csfddetailservice.h"
 
+class QGridLayout;
 class QSqlRecord;
+class QVBoxLayout;
 
 namespace Ui {
     class MovieDetailDialog;
@@ -30,6 +32,7 @@ protected:
 private:
     void prepareMoviePosterSection();
     void prepareTitlesSection();
+    void renderTitlesSection(int maxLines = 0);
     void prepareMovieInfoSection();
     void prepareCreatorsSection();
     QIcon getFlagIcon(const QString &countryIsoCode) const;
@@ -42,6 +45,8 @@ private:
     bool m_firstResizeCall = true;
     // TODO use mutable where appropriate silverqx
     mutable QHash<QString, QIcon> m_flagCache;
+    QGridLayout *m_gridLayoutTitles;
+    QVBoxLayout *m_verticalLayoutCreators;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply);

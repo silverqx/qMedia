@@ -5,9 +5,11 @@
 #include "common.h"
 #include "utils/string.h"
 
-namespace {
-    const struct { const char *source; const char *comment; } units[] = {
-        { "B", "bytes" },
+namespace
+{
+    const struct { const char *source; const char *comment; } units[]
+    {
+        { "B",   "bytes" },
         { "KiB", "kibibytes (1024 bytes)" },
         { "MiB", "mebibytes (1024 kibibytes)" },
         { "GiB", "gibibytes (1024 mibibytes)" },
