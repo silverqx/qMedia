@@ -20,6 +20,11 @@ int main(int argc, char *argv[])
         return 1;
 
     QApplication app(argc, argv);
+    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        // TODO remove after upgrade to Qt6, this is the default in Qt6 silverqx
+        app.setAttribute(Qt::AA_DisableWindowContextHelpButton);
+#endif
 
     // Set font size bigger by 1pt
     QFont font = app.font();

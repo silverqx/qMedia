@@ -18,7 +18,8 @@
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 
-namespace {
+namespace
+{
     // Needed in EnumWindowsProc()
     MainWindow *l_mainWindow = nullptr;
 

@@ -22,11 +22,8 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
 {
     ui->setupUi(this);
 
-    // Remove help button
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-    ui->label->setText(QString("The following files from torrent <strong>%1</strong> support "
-                               "previewing, please select one of them:")
+    ui->label->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
+                                      "support previewing, please select one of them:")
                        .arg(m_torrent.value("name").toString()));
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Preview"));

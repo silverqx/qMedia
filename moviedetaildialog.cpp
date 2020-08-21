@@ -1,6 +1,7 @@
 #include "moviedetaildialog.h"
 #include "ui_moviedetaildialog.h"
 
+#include <QDesktopServices>
 #include <QIcon>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -12,7 +13,8 @@
 #include "utils/gui.h"
 #include "utils/misc.h"
 
-namespace {
+namespace
+{
     // Popular delimiters
     static const auto delimiterSlash       = " / ";
     static const QString delimiterNewLine  = "\n";
@@ -41,21 +43,44 @@ namespace {
         return result;
     };
 
+    // Used in pagination
+    static const auto moreLinkText = [](const bool withDots = true,
+                                     const bool withParenthesis = true)
+    {
+        return (withDots ? QStringLiteral("<strong>...</strong> ") : QStringLiteral("")) +
+            (withParenthesis ? QStringLiteral("(") : QStringLiteral("")) +
+            QStringLiteral("<a href='#show-more' "
+                          "style='font-size: 11pt; text-decoration: none;'"
+                          ">more</a>") +
+            (withParenthesis ? QStringLiteral(")") : QStringLiteral(""));
+    };
+    static const auto moreLinkSize = QStringLiteral("... (more)").size();
+
     /*! Join QJsonArray, all values in array have to be QJsonObject, values will be searched
-        in the jsonArray by keys stored in args pack and wrapped in wrapIn. */
+        in the jsonArray by keys stored in args pack and wrapped in wrapIn. If maxLetters
+        contains value greater than 0, then result will be cutted and at the end will be
+        shown (more) link, letters will be counted only for first substitution ( first key
+        in the args pack ). Resulting string can contain less letters, because when
+        maxLetters limit will be hit or overflow, then currently processed string will not be
+        included at all. */
     template <typename ...Args>
-    QString joinJsonObjectArrayWithWrap(const QJsonArray &jsonArray, const QString &delimiter,
-            const QString &wrappIn, const Args &...args)
+    QString joinJsonObjectArrayWithWrapPaged(const QJsonArray &jsonArray, const QString &delimiter,
+            const QString &wrappIn, const int maxLetters, const Args &...args)
     {
         const int argsSize = sizeof ...(args);
         if (argsSize == 0)
-            qCritical() << "Empty argsSize in joinJsonObjectArrayWithWrap()";
+            qCritical() << QStringLiteral("Empty argsSize in joinJsonObjectArrayWithWrap()");
 
         QString result = "";
         QString value;
         QJsonValue jsonValueInner;
         int jsonValueType;
         int count = 0;
+        int lettersCount = 0;
+        int lettersCountTmp = 0;
+        const auto paginateEnabled = (maxLetters != 0);
+        auto showMoreLink = false;
+        const auto delimiterSize = delimiter.size();
         const QStringList argsList {(args)...};
         for (const auto &jsonValue : jsonArray) {
             if (!jsonValue.isObject() || jsonValue.isNull()
@@ -80,15 +105,38 @@ namespace {
                                   .arg(jsonValueType);
                     break;
                 }
+                // Letters are counted only for first substitution
+                if (paginateEnabled && (arg == argsList[0]))
+                    lettersCount += value.size() + delimiterSize;
                 wrapInTmp = wrapInTmp.arg(value);
+            }
+            /* Last delimiter will never be in the result, also take a more text
+               link size into account. */
+            lettersCountTmp = lettersCount - delimiterSize + moreLinkSize;
+            // lettersCount overflowed 😎
+            if (paginateEnabled && (lettersCountTmp >= maxLetters)) {
+                showMoreLink = true;
+                break;
             }
             result += wrapInTmp + delimiter;
             ++count;
         }
         if (count > 0)
             result.chop(delimiter.size());
+        // Append show more link if needed
+        if (showMoreLink)
+            result += moreLinkText();
         return result;
     };
+
+    /*! Join QJsonArray, all values in array have to be QJsonObject, values will be searched
+        in the jsonArray by keys stored in args pack and wrapped in wrapIn. */
+    template <typename ...Args>
+    QString joinJsonObjectArrayWithWrap(const QJsonArray &jsonArray, const QString &delimiter,
+            const QString &wrappIn, const Args &...args)
+    {
+        return joinJsonObjectArrayWithWrapPaged(jsonArray, delimiter, wrappIn, 0, args...);
+    }
 
     /*! Join QStringList, exclude empty or null values. */
     const auto joinStringList = [](const QStringList &stringList, const QString &delimiter)
@@ -116,16 +164,16 @@ namespace {
     // TODO populate missing flags silverqx
     static const QHash<QString, titlesValue> titlesHash
     {
-        {"Československo", { 1, "cz"}},
-        {"Česko",          { 2, "cz"}},
-        {"USA",            { 3, "us"}},
-        {"Slovensko",      { 4, "sk"}},
-        {"Velká Británie", { 5, "gb"}},
-        {"Kanada",         { 6, "ca"}},
-        {"Německo",        { 7, "de"}},
-        {"Francie",        { 8, "fr"}},
-        {"Nový Zéland",    { 9, "nz"}},
-        {"Austrálie",      {10, "au"}},
+        {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
+        {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
+        {QStringLiteral("USA"),            { 3, QStringLiteral("us")}},
+        {QStringLiteral("Slovensko"),      { 4, QStringLiteral("sk")}},
+        {QStringLiteral("Velká Británie"), { 5, QStringLiteral("gb")}},
+        {QStringLiteral("Kanada"),         { 6, QStringLiteral("ca")}},
+        {QStringLiteral("Německo"),        { 7, QStringLiteral("de")}},
+        {QStringLiteral("Francie"),        { 8, QStringLiteral("fr")}},
+        {QStringLiteral("Nový Zéland"),    { 9, QStringLiteral("nz")}},
+        {QStringLiteral("Austrálie"),      {10, QStringLiteral("au")}},
     };
     static const auto titlesPriorityHashNew = titlesHash.size() + 1;
     const auto compareTitlesByLang = [](const QJsonValue &left, const QJsonValue &right) -> bool
@@ -136,9 +184,22 @@ namespace {
         return (leftTmp == 0 ? titlesPriorityHashNew : leftTmp)
             < (rightTmp == 0 ? titlesPriorityHashNew : rightTmp);
     };
+
+    /*! Resulting string will contain max. letters defined by maxLetters parameter,
+        including 'show more' link text. */
+    Q_DECL_UNUSED const auto paginateString =
+            [](const QString &string, const int maxLetters) -> QString
+    {
+        // Pagination not needed
+        if (string.size() <= maxLetters)
+            return string;
+
+        return QString(string).remove(maxLetters - moreLinkSize, string.size()) +
+                moreLinkText();
+    };
 }
 
-// TODO check if std::move() can be used for swap silverqx
+// Needed when sorting QJsonArray
 inline void swap(QJsonValueRef v1, QJsonValueRef v2)
 {
     QJsonValue temp(v1);
@@ -179,7 +240,9 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
 
     // Modal dialog title
     const auto movieTitle = m_movieDetail["title"].toString();
-    setWindowTitle(" Detail filmu " + movieTitle + "  ( čsfd.cz )");
+    // TODO resolve utf8 boom and /source-charset:utf-8 silverqx
+    setWindowTitle(QStringLiteral(" Detail filmu ") + movieTitle +
+                   QStringLiteral("  ( čsfd.cz )"));
 
     // Title section
     ui->title->setText(movieTitle);
@@ -188,6 +251,7 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     // Movie info section - genre, shot places, year and length
     prepareMovieInfoSection();
     // Score section
+    // TODO tune score QLabel color silverqx
     ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
     // Creators section
     prepareCreatorsSection();
@@ -204,26 +268,36 @@ void MovieDetailDialog::resizeEvent(QResizeEvent *event)
 void MovieDetailDialog::prepareMoviePosterSection()
 {
     // TODO handle errors silverqx
+    // TODO add empty poster, if poster missing silverqx
     auto url = QUrl(m_movieDetail["poster"].toString(), QUrl::StrictMode);
     url.setQuery(QUrlQuery({{"w250", nullptr}}));
     m_networkManager.get(QNetworkRequest(url));
 }
 
+namespace
+{
+    static const int flagWidth = 21;
+}
+
 void MovieDetailDialog::prepareTitlesSection()
 {
-    // Titles section
+    // Create grid for flags and titles
+    m_gridLayoutTitles = new QGridLayout;
+    m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
+    m_gridLayoutTitles->setColumnStretch(1, 1);
+    m_gridLayoutTitles->setHorizontalSpacing(9);
+    m_gridLayoutTitles->setVerticalSpacing(0);
+    ui->verticalLayoutTitles->addLayout(m_gridLayoutTitles);
+
+    // Populate grid layout with flags and titles
+    renderTitlesSection(3);
+}
+
+void MovieDetailDialog::renderTitlesSection(const int maxLines)
+{
     auto titlesArr = m_movieDetail["titles"].toArray();
     // My prefered sort
     std::sort(titlesArr.begin(), titlesArr.end(), compareTitlesByLang);
-
-    // Create grid for flags and titles
-    auto gridLayoutTitles = new QGridLayout;
-    const int flagWidth = 21;
-    gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
-    gridLayoutTitles->setColumnStretch(1, 1);
-    gridLayoutTitles->setHorizontalSpacing(9);
-    gridLayoutTitles->setVerticalSpacing(0);
-    ui->verticalLayoutTitles->addLayout(gridLayoutTitles);
 
     // Populate grid layout with flags and titles
     QLabel *labelFlag;
@@ -237,7 +311,11 @@ void MovieDetailDialog::prepareTitlesSection()
     titlesFont.setPointSize(12);
     titlesFont.setBold(true);
     titlesFont.setKerning(true);
-    for (int i = 0; i < titlesArr.size() ; ++i) {
+    const auto paginateEnabled = (maxLines != 0);
+    auto showMoreLink = false;
+    const auto titlesArrSize = titlesArr.size();
+    int i = 0;
+    for (; i < titlesArrSize ; ++i) {
         titleObject = titlesArr[i].toObject();
         titleLanguage = titleObject["language"].toString();
         // Flag
@@ -247,7 +325,7 @@ void MovieDetailDialog::prepareTitlesSection()
             flag = flagIcon.pixmap(flagIcon.actualSize(QSize(flagWidth, 16)));
             labelFlag->setPixmap(flag);
         } else {
-            qDebug() << "titlesHash doesn't contain this language :"
+            qDebug() << QStringLiteral("titlesHash doesn't contain this language :")
                      << titleLanguage;
         }
         labelFlag->setToolTip(titleLanguage);
@@ -259,9 +337,42 @@ void MovieDetailDialog::prepareTitlesSection()
         labelTitle->setFont(titlesFont);
         labelTitle->setText(titleObject["title"].toString());
 
-        gridLayoutTitles->addWidget(labelFlag, i, 0);
-        gridLayoutTitles->addWidget(labelTitle, i, 1);
+        m_gridLayoutTitles->addWidget(labelFlag, i, 0);
+        m_gridLayoutTitles->addWidget(labelTitle, i, 1);
+
+        // Max. lines overflowed, take into account also show more link, because -1
+        if (paginateEnabled && ((maxLines - 1) != titlesArrSize)
+            && (i >= (maxLines - 2))) {
+            showMoreLink = true;
+            break;
+        }
     }
+
+    // No pagination needed
+    if (!paginateEnabled || !showMoreLink)
+        return;
+
+    // Show more link
+    auto labelMoreLink = new QLabel;
+    labelMoreLink->setTextInteractionFlags(Qt::LinksAccessibleByMouse |
+                                           Qt::LinksAccessibleByKeyboard);
+    labelMoreLink->setText(moreLinkText(false, false));
+    m_gridLayoutTitles->addWidget(labelMoreLink, ++i, 1);
+    labelMoreLink->connect(labelMoreLink, &QLabel::linkActivated, [this](const QString &link)
+    {
+        if (link != QLatin1String("#show-more"))
+            return;
+
+        // Remove all items from grid layout
+        QLayoutItem *layoutItem;
+        while ((layoutItem = m_gridLayoutTitles->takeAt(0)) != nullptr) {
+            delete layoutItem->widget();
+            delete layoutItem;
+        }
+
+        // Re-render whole section again
+        renderTitlesSection();
+    });
 }
 
 void MovieDetailDialog::prepareMovieInfoSection()
@@ -296,38 +407,105 @@ void MovieDetailDialog::prepareMovieInfoSection()
     ui->movieInfo->setText(movieInfo);
 }
 
+namespace
+{
+    enum CREATOR_NAMES
+    {
+        NAMES_DIRECTORS,
+        NAMES_SCREENPLAY,
+        NAMES_MUSIC,
+        NAMES_ACTORS,
+    };
+
+    struct creatorsValue
+    {
+        const QLatin1String keyName;
+        const QString label;
+    };
+
+    static const creatorsValue creatorsMap[]
+    {
+        {QLatin1String("directors"),  QStringLiteral("<strong>Réžia: </strong>%1")},
+        {QLatin1String("screenplay"), QStringLiteral("<strong>Scenár: </strong>%1")},
+        {QLatin1String("music"),      QStringLiteral("<strong>Hudba: </strong>%1")},
+        {QLatin1String("actors"),     QStringLiteral("<strong>Herci: </strong>%1")},
+    };
+}
+
 void MovieDetailDialog::prepareCreatorsSection()
 {
     // Creators section
-    // Directors
     const auto keyName = QStringLiteral("name");
     const auto keyId = QStringLiteral("id");
-    const auto wrapInLink = "<a href='https://www.csfd.cz/tvurce/%2' "
-                            "style='text-decoration: none;'>%1</a>";
+    const auto wrapInLink = QStringLiteral("<a href='https://www.csfd.cz/tvurce/%2' "
+                                           "style='text-decoration: none;'>%1</a>");
+    static const auto maxLetters = 60;
 
-    const QString directors = joinJsonObjectArrayWithWrap(m_movieDetail["directors"].toArray(),
-            delimiterComma, wrapInLink, keyName, keyId);
+    // Directors
+    const QString directors = joinJsonObjectArrayWithWrapPaged(
+            m_movieDetail[creatorsMap[NAMES_DIRECTORS].keyName].toArray(),
+            delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Screenplay
-    const QString screenplay = joinJsonObjectArrayWithWrap(m_movieDetail["screenplay"].toArray(),
-            delimiterComma, wrapInLink, keyName, keyId);
+    const QString screenplay = joinJsonObjectArrayWithWrapPaged(
+            m_movieDetail[creatorsMap[NAMES_SCREENPLAY].keyName].toArray(),
+            delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // TODO camera is missing silverqx
     // Music
-    const QString music = joinJsonObjectArrayWithWrap(m_movieDetail["music"].toArray(),
-            delimiterComma, wrapInLink, keyName, keyId);
+    const QString music = joinJsonObjectArrayWithWrapPaged(
+            m_movieDetail[creatorsMap[NAMES_MUSIC].keyName].toArray(),
+            delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Actors
-    const QString actors = joinJsonObjectArrayWithWrap(m_movieDetail["actors"].toArray(),
-            delimiterComma, wrapInLink, keyName, keyId);
+    const QString actors = joinJsonObjectArrayWithWrapPaged(
+            m_movieDetail[creatorsMap[NAMES_ACTORS].keyName].toArray(),
+            delimiterComma, wrapInLink, 200, keyName, keyId);
 
     // Assemble creators section
     QStringList creatorsList;
     // TODO if QStringLiteral used, encoding is coruppted, ivestigate why, silverqx
     // TODO fix the same width for every section title silverqx
-    creatorsList << QString("<strong>Réžia: </strong>%1").arg(directors)
-                 << QString("<strong>Scenár: </strong>%1").arg(screenplay)
-                 << QString("<strong>Hudba: </strong>%1").arg(music)
-                 << QString("<strong>Herci: </strong>%1").arg(actors);
-    const auto creators = joinStringList(creatorsList, delimiterHtmlNewLine);
-    ui->creators->setText(creators);
+    creatorsList << creatorsMap[NAMES_DIRECTORS].label.arg(directors)
+                 << creatorsMap[NAMES_SCREENPLAY].label.arg(screenplay)
+                 << creatorsMap[NAMES_MUSIC].label.arg(music)
+                 << creatorsMap[NAMES_ACTORS].label.arg(actors);
+
+    // Create the layout for creators
+    m_verticalLayoutCreators = new QVBoxLayout;
+    m_verticalLayoutCreators->setSpacing(2);
+    ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
+
+    // Render each creators section into the layout
+    QLabel *label;
+    auto font = this->font();
+    font.setFamily("Arial");
+    font.setPointSize(12);
+    font.setKerning(true);
+    for (int i = 0; i < creatorsList.size(); ++i) {
+        label = new QLabel;
+        label->setWordWrap(true);
+        label->setTextInteractionFlags(Qt::TextSelectableByMouse |
+                                       Qt::TextSelectableByKeyboard |
+                                       Qt::LinksAccessibleByMouse |
+                                       Qt::LinksAccessibleByKeyboard);
+        label->setFont(font);
+        label->setOpenExternalLinks(false);
+        label->setText(creatorsList[i]);
+        label->connect(label, &QLabel::linkActivated,
+                       [this, label, wrapInLink, keyName, keyId, i](const QString &link)
+        {
+            // Open URL with external browser
+            if (link != QLatin1String("#show-more")) {
+                QDesktopServices::openUrl(QUrl(link, QUrl::StrictMode));
+                return;
+            }
+
+            // Re-populate label
+            const QString joinedText = joinJsonObjectArrayWithWrap(
+                    m_movieDetail[creatorsMap[i].keyName].toArray(), delimiterComma,
+                    wrapInLink, keyName, keyId);
+            label->setText(creatorsMap[i].label.arg(joinedText));
+        });
+        m_verticalLayoutCreators->addWidget(label);
+    }
 }
 
 QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
@@ -340,7 +518,7 @@ QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
     if (iter != m_flagCache.end())
         return *iter;
 
-    const QIcon icon {QLatin1String(":/icons/flags/") + key + QLatin1String(".svg")};
+    const QIcon icon {QStringLiteral(":/icons/flags/") + key + QStringLiteral(".svg")};
     // Save to flag cache
     m_flagCache[key] = icon;
     return icon;
