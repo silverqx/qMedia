@@ -79,6 +79,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     setModel(m_proxyModel);
     hideColumn(TR_ID);
     hideColumn(TR_HASH);
+    hideColumn(TR_CSFD_MOVIE_DETAIL);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
     // Init torrent context menu

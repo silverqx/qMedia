@@ -439,7 +439,7 @@ void MovieDetailDialog::prepareCreatorsSection()
     const auto keyId = QStringLiteral("id");
     const auto wrapInLink = QStringLiteral("<a href='https://www.csfd.cz/tvurce/%2' "
                                            "style='text-decoration: none;'>%1</a>");
-    static const auto maxLetters = 60;
+    static const auto maxLetters = 105;
 
     // Directors
     const QString directors = joinJsonObjectArrayWithWrapPaged(
@@ -457,7 +457,7 @@ void MovieDetailDialog::prepareCreatorsSection()
     // Actors
     const QString actors = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_ACTORS].keyName].toArray(),
-            delimiterComma, wrapInLink, 200, keyName, keyId);
+            delimiterComma, wrapInLink, 320, keyName, keyId);
 
     // Assemble creators section
     QStringList creatorsList;

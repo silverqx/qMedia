@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>941</width>
-    <height>900</height>
+    <width>1316</width>
+    <height>940</height>
    </rect>
   </property>
   <property name="font">
@@ -176,6 +176,9 @@
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayoutStory">
+     <property name="topMargin">
+      <number>3</number>
+     </property>
      <property name="bottomMargin">
       <number>12</number>
      </property>
@@ -219,8 +222,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>917</width>
-          <height>650</height>
+          <width>1292</width>
+          <height>692</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
