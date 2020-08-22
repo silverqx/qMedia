@@ -441,6 +441,9 @@ void MovieDetailDialog::prepareCreatorsSection()
     const auto keyId = QStringLiteral("id");
     const auto wrapInLink = QStringLiteral("<a href='https://www.csfd.cz/tvurce/%2' "
                                            "style='text-decoration: none;'>%1</a>");
+    // 60 for 960px
+    // 105 for 1316px
+    // TODO compute dynamically by width silverqx
     static const auto maxLetters = 105;
 
     // Directors
@@ -459,6 +462,8 @@ void MovieDetailDialog::prepareCreatorsSection()
     // Actors
     const QString actors = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_ACTORS].keyName].toArray(),
+            // 200 for 960px
+            // 320 for 1316px
             delimiterComma, wrapInLink, 320, keyName, keyId);
 
     // Assemble creators section
