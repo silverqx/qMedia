@@ -212,6 +212,8 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
     ui(new Ui::MovieDetailDialog)
 {
     ui->setupUi(this);
+    // Override design values
+    setGeometry(0, 0, 1316, 940);
 
     // Ensure recenter of the dialog after resize
     m_resizeTimer = new QTimer(this);
