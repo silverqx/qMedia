@@ -52,6 +52,7 @@ private:
     QModelIndex getSelectedTorrentIndex() const;
     QSqlRecord getSelectedTorrentRecord() const;
     void removeRecordFromTorrentFilesCache(quint64 torrentId);
+    void resizeColumns();
 
     QSqlTableModel *m_model;
     QSortFilterProxyModel *m_proxyModel;
