@@ -100,6 +100,14 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     const auto *doubleClickHotkeyDelete = new QShortcut(Qt::Key_Delete, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyDelete, &QShortcut::activated, this, &TorrentTransferTableView::deleteSelectedTorrent);
 
+    // Resize columns to default state after right click
+    horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(horizontalHeader(), &QHeaderView::customContextMenuRequested, [this]()
+    {
+        m_showEventInitialized = false;
+        resizeColumns();
+    });
+
     // TODO after start, select torrent with highest / latest added on date silverqx
 }
 
@@ -115,6 +123,11 @@ void TorrentTransferTableView::showEvent(QShowEvent *event)
     if (event->spontaneous())
         return QTableView::showEvent(event);
 
+    return resizeColumns();
+}
+
+void TorrentTransferTableView::resizeColumns()
+{
     if (m_showEventInitialized)
         return;
 
