@@ -70,6 +70,7 @@ SOURCES += \
     previewlistdelegate.cpp \
     previewselectdialog.cpp \
     torrentsqltablemodel.cpp \
+    torrentstatus.cpp \
     torrenttabledelegate.cpp \
     torrenttablesortmodel.cpp \
     torrenttransfertableview.cpp \
@@ -88,6 +89,7 @@ HEADERS += \
     previewlistdelegate.h \
     previewselectdialog.h \
     torrentsqltablemodel.h \
+    torrentstatus.h \
     torrenttabledelegate.h \
     torrenttablesortmodel.h \
     torrenttransfertableview.h \

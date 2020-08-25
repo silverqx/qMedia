@@ -30,6 +30,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     // QWidget
     // Set font size bigger by 1pt
     QFont currentFont = font();
+    currentFont.setFamily("Arial");
     currentFont.setPointSize(10);
     setFont(currentFont);
     // QAbstractItemView
@@ -48,8 +49,8 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     horizontalHeader()->setHighlightSections(false);
     horizontalHeader()->setStretchLastSection(false);
     verticalHeader()->setVisible(false);
-    verticalHeader()->setMinimumSectionSize(30);
-    verticalHeader()->setDefaultSectionSize(34);
+    verticalHeader()->setMinimumSectionSize(32);
+    verticalHeader()->setDefaultSectionSize(36);
     verticalHeader()->setHighlightSections(false);
     verticalHeader()->setStretchLastSection(false);
 
@@ -79,7 +80,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     setModel(m_proxyModel);
     hideColumn(TR_ID);
     hideColumn(TR_HASH);
-    hideColumn(TR_CSFD_MOVIE_DETAIL);
+    hideColumn(TR_STATUS);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
     // Init torrent context menu
@@ -410,7 +411,7 @@ void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &tor
         // Update row by row id
         model->selectRow(model->getTorrentRowByInfoHash(infoHash));
 
-        // If torrent is save in torrent files cache, then remove it
+        // If torrent is saved in torrent files cache, then remove it
         torrentId = model->getTorrentIdByInfoHash(infoHash);
         if (m_torrentFilesCache.contains(torrentId))
             removeRecordFromTorrentFilesCache(torrentId);

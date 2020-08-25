@@ -19,6 +19,7 @@ public:
         TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
+        TR_STATUS,
 
         NB_COLUMNS
     };
@@ -33,9 +34,13 @@ public:
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
     int getTorrentRowByInfoHash(const QString &infoHash);
     quint64 getTorrentIdByInfoHash(const QString &infoHash);
+    // TODO implement rowCount() and columnCount() and may be some others, look qbt model class as reference silverqx
 
 public slots:
     bool select() override;
+
+protected:
+    QString selectStatement() const override;
 
 private:
     QString displayValue(const QModelIndex &modelIndex, int column) const;

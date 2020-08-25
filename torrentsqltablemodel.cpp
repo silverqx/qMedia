@@ -2,30 +2,58 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QHeaderView>
 #include <QLocale>
 #include <QSqlField>
 #include <QSqlRecord>
+#include <QTableView>
 
 #include "common.h"
 #include "mainwindow.h"
+#include "torrentstatus.h"
 #include "utils/misc.h"
 
 TorrentSqlTableModel::TorrentSqlTableModel(QObject *parent, const QSqlDatabase db)
     : QSqlTableModel(parent, db)
 {}
 
-QVariant TorrentSqlTableModel::data(const QModelIndex &idx, const int role) const
+QString TorrentSqlTableModel::selectStatement() const
 {
-    if (!idx.isValid())
+    return QStringLiteral(
+                "SELECT `id`, `name`, `progress`, `eta`, `size`, `remaining`, "
+                "`added_on`, `hash`, `status` "
+                "FROM `torrents`");
+}
+
+QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
+                                    const int role) const
+{
+    if (!modelIndex.isValid())
         return {};
 
-    const int column = idx.column();
+    const int column = modelIndex.column();
+
+    const auto getTooltipForNameColumn = [this, &modelIndex, &column]()
+    {
+        // Relative cursor position from left side of TorrentTransferTableView
+        const auto postitionX =
+                (dynamic_cast<QTableView *>(parent())->
+                horizontalHeader()->mapFromGlobal(QCursor::pos())).x();
+        // TODO get decorationSize from QStyledItemDelegate ( see NOTES.txt ) silverqx
+        static const auto iconWidth = 24;
+        if (postitionX <= iconWidth)
+            return g_statusHash[record(modelIndex.row()).value("status").toString()].text;
+
+        return displayValue(modelIndex, column);
+    };
 
     switch (role) {
+    case Qt::ForegroundRole:
+        return g_statusHash[record(modelIndex.row()).value("status").toString()].color;
     case Qt::DisplayRole:
-        return displayValue(idx, column);
+        return displayValue(modelIndex, column);
     case UnderlyingDataRole:
-        return record(idx.row()).value(column);
+        return record(modelIndex.row()).value(column);
     case Qt::TextAlignmentRole:
         switch (column) {
         case TR_ID:
@@ -39,15 +67,31 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &idx, const int role) cons
             return QVariant {Qt::AlignRight | Qt::AlignVCenter};
         }
         break;
+    case Qt::FontRole:
+        switch (column) {
+        case TR_NAME:
+            // Increase font size for name column
+            auto font = dynamic_cast<QTableView *>(parent())->font();
+            font.setPointSize(12);
+            return font;
+        }
+        break;
+    case Qt::DecorationRole:
+        switch (column) {
+        case TR_NAME:
+            return g_statusHash[record(modelIndex.row()).value("status").toString()]
+                    .getIcon();
+        }
+        break;
     case Qt::ToolTipRole:
         switch (column) {
         case TR_NAME:
-            return displayValue(idx, column);
+            return getTooltipForNameColumn();
         }
         break;
     }
 
-    return QSqlTableModel::data(idx, role);
+    return QSqlTableModel::data(modelIndex, role);
 }
 
 int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) {
@@ -77,10 +121,12 @@ bool TorrentSqlTableModel::select()
     return retVal;
 }
 
-QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const int column) const
+QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
+                                           const int column) const
 {
     bool hideValues = false;
-    const auto unitString = [hideValues](const qint64 value, const bool isSpeedUnit = false) -> QString
+    const auto unitString = [hideValues](const qint64 value,
+                            const bool isSpeedUnit = false) -> QString
     {
         return ((value == 0) && hideValues)
             ? QString {} : Utils::Misc::friendlyUnit(value, isSpeedUnit);
@@ -116,8 +162,10 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex, const 
 void TorrentSqlTableModel::createInfoHashToRowTorrentMap()
 {
     for (int i = 0; i < rowCount() ; ++i) {
-        const QString torrentHash = data(index(i, TR_HASH), UnderlyingDataRole).toString();
+        const QString torrentHash = data(index(i, TR_HASH), UnderlyingDataRole)
+                                    .toString();
         m_torrentMap[torrentHash] = i;
-        m_torrentIdMap[torrentHash] = data(index(i, TR_ID), UnderlyingDataRole).toULongLong();
+        m_torrentIdMap[torrentHash] = data(index(i, TR_ID), UnderlyingDataRole)
+                                      .toULongLong();
     }
 }

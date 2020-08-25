@@ -31,6 +31,7 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
+    // TODO duplicate enum, maps 1:1 to TorrentSqlTableModel::Column enum silverqx
     enum TorrentColumn
     {
         TR_ID,
@@ -41,7 +42,7 @@ private:
         TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
-        TR_CSFD_MOVIE_DETAIL,
+        TR_STATUS,
 
         NB_COLUMNS
     };
