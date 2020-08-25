@@ -99,6 +99,10 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     connect(doubleClickHotkeyF3, &QShortcut::activated, this, &TorrentTransferTableView::previewSelectedTorrent);
     const auto *doubleClickHotkeyDelete = new QShortcut(Qt::Key_Delete, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyDelete, &QShortcut::activated, this, &TorrentTransferTableView::deleteSelectedTorrent);
+    const auto *doubleClickHotkeyF4 = new QShortcut(Qt::Key_F4, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickHotkeyF4, &QShortcut::activated, this, &TorrentTransferTableView::showCsfdDetail);
+    const auto *doubleClickHotkeyF5 = new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickHotkeyF5, &QShortcut::activated, this, &TorrentTransferTableView::showImdbDetail);
 
     // Resize columns to default state after right click
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -337,8 +341,12 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
 
     // Create actions
     auto *actionShowCsfdDetail = new QAction(QIcon(":/icons/csfd_w.svg"), QStringLiteral("Show &csfd detail..."), listMenu);
+    // TODO would be ideal to show this shortcut's text little grey silverqx
+    actionShowCsfdDetail->setShortcut(Qt::Key_F4);
     connect(actionShowCsfdDetail, &QAction::triggered, this, &TorrentTransferTableView::showCsfdDetail);
     auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb_w.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
+    actionShowImdbDetail->setShortcut(Qt::Key_F5);
+    actionShowImdbDetail->setEnabled(false);
     connect(actionShowImdbDetail, &QAction::triggered, this, &TorrentTransferTableView::showImdbDetail);
     auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video_w.svg"), QStringLiteral("&Preview file..."), listMenu);
     actionPreviewTorrent->setShortcut(Qt::Key_F3);
@@ -413,6 +421,9 @@ void TorrentTransferTableView::showImdbDetail()
         return;
 
     qDebug() << "Show IMDB detail :" << torrent.value("name").toString();
+
+    QMessageBox::information(this, QStringLiteral("imdb movie detail"),
+                             QStringLiteral("Currently not implemented."));
 }
 
 void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &torrentInfoHashes)
