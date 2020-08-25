@@ -265,5 +265,12 @@
         <file>icons/flags/za.svg</file>
         <file>icons/flags/zm.svg</file>
         <file>icons/flags/zw.svg</file>
+        <file>icons/torrent_statuses/downloading.svg</file>
+        <file>icons/torrent_statuses/error.svg</file>
+        <file>icons/torrent_statuses/finished.svg</file>
+        <file>icons/torrent_statuses/moving.svg</file>
+        <file>icons/torrent_statuses/paused.svg</file>
+        <file>icons/torrent_statuses/queued.svg</file>
+        <file>icons/torrent_statuses/stalled.svg</file>
     </qresource>
 </RCC>

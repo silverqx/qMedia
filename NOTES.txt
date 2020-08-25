@@ -250,3 +250,14 @@ detect resize event ended:
 --------------------------
 
 https://stackoverflow.com/questions/7753795/qt-user-resize-event-ends-stops
+
+
+decoration position for QStyledItemDelegate:
+--------------------------------------------
+
+code is from QStyledItemDelegate::initStyleOption()
+
+QSize actualSize = option->icon.actualSize(option->decorationSize, mode, state);
+// For highdpi icons actualSize might be larger than decorationSize, which we don't want. Clamp it to decorationSize.
+option->decorationSize = QSize(qMin(option->decorationSize.width(), actualSize.width()),
+                               qMin(option->decorationSize.height(), actualSize.height()));

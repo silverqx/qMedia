@@ -10,6 +10,7 @@
 #include <QUrl>
 #include <QUrlQuery>
 
+#include "torrentstatus.h"
 #include "utils/gui.h"
 #include "utils/misc.h"
 
@@ -156,13 +157,13 @@ namespace
     };
 
     // Code below is for my prefered sorting for the movie titles and for a flag lookup
-    struct titlesValue
+    struct TitlesValue
     {
         uint priority;
         QString flag;
     };
     // TODO populate missing flags silverqx
-    static const QHash<QString, titlesValue> titlesHash
+    static const QHash<QString, TitlesValue> titlesHash
     {
         {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
         {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
@@ -246,7 +247,16 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     setWindowTitle(QStringLiteral(" Detail filmu ") + movieTitle +
                    QStringLiteral("  ( čsfd.cz )"));
 
+    // TODO set minimum size veritcal policy for all widgets in movie info layout silverqx
     // Title section
+    // Status icon before movie titles
+    const auto status = torrent.value("status").toString();
+    const auto statusIcon = g_statusHash[status].getIcon();
+    const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
+    ui->status->setPixmap(statusPixmap);
+    ui->status->setToolTip(g_statusHash[status].text);
+    ui->status->setToolTipDuration(2500);
+    // Title
     ui->title->setText(movieTitle);
     // Titles section
     prepareTitlesSection();
@@ -289,7 +299,7 @@ void MovieDetailDialog::prepareTitlesSection()
     m_gridLayoutTitles->setColumnStretch(1, 1);
     m_gridLayoutTitles->setHorizontalSpacing(9);
     m_gridLayoutTitles->setVerticalSpacing(0);
-    ui->verticalLayoutTitles->addLayout(m_gridLayoutTitles);
+    ui->verticalLayoutInfo->addLayout(m_gridLayoutTitles);
 
     // Populate grid layout with flags and titles
     renderTitlesSection(3);
@@ -419,13 +429,13 @@ namespace
         NAMES_ACTORS,
     };
 
-    struct creatorsValue
+    struct CreatorsValue
     {
         const QLatin1String keyName;
         const QString label;
     };
 
-    static const creatorsValue creatorsMap[]
+    static const CreatorsValue creatorsMap[]
     {
         {QLatin1String("directors"),  QStringLiteral("<strong>Réžia: </strong>%1")},
         {QLatin1String("screenplay"), QStringLiteral("<strong>Scenár: </strong>%1")},

@@ -105,13 +105,49 @@
            </item>
            <item>
             <layout class="QVBoxLayout" name="verticalLayoutInfo">
+             <property name="spacing">
+              <number>10</number>
+             </property>
              <property name="leftMargin">
               <number>6</number>
              </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutTitles" stretch="26,3,3">
                <item>
-                <layout class="QVBoxLayout" name="verticalLayoutTitles" stretch="0">
+                <layout class="QHBoxLayout" name="horizontalLayoutTitle" stretch="0,1">
+                 <item>
+                  <widget class="QLabel" name="status">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Tahoma</family>
+                     <pointsize>16</pointsize>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel {
+    padding-top: 4px;
+}
+</string>
+                   </property>
+                   <property name="text">
+                    <string>Status</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::NoTextInteraction</set>
+                   </property>
+                  </widget>
+                 </item>
                  <item>
                   <widget class="QLabel" name="title">
                    <property name="font">

@@ -72,7 +72,7 @@ void enableDarkTheme(QApplication &a)
     darkPalette.setColor(QPalette::PlaceholderText, QColor(140, 140, 140));
 
     // Dark pastel orange
-    darkPalette.setColor(QPalette::Highlight, QColor(138, 96, 44));
+    darkPalette.setColor(QPalette::Highlight, QColor(138, 96, 44, 70));
     darkPalette.setColor(QPalette::HighlightedText, textColor);
     darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, disabledColor);
 
