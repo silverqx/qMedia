@@ -80,6 +80,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     setModel(m_proxyModel);
     hideColumn(TR_ID);
     hideColumn(TR_HASH);
+    hideColumn(TR_CSFD_MOVIE_DETAIL);
     hideColumn(TR_STATUS);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
@@ -101,8 +102,8 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     connect(doubleClickHotkeyDelete, &QShortcut::activated, this, &TorrentTransferTableView::deleteSelectedTorrent);
     const auto *doubleClickHotkeyF4 = new QShortcut(Qt::Key_F4, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyF4, &QShortcut::activated, this, &TorrentTransferTableView::showCsfdDetail);
-    const auto *doubleClickHotkeyF5 = new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyF5, &QShortcut::activated, this, &TorrentTransferTableView::showImdbDetail);
+    const auto *doubleClickHotkeyF6 = new QShortcut(Qt::Key_F6, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickHotkeyF6, &QShortcut::activated, this, &TorrentTransferTableView::showImdbDetail);
 
     // Resize columns to default state after right click
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -345,7 +346,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
     actionShowCsfdDetail->setShortcut(Qt::Key_F4);
     connect(actionShowCsfdDetail, &QAction::triggered, this, &TorrentTransferTableView::showCsfdDetail);
     auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb_w.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
-    actionShowImdbDetail->setShortcut(Qt::Key_F5);
+    actionShowImdbDetail->setShortcut(Qt::Key_F6);
     actionShowImdbDetail->setEnabled(false);
     connect(actionShowImdbDetail, &QAction::triggered, this, &TorrentTransferTableView::showImdbDetail);
     auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video_w.svg"), QStringLiteral("&Preview file..."), listMenu);

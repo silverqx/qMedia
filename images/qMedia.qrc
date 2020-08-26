@@ -1,17 +1,10 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/cached.svg</file>
-        <file>icons/csfd.svg</file>
-        <file>icons/delete.svg</file>
-        <file>icons/imdb.svg</file>
-        <file>icons/ondemand_video.svg</file>
-        <file>icons/qmedia.svg</file>
-        <file>icons/search.svg</file>
         <file>icons/cached_w.svg</file>
+        <file>icons/csfd.svg</file>
         <file>icons/csfd_w.svg</file>
-        <file>icons/imdb_w.svg</file>
-        <file>icons/ondemand_video_w.svg</file>
-        <file>icons/search_w.svg</file>
+        <file>icons/delete.svg</file>
         <file>icons/delete_w.svg</file>
         <file>icons/flags/ad.svg</file>
         <file>icons/flags/ae.svg</file>
@@ -55,6 +48,7 @@
         <file>icons/flags/cd.svg</file>
         <file>icons/flags/cf.svg</file>
         <file>icons/flags/cg.svg</file>
+        <file>icons/flags/ch.svg</file>
         <file>icons/flags/ci.svg</file>
         <file>icons/flags/ck.svg</file>
         <file>icons/flags/cl.svg</file>
@@ -113,7 +107,6 @@
         <file>icons/flags/hr.svg</file>
         <file>icons/flags/ht.svg</file>
         <file>icons/flags/hu.svg</file>
-        <file>icons/flags/ch.svg</file>
         <file>icons/flags/id.svg</file>
         <file>icons/flags/ie.svg</file>
         <file>icons/flags/il.svg</file>
@@ -265,10 +258,17 @@
         <file>icons/flags/za.svg</file>
         <file>icons/flags/zm.svg</file>
         <file>icons/flags/zw.svg</file>
+        <file>icons/imdb.svg</file>
+        <file>icons/imdb_w.svg</file>
+        <file>icons/ondemand_video.svg</file>
+        <file>icons/ondemand_video_w.svg</file>
+        <file>icons/qmedia.svg</file>
+        <file>icons/search.svg</file>
+        <file>icons/search_w.svg</file>
+        <file>icons/torrent_statuses/checking.svg</file>
         <file>icons/torrent_statuses/downloading.svg</file>
         <file>icons/torrent_statuses/error.svg</file>
         <file>icons/torrent_statuses/finished.svg</file>
-        <file>icons/torrent_statuses/moving.svg</file>
         <file>icons/torrent_statuses/paused.svg</file>
         <file>icons/torrent_statuses/queued.svg</file>
         <file>icons/torrent_statuses/stalled.svg</file>

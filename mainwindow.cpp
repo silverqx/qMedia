@@ -147,7 +147,7 @@ MainWindow::~MainWindow()
 void MainWindow::setQBittorrentHwnd(const HWND hwnd)
 {
     // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
-    if (m_qBittorrentHwnd != nullptr && hwnd == nullptr)
+    if ((m_qBittorrentHwnd != nullptr) && (hwnd == nullptr))
         m_tableView->reloadTorrentModel();
 
     m_qBittorrentHwnd = hwnd;
