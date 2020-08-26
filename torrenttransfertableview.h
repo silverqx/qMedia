@@ -42,6 +42,7 @@ private:
         TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
+        TR_CSFD_MOVIE_DETAIL,
         TR_STATUS,
 
         NB_COLUMNS

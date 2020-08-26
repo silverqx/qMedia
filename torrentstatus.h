@@ -4,21 +4,25 @@
 #include <QHash>
 #include <QIcon>
 
+// Starts from 1 because of MySQL enums starts from 1
+enum struct TorrentStatus
+{
+    Allocating = 1,
+    Checking,
+    CheckingResumeData,
+    Downloading,
+    Error,
+    Finished,
+    MissingFiles,
+    Moving,
+    Paused,
+    Queued,
+    Stalled,
+    Unknown,
+};
+
 struct StatusProperties
 {
-    enum struct TorrentStatus
-    {
-        Downloading,
-        Error,
-        Finished,
-        MissingFiles,
-        Moving,
-        Paused,
-        Queued,
-        Stalled,
-        Unknown = -1,
-    };
-
     TorrentStatus state;
     QColor color;
     std::function<QIcon()> getIcon;

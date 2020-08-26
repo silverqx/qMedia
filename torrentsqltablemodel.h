@@ -19,6 +19,7 @@ public:
         TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
+        TR_CSFD_MOVIE_DETAIL,
         TR_STATUS,
 
         NB_COLUMNS
@@ -38,9 +39,6 @@ public:
 
 public slots:
     bool select() override;
-
-protected:
-    QString selectStatement() const override;
 
 private:
     QString displayValue(const QModelIndex &modelIndex, int column) const;

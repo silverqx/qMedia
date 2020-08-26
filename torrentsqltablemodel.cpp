@@ -17,14 +17,6 @@ TorrentSqlTableModel::TorrentSqlTableModel(QObject *parent, const QSqlDatabase d
     : QSqlTableModel(parent, db)
 {}
 
-QString TorrentSqlTableModel::selectStatement() const
-{
-    return QStringLiteral(
-                "SELECT `id`, `name`, `progress`, `eta`, `size`, `remaining`, "
-                "`added_on`, `hash`, `status` "
-                "FROM `torrents`");
-}
-
 QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
                                     const int role) const
 {
