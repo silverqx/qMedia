@@ -389,6 +389,17 @@ void TorrentTransferTableView::deleteSelectedTorrent()
     if (torrent.isEmpty())
         return;
 
+    const auto result =
+            QMessageBox::question(parentWidget(), QStringLiteral("Delete torrent"),
+                                  QStringLiteral("Do you want to delete torrent:<br>"
+                                                 "<strong>%1</strong>")
+                                  .arg(torrent.value("name").toString()),
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::No);
+    // Nothing to delete
+    if (result != QMessageBox::Yes)
+        return;
+
     qDebug() << "Delete selected torrent :" << torrent.value("name").toString();
 
     QByteArray infoHash = torrent.value("hash").toByteArray();

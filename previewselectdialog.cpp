@@ -84,7 +84,8 @@ void PreviewSelectDialog::previewButtonClicked()
     const QString path = m_previewListModel->data(selectedIndex).toString();
     if (!QFile::exists(path)) {
         QMessageBox::critical(this, QStringLiteral("Preview impossible"),
-                              QString("Sorry, we can't preview this file:\n%1.")
+                              QStringLiteral("Sorry, we can't preview this file:<br>"
+                                             "<strong>%1</strong>")
                               .arg(Utils::Fs::toNativePath(path)));
         reject();
     }
