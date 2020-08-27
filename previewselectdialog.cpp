@@ -22,8 +22,8 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
 {
     ui->setupUi(this);
 
-    ui->label->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
-                                      "support previewing, please select one of them:")
+    ui->infoLabel->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
+                                          "support previewing, please select one of them:")
                        .arg(m_torrent.value("name").toString()));
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Preview"));

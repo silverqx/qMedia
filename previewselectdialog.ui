@@ -36,7 +36,10 @@
   </property>
   <layout class="QVBoxLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="infoLabel">
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>

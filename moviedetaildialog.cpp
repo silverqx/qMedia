@@ -267,6 +267,8 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
     // Creators section
     prepareCreatorsSection();
+    // Fill empty space
+    ui->verticalLayoutInfo->addStretch(1);
     // Storyline section
     ui->storyline->setText(m_movieDetail["content"].toString());
 }
@@ -293,6 +295,12 @@ namespace
 
 void MovieDetailDialog::prepareTitlesSection()
 {
+    // Nothing to render
+    if (m_movieDetail["titles"].toArray().isEmpty()) {
+        qDebug() << "Empty titles for movie :" << m_movieDetail["title"];
+        return;
+    }
+
     // Create grid for flags and titles
     m_gridLayoutTitles = new QGridLayout;
     m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
@@ -417,6 +425,8 @@ void MovieDetailDialog::prepareMovieInfoSection()
                   << movieInfoLine2;
     const auto movieInfo = joinStringList(movieInfoList, delimiterHtmlNewLine);
     ui->movieInfo->setText(movieInfo);
+    // TODO create logging system silverqx
+    // TODO log empty movieInfo, to know how often it happens silverqx
 }
 
 namespace
@@ -478,12 +488,24 @@ void MovieDetailDialog::prepareCreatorsSection()
 
     // Assemble creators section
     QStringList creatorsList;
-    // TODO if QStringLiteral used, encoding is coruppted, ivestigate why, silverqx
     // TODO fix the same width for every section title silverqx
-    creatorsList << creatorsMap[NAMES_DIRECTORS].label.arg(directors)
-                 << creatorsMap[NAMES_SCREENPLAY].label.arg(screenplay)
-                 << creatorsMap[NAMES_MUSIC].label.arg(music)
-                 << creatorsMap[NAMES_ACTORS].label.arg(actors);
+    // Order is important, have to be same as order in creatorsMap enum
+    creatorsList << directors
+                 << screenplay
+                 << music
+                 << actors;
+
+    // TODO rewrite with std::find_if() silverqx
+    // If all are empty, then nothing to render
+    bool nothingToRender = true;
+    for (const auto &creators : creatorsList) {
+        if (!creators.isEmpty()) {
+            nothingToRender = false;
+            break;
+        }
+    }
+    if (nothingToRender)
+        return;
 
     // Create the layout for creators
     m_verticalLayoutCreators = new QVBoxLayout;
@@ -497,6 +519,10 @@ void MovieDetailDialog::prepareCreatorsSection()
     font.setPointSize(12);
     font.setKerning(true);
     for (int i = 0; i < creatorsList.size(); ++i) {
+        // Nothing to render
+        if (creatorsList[i].isEmpty())
+            continue;
+
         label = new QLabel;
         label->setWordWrap(true);
         label->setTextInteractionFlags(Qt::TextSelectableByMouse |
@@ -505,7 +531,7 @@ void MovieDetailDialog::prepareCreatorsSection()
                                        Qt::LinksAccessibleByKeyboard);
         label->setFont(font);
         label->setOpenExternalLinks(false);
-        label->setText(creatorsList[i]);
+        label->setText(creatorsMap[i].label.arg(creatorsList[i]));
         label->connect(label, &QLabel::linkActivated,
                        [this, label, wrapInLink, keyName, keyId, i](const QString &link)
         {
@@ -521,6 +547,7 @@ void MovieDetailDialog::prepareCreatorsSection()
                     wrapInLink, keyName, keyId);
             label->setText(creatorsMap[i].label.arg(joinedText));
         });
+
         m_verticalLayoutCreators->addWidget(label);
     }
 }
