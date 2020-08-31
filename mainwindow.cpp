@@ -156,6 +156,8 @@ void MainWindow::setQBittorrentHwnd(const HWND hwnd)
         m_tableView->reloadTorrentModel();
 
     m_qBittorrentHwnd = hwnd;
+    // BUG if qMedia is started after qBittorrent, I'm not getting updates immediately, investigate, may be send back qMedia hwnd silverqx
+//    ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
 }
 
 MainWindow *MainWindow::instance()
