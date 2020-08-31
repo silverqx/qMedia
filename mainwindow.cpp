@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent)
     const auto *switchSearchFilterShortcut = new QShortcut(QKeySequence::Find, this);
     connect(switchSearchFilterShortcut, &QShortcut::activated, this, &MainWindow::focusTorrentsFilterLineEdit);
     const auto *doubleClickHotkeyDown = new QShortcut(Qt::Key_Down, ui->filterTorrentsLineEdit, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyDown, &QShortcut::activated, this, &MainWindow::focusTorrentsTableView);
+    connect(doubleClickHotkeyDown, &QShortcut::activated, m_tableView, qOverload<>(&TorrentTransferTableView::setFocus));
     const auto *doubleClickHotkeyEsc = new QShortcut(Qt::Key_Escape, ui->filterTorrentsLineEdit, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyEsc, &QShortcut::activated, ui->filterTorrentsLineEdit, &QLineEdit::clear);
     // Reload model from DB
@@ -299,9 +299,4 @@ void MainWindow::focusTorrentsFilterLineEdit()
 {
     ui->filterTorrentsLineEdit->setFocus();
     ui->filterTorrentsLineEdit->selectAll();
-}
-
-void MainWindow::focusTorrentsTableView()
-{
-    m_tableView->setFocus();
 }
