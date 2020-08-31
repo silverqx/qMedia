@@ -89,6 +89,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Initial position
     move(screen()->availableSize().width() - width() - 10, 10);
+    // Override design values
+#ifdef VISIBLE_CONSOLE
+    // Set up smaller, so I can see console output
+    resize(geometry().width(), geometry().height() - 200);
+#endif
 
     connectToDb();
 
