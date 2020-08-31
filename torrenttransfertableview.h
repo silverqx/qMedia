@@ -15,7 +15,6 @@ class TorrentTransferTableView final : public QTableView
     Q_DISABLE_COPY(TorrentTransferTableView)
 
 public:
-    // TODO solve explicit, default and delete for contructors, use this keywords correctly silverqx
     explicit TorrentTransferTableView(const HWND qBittorrentHwnd, QWidget *parent = nullptr);
     ~TorrentTransferTableView();
 

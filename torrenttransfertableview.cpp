@@ -212,8 +212,8 @@ QVector<QSqlRecord> *TorrentTransferTableView::selectTorrentFilesById(quint64 id
     if (m_torrentFilesCache.contains(id))
         return m_torrentFilesCache.value(id);
 
-    // TODO set setForwardOnly(true) for all queries for better performance silverqx
     QSqlQuery query;
+    query.setForwardOnly(true);
     query.prepare("SELECT * FROM torrents_previewable_files WHERE torrent_id = ?");
     query.addBindValue(id);
 
@@ -427,7 +427,6 @@ void TorrentTransferTableView::showCsfdDetail()
     // TODO measure with and w/o Qt::WA_DeleteOnClose, idea is to reuse dialog and not to create and destroy everytime silverqx
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->prepareData(torrent);
-    // TODO wait until ui is populated, to avoid ui flickering silverqx
     dialog->show();
 }
 
