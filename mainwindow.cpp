@@ -267,9 +267,10 @@ void MainWindow::createStatusBar()
 
 uint MainWindow::selectTorrentsCount() const
 {
-    QSqlQuery query("SELECT COUNT(*) as count FROM torrents");
+    QSqlQuery query;
+    query.setForwardOnly(true);
 
-    const bool ok = query.exec();
+    const bool ok = query.exec("SELECT COUNT(*) as count FROM torrents");
     if (!ok) {
         qDebug() << QStringLiteral("Select of torrents count failed :")
                  << query.lastError().text();
@@ -282,9 +283,10 @@ uint MainWindow::selectTorrentsCount() const
 
 uint MainWindow::selectTorrentFilesCount() const
 {
-    QSqlQuery query("SELECT COUNT(*) as count FROM torrents_previewable_files");
+    QSqlQuery query;
+    query.setForwardOnly(true);
 
-    const bool ok = query.exec();
+    const bool ok = query.exec("SELECT COUNT(*) as count FROM torrents_previewable_files");
     if (!ok) {
         qDebug() << QStringLiteral("Select of torrent files count failed :")
                  << query.lastError().text();

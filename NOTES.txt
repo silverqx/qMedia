@@ -1,3 +1,11 @@
+Todos to check in qBittorent torrentexporter:
+---------------------------------------------
+
+ - set setForwardOnly(true) for all queries for better performance
+ - solve explicit, default and delete for contructors, use this keywords correctly
+ - use every where toNativePath()
+
+
 Example code which heavily uses win32 api:
 ------------------------------------------
 

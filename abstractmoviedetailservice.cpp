@@ -127,7 +127,6 @@ MovieDetail AbstractMovieDetailService::parseSearchedMovieDetail(const QByteArra
 QString AbstractMovieDetailService::getMovieScrapperPath() const
 {
 #ifdef QT_DEBUG
-    // TODO use every where toNativePath() silverqx
     return Utils::Fs::toNativePath("E:/c/qMedia/qMedia/movies_scrapper/src/index.js");
 #else
     return Utils::Fs::toNativePath(QCoreApplication::applicationDirPath() +
