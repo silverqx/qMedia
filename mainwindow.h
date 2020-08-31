@@ -49,7 +49,6 @@ private:
 
 private slots:
     void focusTorrentsFilterLineEdit();
-    void focusTorrentsTableView();
     void refreshStatusBar();
 };
 

@@ -253,7 +253,6 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
     // Hotkeys
     // movieDetailComboBox
     const auto *doubleClickHotkeyCtrlM = new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
-    // TODO use qOverload<> for other setFocus events silverqx
     connect(doubleClickHotkeyCtrlM, &QShortcut::activated, ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
     const auto *doubleClickHotkeyF12 = new QShortcut(Qt::Key_F12, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
     connect(doubleClickHotkeyF12, &QShortcut::activated, ui->movieDetailComboBox, &QComboBox::showPopup);
