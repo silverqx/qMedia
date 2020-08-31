@@ -4,18 +4,22 @@
 
 CsfdDetailService *CsfdDetailService::m_instance = nullptr;
 
-CsfdDetailService::CsfdDetailService()
-    : m_movieScrapperPath(getMovieScrapperPath())
+CsfdDetailService::CsfdDetailService(TorrentSqlTableModel *const model)
+    : AbstractMovieDetailService(model)
+    , m_movieScrapperPath(getMovieScrapperPath())
 {}
 
 CsfdDetailService::~CsfdDetailService()
 {}
 
-CsfdDetailService *CsfdDetailService::instance()
+void CsfdDetailService::initInstance(TorrentSqlTableModel *model)
 {
     if (!m_instance)
-        m_instance = new CsfdDetailService();
+        m_instance = new CsfdDetailService(model);
+}
 
+CsfdDetailService *CsfdDetailService::instance()
+{
     return m_instance;
 }
 
@@ -28,13 +32,13 @@ void CsfdDetailService::freeInstance()
     m_instance = nullptr;
 }
 
-MovieDetail CsfdDetailService::obtainMovieDetail(const QSqlRecord &torrent)
+MovieDetail CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) const
 {
     // TODO handle errors in std::cerr silverqx
     QProcess movieScrapper;
     QStringList arguments;
     arguments << m_movieScrapperPath
-              << QStringLiteral("csfd")
+              << QStringLiteral("csfd-search")
               << prepareSearchQueryString(torrent);
     movieScrapper.start(QStringLiteral("node.exe"), arguments);
 
@@ -46,10 +50,30 @@ MovieDetail CsfdDetailService::obtainMovieDetail(const QSqlRecord &torrent)
 
     QByteArray movieDetailRaw = movieScrapper.readAll();
 
-    const auto movieDetail = parseMovieDetail(movieDetailRaw);
+    qDebug() << "Searched movie detail obtained from čsfd.cz";
 
-    // Save movie detail to cache
-    m_movieDetailsCache.insert(torrent.value("id").toULongLong(), movieDetail);
+    return parseSearchedMovieDetail(movieDetailRaw);
+}
 
-    return movieDetail;
+MovieDetail CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
+{
+    // TODO handle errors in std::cerr silverqx
+    QProcess movieScrapper;
+    QStringList arguments;
+    arguments << m_movieScrapperPath
+              << QStringLiteral("csfd-get")
+              << QString::number(filmId);
+    movieScrapper.start(QStringLiteral("node.exe"), arguments);
+
+    // TODO check all paths, when obtaining movie detail was not successful silverqx
+    if (!movieScrapper.waitForStarted())
+        return {};
+    if (!movieScrapper.waitForFinished())
+        return {};
+
+    QByteArray movieDetailRaw = movieScrapper.readAll();
+
+    qDebug() << "Obtained movie detail obtained from čsfd.cz";
+
+    return parseMovieDetail(movieDetailRaw);
 }

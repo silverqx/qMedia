@@ -35,6 +35,9 @@
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayoutMainDialog">
+   <property name="spacing">
+    <number>11</number>
+   </property>
    <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="frameShape">
@@ -49,7 +52,7 @@
         <x>0</x>
         <y>0</y>
         <width>958</width>
-        <height>698</height>
+        <height>694</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayoutMainScrollArea">
@@ -66,7 +69,7 @@
         <number>0</number>
        </property>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="0,1">
+        <layout class="QVBoxLayout" name="verticalLayoutMain">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutPosterInfo">
            <item>
@@ -118,7 +121,7 @@
               <number>6</number>
              </property>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutTitles" stretch="26,3,3">
+              <layout class="QHBoxLayout" name="horizontalLayoutTitles" stretch="26,3,1">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutTitle" stretch="0,1">
                  <item>
@@ -139,7 +142,7 @@
                    </property>
                    <property name="styleSheet">
                     <string notr="true">QLabel {
-    padding-top: 4px;
+    padding-top: 2px;
 }
 </string>
                    </property>
@@ -159,6 +162,18 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="title">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>34</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <family>Tahoma</family>
@@ -167,17 +182,14 @@
                      <bold>true</bold>
                     </font>
                    </property>
-                   <property name="styleSheet">
-                    <string notr="true">QLabel {
-    padding: 10px 0;
-}
-</string>
-                   </property>
                    <property name="text">
                     <string>TextLabel</string>
                    </property>
                    <property name="textFormat">
                     <enum>Qt::PlainText</enum>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
                    </property>
                    <property name="indent">
                     <number>0</number>
@@ -275,34 +287,107 @@
             <number>12</number>
            </property>
            <item>
-            <widget class="QLabel" name="storyLineHeader">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
+             <property name="spacing">
+              <number>4</number>
              </property>
-             <property name="font">
-              <font>
-               <family>Tahoma</family>
-               <pointsize>14</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Storyline</string>
-             </property>
-             <property name="textFormat">
-              <enum>Qt::PlainText</enum>
-             </property>
-             <property name="margin">
-              <number>8</number>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::NoTextInteraction</set>
-             </property>
-            </widget>
+             <item>
+              <widget class="QLabel" name="storyLineHeader">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Tahoma</family>
+                 <pointsize>14</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Storyline</string>
+               </property>
+               <property name="textFormat">
+                <enum>Qt::PlainText</enum>
+               </property>
+               <property name="margin">
+                <number>8</number>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::NoTextInteraction</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="saveButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>34</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Tahoma</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string notr="true">Save current movie detail as default</string>
+               </property>
+               <property name="toolTipDuration">
+                <number>2500</number>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="icon">
+                <iconset resource="images/qMedia.qrc">
+                 <normaloff>:/icons/save_w.svg</normaloff>:/icons/save_w.svg</iconset>
+               </property>
+               <property name="shortcut">
+                <string>Ctrl+S</string>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="movieDetailComboBox">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>34</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Tahoma</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>Load another movie detail</string>
+               </property>
+               <property name="toolTipDuration">
+                <number>2000</number>
+               </property>
+               <property name="currentText">
+                <string notr="true"/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QLabel" name="storyline">
@@ -349,7 +434,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Ok</set>
      </property>
      <property name="centerButtons">
       <bool>true</bool>
@@ -358,7 +443,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="images/qMedia.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

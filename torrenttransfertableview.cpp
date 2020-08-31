@@ -9,11 +9,11 @@
 #include <QShortcut>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
-#include <QtSql/QSqlRecord>
 
 #include <qt_windows.h>
 
 #include "common.h"
+#include "csfddetailservice.h"
 #include "moviedetaildialog.h"
 #include "previewselectdialog.h"
 #include "torrentsqltablemodel.h"
@@ -61,7 +61,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     // Create models
     m_model = new TorrentSqlTableModel(this);
     m_model->setTable(QStringLiteral("torrents"));
-    m_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    m_model->setEditStrategy(QSqlTableModel::OnRowChange);
     m_model->select();
     m_model->setHeaderData(TR_ID, Qt::Horizontal, QStringLiteral("Id"));
     m_model->setHeaderData(TR_NAME, Qt::Horizontal, QStringLiteral("Name"));
@@ -77,11 +77,14 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
 
+    CsfdDetailService::initInstance(dynamic_cast<TorrentSqlTableModel *>(m_model));
+
     setModel(m_proxyModel);
     hideColumn(TR_ID);
     hideColumn(TR_HASH);
     hideColumn(TR_CSFD_MOVIE_DETAIL);
     hideColumn(TR_STATUS);
+    hideColumn(TR_MOVIE_DETAIL_INDEX);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
     // Init torrent context menu
@@ -113,7 +116,9 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
         resizeColumns();
     });
 
-    // TODO after start, select torrent with highest / latest added on date silverqx
+    // Select torrent with latest / highest added on datetime
+    selectionModel()->select(m_model->index(0, TR_NAME),
+                             QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
 TorrentTransferTableView::~TorrentTransferTableView()
@@ -173,7 +178,7 @@ void TorrentTransferTableView::resizeColumns()
     nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
     nameColWidth -= 2; // Borders
 
-    // TODO and at the end set mainwindow width and height based on torrentTransferTableView ( inteligently 😎 ) silverqx
+    // TODO at the end set mainwindow width and height based on torrentTransferTableView ( inteligently 😎 ) silverqx
 
     tableViewHeader->resizeSection(TR_NAME, nameColWidth);
     horizontalHeader()->setStretchLastSection(true);
@@ -325,8 +330,8 @@ void TorrentTransferTableView::reloadTorrentModel()
 
     // Reselect remembered row
     // TODO doesn't work well, selection works, but when I press up or down, then navigation starts from modelindex(0,0), don't know why :/, also tried | QItemSelectionModel::Current, but didn't help silverqx
-    selectionModel()->select(m_model->index(selectRow, 0),
-                             QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    selectionModel()->select(m_model->index(selectRow, TR_NAME),
+                             QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
 void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const event)

@@ -9,6 +9,8 @@
 #endif
 #include "mainwindow.h"
 
+// TODO unify viewbox and width / height for all svg icons silverqx
+// TODO remove version from all svg icons silverqx
 void enableDarkTheme(QApplication &a);
 void applicationCleanup();
 
