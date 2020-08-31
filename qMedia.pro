@@ -53,9 +53,9 @@ DEFINES += NOMINMAX
 win32-msvc* {
     LIBS += User32.lib
 
-    QMAKE_CXXFLAGS += "/guard:cf /utf-8"
-    QMAKE_LFLAGS += "/guard:cf"
-    QMAKE_LFLAGS_RELEASE += "/OPT:REF /OPT:ICF"
+    QMAKE_CXXFLAGS += /guard:cf /utf-8
+    QMAKE_LFLAGS += /guard:cf
+    QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF
 }
 
 # Application files
@@ -143,7 +143,7 @@ stacktrace {
         }
 
         QMAKE_CXXFLAGS *= -Zi
-        QMAKE_LFLAGS *= "/DEBUG"
+        QMAKE_LFLAGS *= /DEBUG
 
         LIBS += dbghelp.lib
     }

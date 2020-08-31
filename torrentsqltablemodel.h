@@ -21,6 +21,7 @@ public:
         TR_HASH,
         TR_CSFD_MOVIE_DETAIL,
         TR_STATUS,
+        TR_MOVIE_DETAIL_INDEX,
 
         NB_COLUMNS
     };

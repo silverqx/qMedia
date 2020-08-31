@@ -2,10 +2,8 @@
 #include "ui_moviedetaildialog.h"
 
 #include <QDesktopServices>
-#include <QIcon>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QNetworkReply>
+#include <QShortcut>
 #include <QTimer>
 #include <QUrl>
 #include <QUrlQuery>
@@ -198,6 +196,20 @@ namespace
         return QString(string).remove(maxLetters - moreLinkSize, string.size()) +
                 moreLinkText();
     };
+
+    /*! Remove all items from layout. */
+    inline const auto wipeOutLayout = [](QLayout &layout)
+    {
+        // Nothing to remove
+        if (layout.count() == 0)
+            return;
+
+        QLayoutItem *layoutItem;
+        while ((layoutItem = layout.takeAt(0)) != nullptr) {
+            delete layoutItem->widget();
+            delete layoutItem;
+        }
+    };
 }
 
 // Needed when sorting QJsonArray
@@ -213,8 +225,20 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
     ui(new Ui::MovieDetailDialog)
 {
     ui->setupUi(this);
+
     // Override design values
-    setGeometry(0, 0, 1316, 940);
+    // TODO check how to correctly use my own DEFINES silverqx
+#ifdef VISIBLE_CONSOLE
+    // Set up smaller, so I can see console output
+    const auto height = minimumHeight();
+#else
+    const auto height = 940;
+#endif
+    resize(1316, height);
+
+    // Initialize ui widgets
+    ui->saveButton->setEnabled(false);
+    ui->saveButton->hide();
 
     // Ensure recenter of the dialog after resize
     m_resizeTimer = new QTimer(this);
@@ -224,6 +248,15 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
 
     // Connect events
     connect(&m_networkManager, &QNetworkAccessManager::finished, this, &MovieDetailDialog::finishedMoviePoster);
+    // saveButton
+    connect(ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
+    // Hotkeys
+    // movieDetailComboBox
+    const auto *doubleClickHotkeyCtrlM = new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
+    // TODO use qOverload<> for other setFocus events silverqx
+    connect(doubleClickHotkeyCtrlM, &QShortcut::activated, ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
+    const auto *doubleClickHotkeyF12 = new QShortcut(Qt::Key_F12, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
+    connect(doubleClickHotkeyF12, &QShortcut::activated, ui->movieDetailComboBox, &QComboBox::showPopup);
 
     // Center on active screen
     Utils::Gui::centerDialog(this);
@@ -236,8 +269,27 @@ MovieDetailDialog::~MovieDetailDialog()
 
 void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
 {
-    m_movieDetail = CsfdDetailService::instance()->getMovieDetail(torrent);
+    m_selectedTorrent = torrent;
+    m_movieDetailIndex = torrent.value("movie_detail_index").toInt();
+    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(torrent);
+    m_movieDetail = movieDetail["detail"].toObject();
+    m_movieSearchResult = movieDetail["search"].toArray();
 
+    populateUi();
+    m_initialPopulate = false;
+}
+
+void MovieDetailDialog::prepareData(const quint64 filmId)
+{
+    const auto movieDetail = CsfdDetailService::instance()
+                             ->getMovieDetail(filmId);
+    m_movieDetail = movieDetail.object();
+
+    populateUi();
+}
+
+void MovieDetailDialog::populateUi()
+{
     // Movie poster, start as soon as possible, because it's async
     prepareMoviePosterSection();
 
@@ -247,17 +299,20 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     setWindowTitle(QStringLiteral(" Detail filmu ") + movieTitle +
                    QStringLiteral("  ( čsfd.cz )"));
 
-    // TODO set minimum size veritcal policy for all widgets in movie info layout silverqx
     // Title section
     // Status icon before movie titles
-    const auto status = torrent.value("status").toString();
-    const auto statusIcon = g_statusHash[status].getIcon();
-    const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
-    ui->status->setPixmap(statusPixmap);
-    ui->status->setToolTip(g_statusHash[status].text);
-    ui->status->setToolTipDuration(2500);
+    if (m_initialPopulate) {
+        const auto status = m_selectedTorrent.value("status").toString();
+        const auto statusIcon = g_statusHash[status].getIcon();
+        const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
+        ui->status->setPixmap(statusPixmap);
+        ui->status->setToolTip(g_statusHash[status].text);
+        ui->status->setToolTipDuration(2500);
+    }
     // Title
-    ui->title->setText(movieTitle);
+    // QLabel width needed, it's called from showEvent() during first show
+    if (!m_initialPopulate)
+        renderTitleSection();
     // Titles section
     prepareTitlesSection();
     // Movie info section - genre, shot places, year and length
@@ -267,16 +322,29 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
     // Creators section
     prepareCreatorsSection();
-    // Fill empty space
-    ui->verticalLayoutInfo->addStretch(1);
     // Storyline section
     ui->storyline->setText(m_movieDetail["content"].toString());
+
+    if (!m_initialPopulate)
+        return;
+
+    // Fill empty space
+    ui->verticalLayoutInfo->addStretch(1);
+    // Search results in ComboBox
+    prepareMovieDetailComboBox();
 }
 
 void MovieDetailDialog::resizeEvent(QResizeEvent *event)
 {
     QDialog::resizeEvent(event);
+    // TODO detect resize event ended, https://stackoverflow.com/a/45830212/2266467 silverqx
     m_resizeTimer->start();
+}
+
+void MovieDetailDialog::showEvent(QShowEvent *)
+{
+    // Title
+    renderTitleSection();
 }
 
 void MovieDetailDialog::prepareMoviePosterSection()
@@ -288,6 +356,14 @@ void MovieDetailDialog::prepareMoviePosterSection()
     m_networkManager.get(QNetworkRequest(url));
 }
 
+void MovieDetailDialog::renderTitleSection()
+{
+    const auto movieTitle = m_movieDetail["title"].toString();
+    const auto movieTitleElided = ui->title->fontMetrics()
+                                  .elidedText(movieTitle, Qt::ElideRight, ui->title->width());
+    ui->title->setText(movieTitleElided);
+}
+
 namespace
 {
     static const int flagWidth = 21;
@@ -295,19 +371,26 @@ namespace
 
 void MovieDetailDialog::prepareTitlesSection()
 {
-    // Nothing to render
-    if (m_movieDetail["titles"].toArray().isEmpty()) {
-        qDebug() << "Empty titles for movie :" << m_movieDetail["title"];
-        return;
+    // Create grid for flags and titles
+    // Create even when there is nothing to render, so I don't have to manage positioning
+    if (m_gridLayoutTitles == nullptr) {
+        m_gridLayoutTitles = new QGridLayout;
+        m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
+        m_gridLayoutTitles->setColumnStretch(1, 1);
+        m_gridLayoutTitles->setHorizontalSpacing(9);
+        m_gridLayoutTitles->setVerticalSpacing(0);
+        ui->verticalLayoutInfo->addLayout(m_gridLayoutTitles);
     }
 
-    // Create grid for flags and titles
-    m_gridLayoutTitles = new QGridLayout;
-    m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
-    m_gridLayoutTitles->setColumnStretch(1, 1);
-    m_gridLayoutTitles->setHorizontalSpacing(9);
-    m_gridLayoutTitles->setVerticalSpacing(0);
-    ui->verticalLayoutInfo->addLayout(m_gridLayoutTitles);
+    // Remove all items from grid layout
+    if (!m_initialPopulate)
+        wipeOutLayout(*m_gridLayoutTitles);
+
+    // Nothing to render
+    if (m_movieDetail["titles"].toArray().isEmpty()) {
+        qDebug() << "Empty titles for movie :" << m_movieDetail["title"].toString();
+        return;
+    }
 
     // Populate grid layout with flags and titles
     renderTitlesSection(3);
@@ -384,11 +467,7 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines)
             return;
 
         // Remove all items from grid layout
-        QLayoutItem *layoutItem;
-        while ((layoutItem = m_gridLayoutTitles->takeAt(0)) != nullptr) {
-            delete layoutItem->widget();
-            delete layoutItem;
-        }
+        wipeOutLayout(*m_gridLayoutTitles);
 
         // Re-render whole section again
         renderTitlesSection();
@@ -487,30 +566,41 @@ void MovieDetailDialog::prepareCreatorsSection()
             delimiterComma, wrapInLink, 320, keyName, keyId);
 
     // Assemble creators section
-    QStringList creatorsList;
     // TODO fix the same width for every section title silverqx
     // Order is important, have to be same as order in creatorsMap enum
-    creatorsList << directors
-                 << screenplay
-                 << music
-                 << actors;
-
-    // TODO rewrite with std::find_if() silverqx
-    // If all are empty, then nothing to render
-    bool nothingToRender = true;
-    for (const auto &creators : creatorsList) {
-        if (!creators.isEmpty()) {
-            nothingToRender = false;
-            break;
-        }
-    }
-    if (nothingToRender)
-        return;
+    const QStringList creatorsList {
+        directors,
+        screenplay,
+        music,
+        actors,
+    };
 
     // Create the layout for creators
-    m_verticalLayoutCreators = new QVBoxLayout;
-    m_verticalLayoutCreators->setSpacing(2);
-    ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
+    // Create even when there is nothing to render, so I don't have to manage positioning
+    if (m_verticalLayoutCreators == nullptr) {
+        m_verticalLayoutCreators = new QVBoxLayout;
+        m_verticalLayoutCreators->setSpacing(2);
+        ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
+    }
+
+    // Remove all items from box layout
+    if (!m_initialPopulate)
+        wipeOutLayout(*m_verticalLayoutCreators);
+
+    // If all are empty, then nothing to render
+    const auto result = std::find_if(creatorsList.constBegin(), creatorsList.constEnd(),
+                                     [](const QString &creators)
+    {
+        // If any have some text, so will render section
+        if (!creators.isEmpty())
+            return true;
+        return false;
+    });
+    // All was empty
+    if (result == creatorsList.constEnd()) {
+        qDebug() << "Empty creators for movie :" << m_movieDetail["title"].toString();
+        return;
+    }
 
     // Render each creators section into the layout
     QLabel *label;
@@ -532,7 +622,7 @@ void MovieDetailDialog::prepareCreatorsSection()
         label->setFont(font);
         label->setOpenExternalLinks(false);
         label->setText(creatorsMap[i].label.arg(creatorsList[i]));
-        label->connect(label, &QLabel::linkActivated,
+        label->connect(label, &QLabel::linkActivated, this,
                        [this, label, wrapInLink, keyName, keyId, i](const QString &link)
         {
             // Open URL with external browser
@@ -550,6 +640,57 @@ void MovieDetailDialog::prepareCreatorsSection()
 
         m_verticalLayoutCreators->addWidget(label);
     }
+}
+
+void MovieDetailDialog::prepareMovieDetailComboBox()
+{
+    // Nothing to render
+    if (m_movieSearchResult.isEmpty()) {
+        ui->movieDetailComboBox->setEnabled(false);
+        ui->movieDetailComboBox->setVisible(false);
+        return;
+    }
+
+    populateMovieDetailComboBox();
+
+    connect(ui->movieDetailComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
+            [this](const int index)
+    {
+        const auto filmId = ui->movieDetailComboBox->currentData().toULongLong();
+        qDebug() << "Movie detail ComboBox changed, current csfd id :"
+                 << filmId;
+        prepareData(filmId);
+
+        qDebug() << "Selected movie detail index :" << index;
+        if (index != m_movieDetailIndex) {
+            ui->saveButton->setEnabled(true);
+            ui->saveButton->show();
+            return;
+        }
+
+        ui->saveButton->setEnabled(false);
+        ui->saveButton->hide();
+    });
+}
+
+void MovieDetailDialog::populateMovieDetailComboBox()
+{
+    for (const auto &searchItem : qAsConst(m_movieSearchResult)) {
+        const auto itemObject = searchItem.toObject();
+        const auto name = itemObject["name"].toString();
+        const auto year = itemObject["year"].toInt();
+        const auto typeRaw = itemObject["type"];
+        // Compose item
+        auto item = QString("%1 (%2)").arg(name).arg(year);
+        if (!typeRaw.isNull())
+            item += " - " + typeRaw.toString();
+
+        ui->movieDetailComboBox->addItem(item, itemObject["id"].toVariant());
+    }
+
+    // Preselect right movie detail
+    ui->movieDetailComboBox->setCurrentIndex(
+                m_selectedTorrent.value("movie_detail_index").toInt());
 }
 
 QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
@@ -588,5 +729,23 @@ void MovieDetailDialog::resizeTimeout()
         return;
     }
 
+    // Recenter movie detail dialog
     Utils::Gui::centerDialog(this);
+    // Recompute title elide
+    renderTitleSection();
+}
+
+void MovieDetailDialog::saveButtonClicked()
+{
+    const auto movieDetailIndex = ui->movieDetailComboBox->currentIndex();
+    const auto result =
+            CsfdDetailService::instance()->updateObtainedMovieDetailInDb(
+                m_selectedTorrent, m_movieDetail, m_movieSearchResult,
+                movieDetailIndex);
+    if (result != 0)
+        return;
+
+    m_movieDetailIndex = movieDetailIndex;
+    ui->saveButton->setEnabled(false);
+    ui->saveButton->hide();
 }

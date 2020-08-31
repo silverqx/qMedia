@@ -263,6 +263,8 @@
         <file>icons/ondemand_video.svg</file>
         <file>icons/ondemand_video_w.svg</file>
         <file>icons/qmedia.svg</file>
+        <file>icons/save.svg</file>
+        <file>icons/save_w.svg</file>
         <file>icons/search.svg</file>
         <file>icons/search_w.svg</file>
         <file>icons/torrent_statuses/checking.svg</file>
