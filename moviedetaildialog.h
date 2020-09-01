@@ -40,6 +40,7 @@ private:
     void renderTitleSection();
     void prepareTitlesSection();
     void renderTitlesSection(int maxLines = 0);
+    void prepareImdbLink();
     void prepareMovieInfoSection();
     void prepareCreatorsSection();
     void prepareMovieDetailComboBox();

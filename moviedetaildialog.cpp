@@ -339,6 +339,8 @@ void MovieDetailDialog::populateUi()
     // Score section
     // TODO tune score QLabel color silverqx
     ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
+    // Imdb link
+    prepareImdbLink();
     // Creators section
     prepareCreatorsSection();
     // Storyline section
@@ -401,7 +403,7 @@ void MovieDetailDialog::prepareTitlesSection()
         m_gridLayoutTitles->setColumnStretch(1, 1);
         m_gridLayoutTitles->setHorizontalSpacing(9);
         m_gridLayoutTitles->setVerticalSpacing(0);
-        ui->verticalLayoutInfo->addLayout(m_gridLayoutTitles);
+        ui->verticalLayoutInfoLeft->addLayout(m_gridLayoutTitles);
     }
 
     // Remove all items from grid layout
@@ -494,6 +496,22 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines)
         // Re-render whole section again
         renderTitlesSection();
     });
+}
+
+void MovieDetailDialog::prepareImdbLink()
+{
+    const auto imdbIdRaw = m_movieDetail["imdbId"];
+    if (imdbIdRaw.isNull()) {
+        ui->imdbLink->setEnabled(false);
+        ui->imdbLink->hide();
+        return;
+    }
+
+    ui->imdbLink->setText(QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
+                                         "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
+                          .arg(imdbIdRaw.toString()));
+    ui->imdbLink->setEnabled(true);
+    ui->imdbLink->show();
 }
 
 void MovieDetailDialog::prepareMovieInfoSection()
