@@ -385,7 +385,7 @@ void MovieDetailDialog::renderTitleSection()
     ui->title->setText(movieTitleElided);
     ui->title->setToolTip(QStringLiteral("Torrent name<br><strong>%1</strong>")
                           .arg(m_selectedTorrent.value("name").toString()));
-    ui->title->setToolTipDuration(5500);
+    ui->title->setToolTipDuration(8500);
 }
 
 namespace
@@ -771,7 +771,9 @@ void MovieDetailDialog::saveButtonClicked()
 
     m_movieDetailIndex = movieDetailIndex;
     ui->saveButton->setEnabled(false);
+    m_saveButton->setEnabled(false);
     ui->saveButton->hide();
+    m_saveButton->hide();
 }
 
 void MovieDetailDialog::previewButtonClicked()
