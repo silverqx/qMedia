@@ -97,6 +97,8 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     // torrentTransferTableView
     const auto *doubleClickHotkeyReturn = new QShortcut(Qt::Key_Return, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyReturn, &QShortcut::activated, this, &TorrentTransferTableView::previewSelectedTorrent);
+    const auto *doubleClickHotkeyReturnAlt = new QShortcut(Qt::SHIFT + Qt::Key_Return, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickHotkeyReturnAlt, &QShortcut::activated, this, &TorrentTransferTableView::showCsfdDetail);
     const auto *doubleClickHotkeyEnter = new QShortcut(Qt::Key_Enter, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyEnter, &QShortcut::activated, this, &TorrentTransferTableView::previewSelectedTorrent);
     const auto *doubleClickHotkeyF3 = new QShortcut(Qt::Key_F3, this, nullptr, nullptr, Qt::WidgetShortcut);
