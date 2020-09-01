@@ -329,9 +329,10 @@ void TorrentTransferTableView::reloadTorrentModel()
         selectRow = rowCount;
 
     // Reselect remembered row
-    // TODO doesn't work well, selection works, but when I press up or down, then navigation starts from modelindex(0,0), don't know why :/, also tried | QItemSelectionModel::Current, but didn't help silverqx
-    selectionModel()->select(m_model->index(selectRow, TR_NAME),
-                             QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+    // TODO currentSelection rectangle is not showed silverqx
+    selectionModel()->setCurrentIndex(m_model->index(selectRow, TR_NAME),
+                                      QItemSelectionModel::SelectCurrent |
+                                      QItemSelectionModel::Rows);
 }
 
 void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const event)
