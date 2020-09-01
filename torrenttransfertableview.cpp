@@ -427,6 +427,7 @@ void TorrentTransferTableView::showCsfdDetail()
     // TODO measure with and w/o Qt::WA_DeleteOnClose, idea is to reuse dialog and not to create and destroy everytime silverqx
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->prepareData(torrent);
+    connect(dialog, &MovieDetailDialog::readyToPreviewFile, this, &TorrentTransferTableView::previewSelectedTorrent);
     dialog->show();
 }
 

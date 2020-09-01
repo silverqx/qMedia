@@ -339,7 +339,7 @@
                 </font>
                </property>
                <property name="toolTip">
-                <string notr="true">Save current movie detail as default</string>
+                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save current movie detail as default &lt;span style=&quot;font-size:7pt; color:#8c8c8c;&quot;&gt;CTRL+S&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="toolTipDuration">
                 <number>2500</number>
@@ -377,7 +377,7 @@
                 </font>
                </property>
                <property name="toolTip">
-                <string>Load another movie detail</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load another movie detail &lt;span style=&quot;font-size:7pt; color:#8c8c8c;&quot;&gt;CTRL+M or F12&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="toolTipDuration">
                 <number>2000</number>
@@ -434,7 +434,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Ok|QDialogButtonBox::Save</set>
      </property>
      <property name="centerButtons">
       <bool>true</bool>
@@ -447,22 +447,6 @@
   <include location="images/qMedia.qrc"/>
  </resources>
  <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>MovieDetailDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>

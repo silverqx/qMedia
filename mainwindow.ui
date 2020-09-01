@@ -29,7 +29,7 @@
       <item>
        <widget class="QPushButton" name="reloadTorrentsButton">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reload data from DB &lt;span style=&quot; font-size:7pt; color:#8c8c8c;&quot;&gt;F5&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reload data from DB &lt;span style=&quot;font-size:7pt; color:#8c8c8c;&quot;&gt;F5&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="toolTipDuration">
          <number>2000</number>
@@ -74,7 +74,7 @@
       <item>
        <widget class="QLineEdit" name="filterTorrentsLineEdit">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter torrents &lt;span style=&quot; font-size:7pt; color:#8c8c8c;&quot;&gt;F2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter torrents &lt;span style=&quot;font-size:7pt; color:#8c8c8c;&quot;&gt;F2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="toolTipDuration">
          <number>2000</number>

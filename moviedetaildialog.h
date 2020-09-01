@@ -28,6 +28,9 @@ public:
     /*! Prepare data from torrent and populate ui with them. */
     void prepareData(const QSqlRecord &torrent);
 
+signals:
+    void readyToPreviewFile();
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void showEvent(QShowEvent *) override;
@@ -62,11 +65,15 @@ private:
     bool m_initialPopulate = true;
     /*! Currently showed movie detail index, used in movie detail combobox. */
     int m_movieDetailIndex;
+    /*! Save button in the buttonBox. */
+    QPushButton *m_saveButton;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply);
     void resizeTimeout();
     void saveButtonClicked();
+    void previewButtonClicked();
+    void movieDetailComboBoxChanged(int index);
 };
 
 #endif // MOVIEDETAILDIALOG_H

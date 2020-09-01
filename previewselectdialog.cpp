@@ -26,10 +26,9 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
                                           "support previewing, please select one of them:")
                        .arg(m_torrent.value("name").toString()));
 
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Preview"));
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("&Preview"));
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &PreviewSelectDialog::previewButtonClicked);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(ui->previewList, &QAbstractItemView::doubleClicked, this, &PreviewSelectDialog::previewButtonClicked);
 
     // Create and apply delegate

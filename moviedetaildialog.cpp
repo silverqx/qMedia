@@ -220,9 +220,9 @@ inline void swap(QJsonValueRef v1, QJsonValueRef v2)
     v2 = temp;
 }
 
-MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::MovieDetailDialog)
+MovieDetailDialog::MovieDetailDialog(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::MovieDetailDialog)
 {
     ui->setupUi(this);
 
@@ -239,6 +239,21 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
     // Initialize ui widgets
     ui->saveButton->setEnabled(false);
     ui->saveButton->hide();
+    // Preview button
+    const auto previewButton = ui->buttonBox->button(QDialogButtonBox::Ok);
+    previewButton->setText(QStringLiteral("&Preview"));
+    // Save button
+    m_saveButton = ui->buttonBox->button(QDialogButtonBox::Save);
+    m_saveButton->setEnabled(false);
+    m_saveButton->hide();
+    m_saveButton->setText(QStringLiteral("&Save"));
+    // TODO create tooltip wrapper function for tooltips with shortcuts silverqx
+    m_saveButton->setToolTip("<html><head/><body><p style='white-space:pre;'>Save current movie detail as default "
+                             "<br><span style='font-size:7pt; color:#8c8c8c;'>ALT+S</span></p>"
+                             "</body></html>");
+    m_saveButton->setToolTipDuration(2500);
+    // Close button
+    ui->buttonBox->button(QDialogButtonBox::Close)->setText(QStringLiteral("&Close"));
 
     // Ensure recenter of the dialog after resize
     m_resizeTimer = new QTimer(this);
@@ -250,6 +265,11 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent) :
     connect(&m_networkManager, &QNetworkAccessManager::finished, this, &MovieDetailDialog::finishedMoviePoster);
     // saveButton
     connect(ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
+    // buttonBox
+    connect(m_saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
+    connect(previewButton, &QPushButton::clicked, this, &MovieDetailDialog::previewButtonClicked);
+    // Order important, have to be last
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     // Hotkeys
     // movieDetailComboBox
     const auto *doubleClickHotkeyCtrlM = new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
@@ -361,6 +381,9 @@ void MovieDetailDialog::renderTitleSection()
     const auto movieTitleElided = ui->title->fontMetrics()
                                   .elidedText(movieTitle, Qt::ElideRight, ui->title->width());
     ui->title->setText(movieTitleElided);
+    ui->title->setToolTip(QStringLiteral("Torrent name<br><strong>%1</strong>")
+                          .arg(m_selectedTorrent.value("name").toString()));
+    ui->title->setToolTipDuration(5500);
 }
 
 namespace
@@ -653,23 +676,7 @@ void MovieDetailDialog::prepareMovieDetailComboBox()
     populateMovieDetailComboBox();
 
     connect(ui->movieDetailComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
-            [this](const int index)
-    {
-        const auto filmId = ui->movieDetailComboBox->currentData().toULongLong();
-        qDebug() << "Movie detail ComboBox changed, current csfd id :"
-                 << filmId;
-        prepareData(filmId);
-
-        qDebug() << "Selected movie detail index :" << index;
-        if (index != m_movieDetailIndex) {
-            ui->saveButton->setEnabled(true);
-            ui->saveButton->show();
-            return;
-        }
-
-        ui->saveButton->setEnabled(false);
-        ui->saveButton->hide();
-    });
+            this, &MovieDetailDialog::movieDetailComboBoxChanged);
 }
 
 void MovieDetailDialog::populateMovieDetailComboBox()
@@ -747,4 +754,32 @@ void MovieDetailDialog::saveButtonClicked()
     m_movieDetailIndex = movieDetailIndex;
     ui->saveButton->setEnabled(false);
     ui->saveButton->hide();
+}
+
+void MovieDetailDialog::previewButtonClicked()
+{
+    emit readyToPreviewFile();
+}
+
+void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
+{
+    const auto filmId = ui->movieDetailComboBox->currentData().toULongLong();
+    qDebug() << "Movie detail ComboBox changed, current csfd id :"
+             << filmId;
+    qDebug() << "Selected movie detail index :" << index;
+
+    prepareData(filmId);
+
+    if (index != m_movieDetailIndex) {
+        ui->saveButton->setEnabled(true);
+        m_saveButton->setEnabled(true);
+        ui->saveButton->show();
+        m_saveButton->show();
+        return;
+    }
+
+    ui->saveButton->setEnabled(false);
+    m_saveButton->setEnabled(false);
+    ui->saveButton->hide();
+    m_saveButton->hide();
 }
