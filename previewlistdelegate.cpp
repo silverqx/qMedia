@@ -39,8 +39,12 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
         newopt.progress = static_cast<int>(progress);
         newopt.maximum = 100;
         newopt.minimum = 0;
-        newopt.state |= QStyle::State_Enabled;
         newopt.textVisible = true;
+        // Setup color for progressbar
+        auto progressBarColor = newopt.palette.color(QPalette::Highlight);
+        // Remove transparency
+        progressBarColor.setAlpha(255);
+        newopt.palette.setColor(QPalette::Highlight, progressBarColor);
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
         QProxyStyle fusionStyle("fusion");
