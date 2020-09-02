@@ -34,6 +34,7 @@ signals:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void showEvent(QShowEvent *) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     void prepareMoviePosterSection();
@@ -56,7 +57,7 @@ private:
     // TODO implement QNetworkDiskCache silverqx
     QNetworkAccessManager m_networkManager;
     QTimer *m_resizeTimer;
-    bool m_firstResizeCall = true;
+    bool m_resizeInProgress = false;
     // TODO use mutable where appropriate silverqx
     mutable QHash<QString, QIcon> m_flagCache;
     QGridLayout *m_gridLayoutTitles = nullptr;

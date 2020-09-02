@@ -2,6 +2,7 @@
 #include "ui_moviedetaildialog.h"
 
 #include <QDesktopServices>
+#include <QMouseEvent>
 #include <QNetworkReply>
 #include <QShortcut>
 #include <QTimer>
@@ -258,7 +259,7 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     // Ensure recenter of the dialog after resize
     m_resizeTimer = new QTimer(this);
     m_resizeTimer->setSingleShot(true);
-    m_resizeTimer->setInterval(1000);
+    m_resizeTimer->setInterval(100);
     connect(m_resizeTimer, &QTimer::timeout, this, &MovieDetailDialog::resizeTimeout);
 
     // Connect events
@@ -279,6 +280,8 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
 
     // Center on active screen
     Utils::Gui::centerDialog(this);
+    // Event filter to detect resize done
+    qApp->installEventFilter(this);
 }
 
 MovieDetailDialog::~MovieDetailDialog()
@@ -357,15 +360,35 @@ void MovieDetailDialog::populateUi()
 
 void MovieDetailDialog::resizeEvent(QResizeEvent *event)
 {
+    m_resizeInProgress = true;
+
     QDialog::resizeEvent(event);
-    // TODO detect resize event ended, https://stackoverflow.com/a/45830212/2266467 silverqx
-    m_resizeTimer->start();
 }
 
 void MovieDetailDialog::showEvent(QShowEvent *)
 {
     // Title
     renderTitleSection();
+}
+
+bool MovieDetailDialog::eventFilter(QObject *watched, QEvent *event)
+{
+    const auto eventType = event->type();
+    /* We need to check for both types of mouse release, because it can vary on which type
+       happened, when resizing. */
+    if ((eventType == QEvent::MouseButtonRelease)
+        || (eventType == QEvent::NonClientAreaMouseButtonRelease)
+    ) {
+        QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent *>(event);
+        if (m_resizeInProgress && (mouseEvent->button() == Qt::MouseButton::LeftButton)) {
+            m_resizeInProgress = false;
+            qDebug() << QStringLiteral("Resizing of the movie detail dialog ended");
+            // I don't delete this timer logic and reuse it, even if it worked without it
+            m_resizeTimer->start();
+        }
+    }
+
+    return QObject::eventFilter(watched, event);
 }
 
 void MovieDetailDialog::prepareMoviePosterSection()
@@ -747,12 +770,6 @@ void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply)
 
 void MovieDetailDialog::resizeTimeout()
 {
-    // Resize event is also triggered, when the dialog is shown, this prevents unwanted resize
-    if (m_firstResizeCall) {
-        m_firstResizeCall = false;
-        return;
-    }
-
     // Recenter movie detail dialog
     Utils::Gui::centerDialog(this);
     // Recompute title elide
