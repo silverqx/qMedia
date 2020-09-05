@@ -3,6 +3,7 @@
 #include <QDebug>
 
 #include "common.h"
+#include "config.h"
 #include "mainwindow.h"
 
 MainEventFilter::MainEventFilter(MainWindow *const mainWindow)
@@ -22,11 +23,12 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
     switch (msg->message) {
     case MSG_QBITTORRENT_UP:
         qDebug() << "IPC qBittorrent : qBittorrent started";
-        m_mainWindow->setQBittorrentHwnd(reinterpret_cast<HWND>(msg->wParam));
+        emit m_mainWindow->qBittorrentHwndChanged(reinterpret_cast<HWND>(msg->wParam));
         return true;
     case MSG_QBITTORRENT_DOWN:
         qDebug() << "IPC qBittorrent : qBittorrent closed";
-        m_mainWindow->setQBittorrentHwnd(nullptr);
+        // TODO keep track of hwnd and emit only when changed silverqx
+        emit m_mainWindow->qBittorrentHwndChanged(nullptr);
         return true;
     case MSG_QBT_TORRENT_REMOVED:
         qDebug() << "IPC qBittorrent : Torrent removed";
@@ -54,8 +56,10 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
             torrentInfoHashes << QString::fromLatin1(begin + (i * INFOHASH_SIZE),
                                                      INFOHASH_SIZE);
 
+#if LOG_CHANGED_TORRENTS
         qDebug() << "IPC qBittorrent : Changed torrents copyData size :" << dataSize;
         qDebug() << "IPC qBittorrent : Changed torrents info hashes :" << torrentInfoHashes;
+#endif
 
         emit m_mainWindow->torrentsChanged(torrentInfoHashes);
         return true;

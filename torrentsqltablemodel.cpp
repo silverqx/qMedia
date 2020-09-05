@@ -9,12 +9,14 @@
 #include <QTableView>
 
 #include "common.h"
-#include "mainwindow.h"
 #include "torrentstatus.h"
+#include "torrenttransfertableview.h"
 #include "utils/misc.h"
 
-TorrentSqlTableModel::TorrentSqlTableModel(QObject *parent, const QSqlDatabase db)
+TorrentSqlTableModel::TorrentSqlTableModel(TorrentTransferTableView *parent,
+                                           const QSqlDatabase db)
     : QSqlTableModel(parent, db)
+    , m_torrentTableView(parent)
 {}
 
 QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
@@ -138,7 +140,7 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
         return QString::number(rawData.toReal() / 10) + '%';
     case TR_ETA:
         // If qBittorrent is not running, show ∞ for every torrent
-        if (MainWindow::instance()->getQBittorrentHwnd() == nullptr)
+        if (!m_torrentTableView->isQBittorrentUp())
             return QString::fromUtf8(C_INFINITY);
         return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), MAX_ETA);
     case TR_ADDED_ON:

@@ -68,7 +68,7 @@ namespace
             return true;
 
         qDebug() << "HWND for qBittorrent window found :" << hwnd;
-        l_mainWindow->setQBittorrentHwnd(hwnd);
+        emit l_mainWindow->qBittorrentHwndChanged(hwnd);
 
         return false;
     }
@@ -105,6 +105,9 @@ MainWindow::MainWindow(QWidget *parent)
     createStatusBar();
 
     // Connect events
+    // WARNING can occur edge case, when qBittorrent HWND was changed, before slots before was connected, also check TorrentTransferTableView::updateQBittorrentHwnd(), it relates silverqx
+    connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
+    connect(this, &MainWindow::qBittorrentHwndChanged, m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
     connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged, m_tableView, &TorrentTransferTableView::filterTextChanged);
     connect(ui->reloadTorrentsButton, &QPushButton::clicked, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::torrentsAddedOrRemoved, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
@@ -136,28 +139,17 @@ MainWindow::MainWindow(QWidget *parent)
     // Find qBittorent's main window HWND
     ::EnumWindows(EnumWindowsProc, NULL);
     // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
-    if (m_qBittorrentHwnd != nullptr)
+    if (isQBittorrentUp())
         ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
     // TODO node.exe on path checker in qtimer 1sec after start, may be also nodejs version silverqx
 }
 
 MainWindow::~MainWindow()
 {
-    if (m_qBittorrentHwnd != nullptr)
+    if (isQBittorrentUp())
         ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_DOWN, NULL, NULL);
 
     delete ui;
-}
-
-void MainWindow::setQBittorrentHwnd(const HWND hwnd)
-{
-    // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
-    if ((m_qBittorrentHwnd != nullptr) && (hwnd == nullptr))
-        m_tableView->reloadTorrentModel();
-
-    m_qBittorrentHwnd = hwnd;
-    // BUG if qMedia is started after qBittorrent, I'm not getting updates immediately, investigate, may be send back qMedia hwnd silverqx
-//    ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
 }
 
 MainWindow *MainWindow::instance()
