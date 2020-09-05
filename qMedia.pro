@@ -2,7 +2,7 @@ QT += core gui widgets sql network
 
 # Configuration
 # ---
-CONFIG += c++17
+CONFIG += c++17 silent utf8_source
 # Enable stack trace support
 #CONFIG += stacktrace
 
@@ -53,9 +53,24 @@ DEFINES += NOMINMAX
 win32-msvc* {
     LIBS += User32.lib
 
-    QMAKE_CXXFLAGS += /guard:cf /utf-8
+    # I don't use -MP flag, because using jom
+    QMAKE_CXXFLAGS += /guard:cf
     QMAKE_LFLAGS += /guard:cf
-    QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF
+    QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF=5
+}
+
+# File version and windows manifest
+# ---
+win32:VERSION = 0.1.0.0
+else:VERSION = 0.1.0
+
+win32-msvc* {
+    QMAKE_TARGET_PRODUCT = qMedia
+    QMAKE_TARGET_DESCRIPTION = qMedia media library for qBittorrent
+    QMAKE_TARGET_COMPANY = Crystal Studio
+    QMAKE_TARGET_COPYRIGHT = Copyright (©) 2020 Crystal Studio
+    RC_ICONS = images/qMedia.ico
+    RC_LANG = 1033
 }
 
 # Stacktrace support
@@ -89,6 +104,13 @@ stacktrace {
     }
 }
 
+# Use Precompiled headers (PCH)
+PRECOMPILED_HEADER = pch.h
+
+precompile_header:!isEmpty(PRECOMPILED_HEADER) {
+    DEFINES += USING_PCH
+}
+
 # Application files
 # ---
 SOURCES += \
@@ -118,6 +140,7 @@ HEADERS += \
     maineventfilter_win.h \
     mainwindow.h \
     moviedetaildialog.h \
+    pch.h \
     previewlistdelegate.h \
     previewselectdialog.h \
     torrentsqltablemodel.h \
