@@ -2,9 +2,11 @@
 
 #include <QContextMenuEvent>
 #include <QDebug>
+#include <QDir>
 #include <QHeaderView>
 #include <QMenu>
 #include <QMessageBox>
+#include <QProcess>
 #include <QScrollBar>
 #include <QShortcut>
 #include <QtSql/QSqlError>
@@ -17,8 +19,10 @@
 #include "moviedetaildialog.h"
 #include "previewselectdialog.h"
 #include "torrentsqltablemodel.h"
+#include "torrentstatus.h"
 #include "torrenttabledelegate.h"
 #include "torrenttablesortmodel.h"
+#include "utils/fs.h"
 #include "utils/gui.h"
 
 TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, QWidget *parent)
@@ -109,6 +113,14 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     connect(doubleClickHotkeyF4, &QShortcut::activated, this, &TorrentTransferTableView::showCsfdDetail);
     const auto *doubleClickHotkeyF6 = new QShortcut(Qt::Key_F6, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyF6, &QShortcut::activated, this, &TorrentTransferTableView::showImdbDetail);
+    const auto *doubleClickForceResume = new QShortcut(Qt::CTRL + Qt::Key_Space, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickForceResume, &QShortcut::activated, this, &TorrentTransferTableView::forceResumeSelectedTorrent);
+    const auto *doubleClickOpenFolder = new QShortcut(Qt::ALT + Qt::Key_O, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickOpenFolder, &QShortcut::activated, this, &TorrentTransferTableView::openFolderForSelectedTorrent);
+    const auto *doubleClickForceRecheck = new QShortcut(Qt::ALT + Qt::Key_R, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickForceRecheck, &QShortcut::activated, this, &TorrentTransferTableView::forceRecheckSelectedTorrent);
+    const auto *doubleClickPauseResume = new QShortcut(Qt::Key_Space, this, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(doubleClickPauseResume, &QShortcut::activated, this, &TorrentTransferTableView::pauseResumeSelectedTorrent);
 
     // Resize columns to default state after right click
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -188,6 +200,30 @@ void TorrentTransferTableView::resizeColumns()
     // Finally, I like this
     tableViewHeader->setSectionResizeMode(QHeaderView::Interactive);
     tableViewHeader->setCascadingSectionResizes(true);
+}
+
+QAction *TorrentTransferTableView::createActionForMenu(
+        const QIcon &icon, const QString &text,
+        const QKeySequence shortcut, const bool enabled,
+        void (TorrentTransferTableView::*const slot)(), QWidget *parent
+) const
+{
+    auto *newAction = new QAction(icon, text, parent);
+    // TODO would be ideal to show this shortcut's text little grey silverqx
+    newAction->setShortcut(shortcut);
+    newAction->setEnabled(enabled);
+    connect(newAction, &QAction::triggered, this, slot);
+
+    return newAction;
+}
+
+QAction *TorrentTransferTableView::createActionForMenu(
+        const QIcon &icon, const QString &text,
+        const QKeySequence shortcut,
+        void (TorrentTransferTableView::*const slot)(), QWidget *parent
+) const
+{
+    return createActionForMenu(icon, text, shortcut, true, slot, parent);
 }
 
 void TorrentTransferTableView::contextMenuEvent(QContextMenuEvent *event)
@@ -347,30 +383,95 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
 
     auto *listMenu = new QMenu(this);
     listMenu->setAttribute(Qt::WA_DeleteOnClose);
+    listMenu->setStyleSheet(R"END(QMenu::separator {
+    height: 1px;
+    background-color: #393939;
+    margin: 4px 14px 1px 33px;
+}
+)END");
 
     // Create actions
-    auto *actionShowCsfdDetail = new QAction(QIcon(":/icons/csfd_w.svg"), QStringLiteral("Show &csfd detail..."), listMenu);
-    // TODO would be ideal to show this shortcut's text little grey silverqx
-    actionShowCsfdDetail->setShortcut(Qt::Key_F4);
-    connect(actionShowCsfdDetail, &QAction::triggered, this, &TorrentTransferTableView::showCsfdDetail);
-    auto *actionShowImdbDetail = new QAction(QIcon(":/icons/imdb_w.svg"), QStringLiteral("Show &imdb detail..."), listMenu);
-    actionShowImdbDetail->setShortcut(Qt::Key_F6);
-    actionShowImdbDetail->setEnabled(false);
-    connect(actionShowImdbDetail, &QAction::triggered, this, &TorrentTransferTableView::showImdbDetail);
-    auto *actionPreviewTorrent = new QAction(QIcon(":/icons/ondemand_video_w.svg"), QStringLiteral("&Preview file..."), listMenu);
-    actionPreviewTorrent->setShortcut(Qt::Key_F3);
-    connect(actionPreviewTorrent, &QAction::triggered, this, &TorrentTransferTableView::previewSelectedTorrent);
-    auto *actionDeleteTorrent = new QAction(QIcon(":/icons/delete_w.svg"), QStringLiteral("&Delete torrent"), listMenu);
-    actionDeleteTorrent->setShortcuts(QKeySequence::Delete);
-    connect(actionDeleteTorrent, &QAction::triggered, this, &TorrentTransferTableView::deleteSelectedTorrent);
+    const auto actionPause =
+            createActionForMenu(QIcon(":/icons/media-playback-pause.svg"),
+                                QStringLiteral("&Pause"),
+                                Qt::Key_Space, isQBittorrentUp(),
+                                &TorrentTransferTableView::pauseSelectedTorrent, listMenu);
+    const auto actionResume =
+            createActionForMenu(QIcon(":/icons/media-playback-start.svg"),
+                                QStringLiteral("&Resume"),
+                                Qt::Key_Space, isQBittorrentUp(),
+                                &TorrentTransferTableView::resumeSelectedTorrent, listMenu);
+    const auto actionForceResume =
+            createActionForMenu(QIcon(":/icons/media-seek-forward.svg"),
+                                QStringLiteral("&Force Resume"),
+                                Qt::CTRL + Qt::Key_Space, isQBittorrentUp(),
+                                &TorrentTransferTableView::forceResumeSelectedTorrent, listMenu);
+    const auto actionShowCsfdDetail =
+            createActionForMenu(QIcon(":/icons/csfd_w.svg"),
+                                QStringLiteral("Show &csfd detail..."),
+                                Qt::Key_F4,
+                                &TorrentTransferTableView::showCsfdDetail, listMenu);
+    const auto actionShowImdbDetail =
+            createActionForMenu(QIcon(":/icons/imdb_w.svg"),
+                                QStringLiteral("Show &imdb detail..."),
+                                Qt::Key_F6, false,
+                                &TorrentTransferTableView::showImdbDetail, listMenu);
+    const auto actionOpenFolder =
+            createActionForMenu(QIcon(":/icons/inode-directory_w.svg"),
+                                QStringLiteral("&Open folder"),
+                                Qt::ALT + Qt::Key_O, isQBittorrentUp(),
+                                &TorrentTransferTableView::openFolderForSelectedTorrent, listMenu);
+    const auto actionForceRecheck =
+            createActionForMenu(QIcon(":/icons/document-edit-verify_w.svg"),
+                                QStringLiteral("Force Rechec&k"),
+                                Qt::ALT + Qt::Key_R, isQBittorrentUp(),
+                                &TorrentTransferTableView::forceRecheckSelectedTorrent, listMenu);
+    const auto actionPreviewTorrent =
+            createActionForMenu(QIcon(":/icons/ondemand_video_w.svg"),
+                                QStringLiteral("Previe&w..."),
+                                Qt::Key_F3,
+                                &TorrentTransferTableView::previewSelectedTorrent, listMenu);
+    const auto actionDeleteTorrent =
+            createActionForMenu(QIcon(":/icons/delete_w.svg"),
+                                QStringLiteral("&Delete torrent"),
+                                QKeySequence::Delete, isQBittorrentUp(),
+                                &TorrentTransferTableView::deleteSelectedTorrent, listMenu);
 
     // Add actions to menu
+    // Pause, Resume and Force resume
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (statusProperties.isDownloading()) {
+        listMenu->addAction(actionPause);
+        listMenu->addAction(actionForceResume);
+    }
+    if (statusProperties.isForced()) {
+        listMenu->addAction(actionPause);
+        listMenu->addAction(actionResume);
+    }
+    if (statusProperties.isPaused()) {
+        listMenu->addAction(actionResume);
+        listMenu->addAction(actionForceResume);
+    }
+    listMenu->addSeparator();
+    // Show čsfd.cz and imdb.com movie detail
     listMenu->addAction(actionShowCsfdDetail);
     listMenu->addAction(actionShowImdbDetail);
-    listMenu->addSeparator();
-    listMenu->addAction(actionPreviewTorrent);
-    listMenu->addAction(actionDeleteTorrent);
+    // Open folder
+    if (!statusProperties.isMoving()) {
+        listMenu->addSeparator();
+        listMenu->addAction(actionOpenFolder);
+    }
+    // Force recheck, Preview and Delete torrent
+    if (!statusProperties.isAllocating() || !statusProperties.isChecking()
+        || !statusProperties.isMoving()
+    ) {
+        listMenu->addAction(actionForceRecheck);
+        listMenu->addSeparator();
+        listMenu->addAction(actionPreviewTorrent);
+        listMenu->addAction(actionDeleteTorrent);
+    }
 
+    // Show popup menu on custom position, when triggered from keyboard
     if (event->reason() == QContextMenuEvent::Keyboard) {
         // Show context menu next to selected row
         // I like this method, because it show popup every time on the same x position
@@ -387,7 +488,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
 void TorrentTransferTableView::deleteSelectedTorrent()
 {
     // qBittorrent is not running, so nothing to send
-    if (m_qBittorrentHwnd == nullptr) {
+    if (!isQBittorrentUp()) {
         QMessageBox::information(this, QStringLiteral("Delete impossible"),
                                  QStringLiteral("qBittorrent is not running."));
         return;
@@ -396,6 +497,15 @@ void TorrentTransferTableView::deleteSelectedTorrent()
     QSqlRecord torrent = getSelectedTorrentRecord();
     if (torrent.isEmpty())
         return;
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (statusProperties.isAllocating() || statusProperties.isChecking()
+        || statusProperties.isMoving()
+    ) {
+        QMessageBox::information(this, QStringLiteral("Delete impossible"),
+                QStringLiteral("Torrent is in a allocating, checking or moving state."));
+        return;
+    }
 
     const auto result =
             QMessageBox::question(parentWidget(), QStringLiteral("Delete torrent"),
@@ -410,6 +520,7 @@ void TorrentTransferTableView::deleteSelectedTorrent()
 
     qDebug() << "Delete selected torrent :" << torrent.value("name").toString();
 
+    // TODO migrate similar code to IpcSendByteArray() silverqx
     QByteArray infoHash = torrent.value("hash").toByteArray();
     COPYDATASTRUCT torrentInfoHash;
     torrentInfoHash.lpData = infoHash.data();
@@ -421,8 +532,10 @@ void TorrentTransferTableView::deleteSelectedTorrent()
 void TorrentTransferTableView::showCsfdDetail()
 {
     QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
+    if (torrent.isEmpty()) {
+        qDebug() << "Show čsfd movie detail failed, because any torrent was selected.";
         return;
+    }
 
     qDebug() << "Show CSFD detail :" << torrent.value("name").toString();
 
@@ -437,13 +550,174 @@ void TorrentTransferTableView::showCsfdDetail()
 void TorrentTransferTableView::showImdbDetail()
 {
     QSqlRecord torrent = getSelectedTorrentRecord();
-    if (torrent.isEmpty())
+    if (torrent.isEmpty()) {
+        qDebug() << "Show imdb movie detail failed, because any torrent was selected.";
         return;
+    }
 
     qDebug() << "Show IMDB detail :" << torrent.value("name").toString();
 
     QMessageBox::information(this, QStringLiteral("imdb movie detail"),
                              QStringLiteral("Currently not implemented."));
+}
+
+void TorrentTransferTableView::pauseTorrent(const QSqlRecord &torrent)
+{
+    qDebug() << "Pause selected torrent :" << torrent.value("name").toString();
+
+    QByteArray infoHash = torrent.value("hash").toByteArray();
+    ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_PAUSE_TORRENT, infoHash);
+}
+
+void TorrentTransferTableView::pauseSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Pause failed, because any torrent was selected.";
+        return;
+    }
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (!isQBittorrentUp() || !statusProperties.isDownloading())
+        return;
+
+    pauseTorrent(torrent);
+}
+
+void TorrentTransferTableView::resumeTorrent(const QSqlRecord &torrent)
+{
+    qDebug() << "Resume selected torrent :" << torrent.value("name").toString();
+
+    QByteArray infoHash = torrent.value("hash").toByteArray();
+    ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_RESUME_TORRENT, infoHash);
+}
+
+void TorrentTransferTableView::resumeSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Resume failed, because any torrent was selected.";
+        return;
+    }
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (!isQBittorrentUp()
+        || (!statusProperties.isPaused() && !statusProperties.isForced()))
+        return;
+
+    resumeTorrent(torrent);
+}
+
+void TorrentTransferTableView::forceResumeSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Force resume failed, because any torrent was selected.";
+        return;
+    }
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (!isQBittorrentUp()
+        || (!statusProperties.isDownloading() && !statusProperties.isPaused()))
+        return;
+
+    qDebug() << "Force resume selected torrent :" << torrent.value("name").toString();
+
+    QByteArray infoHash = torrent.value("hash").toByteArray();
+    ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RESUME_TORRENT, infoHash);
+}
+
+void TorrentTransferTableView::forceRecheckSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Force recheck failed, because any torrent was selected.";
+        return;
+    }
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (!isQBittorrentUp() || statusProperties.isAllocating() || statusProperties.isChecking()
+        || statusProperties.isMoving())
+        return;
+
+    qDebug() << "Force recheck selected torrent :" << torrent.value("name").toString();
+
+    QByteArray infoHash = torrent.value("hash").toByteArray();
+    ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RECHECK_TORRENT, infoHash);
+}
+
+void TorrentTransferTableView::openFolderForSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Open folder failed, because any torrent was selected.";
+        return;
+    }
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (statusProperties.isMoving())
+        return;
+
+    // Obtain folder name from fisrt torrent file, this is enough
+    const auto torrentFiles = selectTorrentFilesById(torrent.value("id").toULongLong());
+    if (torrentFiles->isEmpty())
+        return;
+    const auto folderName = Utils::Fs::folderName(
+                                torrentFiles->first().value("filepath").toString());
+    if (!QDir(folderName).exists()) {
+        qDebug() << QStringLiteral("Open folder '%1' failed (doesn't exist), "
+                                   "for selected torrent :")
+                    .arg(folderName)
+                 << torrent.value("name").toString();
+        return;
+    }
+
+    qDebug() << QStringLiteral("Open folder '%1' for selected torrent :")
+                .arg(folderName)
+             << torrent.value("name").toString();
+
+    // Prepare process to execute
+    QProcess totalCommander;
+    totalCommander.setProgram(
+                Utils::Fs::toNativePath(
+                    QStringLiteral("C:/Program Files (x86)/TC UP/TOTALCMD.EXE")));
+
+    // Prepare command line arguments
+    QStringList arguments;
+    // "C:\Program Files (x86)\TC UP\TOTALCMD.EXE" /O /T /R="%1"
+    arguments << QStringLiteral("/O")
+              << QStringLiteral("/T")
+              << QStringLiteral("/R=""%1""")
+                 .arg(Utils::Fs::toNativePath(folderName));
+    totalCommander.setArguments(arguments);
+
+    // Fire it up
+    totalCommander.startDetached();
+}
+
+void TorrentTransferTableView::pauseResumeSelectedTorrent()
+{
+    QSqlRecord torrent = getSelectedTorrentRecord();
+    if (torrent.isEmpty()) {
+        qDebug() << "Pause / Resume failed, because any torrent was selected.";
+        return;
+    }
+
+    if (!isQBittorrentUp())
+        return;
+
+    qDebug() << "Pause / Resume selected torrent :" << torrent.value("name").toString();
+
+    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    if (statusProperties.isPaused())
+        resumeTorrent(torrent);
+    else if (statusProperties.isDownloading() || statusProperties.isForced())
+        pauseTorrent(torrent);
+    else
+        // TODO fix combining .arg() and operator<<() in qDebug() messages silverqx
+        qDebug("Can't pause / resume selected torrent, because status is '%s', torrent : %s",
+               qUtf8Printable(statusProperties.text),
+               qUtf8Printable(torrent.value("name").toString()));
 }
 
 void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &torrentInfoHashes)
@@ -460,4 +734,15 @@ void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &tor
         if (m_torrentFilesCache.contains(torrentId))
             removeRecordFromTorrentFilesCache(torrentId);
     }
+}
+
+void TorrentTransferTableView::updateQBittorrentHwnd(const HWND hwnd)
+{
+    // BUG if qMedia is started after qBittorrent, I'm not getting updates immediately, investigate, may be send back qMedia hwnd silverqx
+    // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
+    if ((isQBittorrentUp() && (hwnd == nullptr))
+        || (!isQBittorrentUp() && (hwnd != nullptr)))
+        reloadTorrentModel();
+
+    m_qBittorrentHwnd = hwnd;
 }

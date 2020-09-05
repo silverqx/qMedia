@@ -33,3 +33,13 @@ QString Utils::Fs::fileName(const QString &filePath)
 
     return path.mid(slashIndex + 1);
 }
+
+QString Utils::Fs::folderName(const QString &filePath)
+{
+    const QString path = toUniformPath(filePath);
+    const int slashIndex = path.lastIndexOf(QLatin1String("/"));
+    if (slashIndex == -1)
+        return path;
+
+    return path.left(slashIndex);
+}

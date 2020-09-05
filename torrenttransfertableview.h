@@ -19,11 +19,13 @@ public:
     ~TorrentTransferTableView();
 
     int getModelRowCount() const;
+    inline bool isQBittorrentUp() const { return (m_qBittorrentHwnd != nullptr); };
 
 public slots:
     void filterTextChanged(const QString &name);
     void reloadTorrentModel();
     void updateChangedTorrents(const QVector<QString> &torrentInfoHashes);
+    void updateQBittorrentHwnd(const HWND hwnd);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -54,6 +56,18 @@ private:
     QSqlRecord getSelectedTorrentRecord() const;
     void removeRecordFromTorrentFilesCache(quint64 torrentId);
     void resizeColumns();
+    /*! Context menu action factory. */
+    QAction *createActionForMenu(const QIcon &icon, const QString &text,
+                                 const QKeySequence shortcut, const bool enabled,
+                                 void (TorrentTransferTableView::*const slot)(),
+                                 QWidget *parent = nullptr) const;
+    /*! Context menu action factory ( overload ). */
+    QAction *createActionForMenu(const QIcon &icon, const QString &text,
+                                 const QKeySequence shortcut,
+                                 void (TorrentTransferTableView::*const slot)(),
+                                 QWidget *parent = nullptr) const;
+    void resumeTorrent(const QSqlRecord &torrent);
+    void pauseTorrent(const QSqlRecord &torrent);
 
     QSqlTableModel *m_model;
     QSortFilterProxyModel *m_proxyModel;
@@ -66,11 +80,18 @@ private:
     HWND m_qBittorrentHwnd = nullptr;
 
 private slots:
+    // TODO use const slots where appropriate silverqx
     void previewSelectedTorrent();
     void previewFile(const QString &filePath);
     void deleteSelectedTorrent();
     void showCsfdDetail();
     void showImdbDetail();
+    void pauseSelectedTorrent();
+    void resumeSelectedTorrent();
+    void forceResumeSelectedTorrent();
+    void forceRecheckSelectedTorrent();
+    void openFolderForSelectedTorrent();
+    void pauseResumeSelectedTorrent();
 };
 
 #endif // TORRENTTRANSFERTABLEVIEW_H

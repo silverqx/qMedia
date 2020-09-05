@@ -59,6 +59,8 @@ namespace
     static const QColor colorError(214, 86, 69);
     // blue
     static const QColor colorFinished(69, 198, 214);
+    // green
+    static const QColor colorForcedDownloading {colorDownloading};
     // orange
     static const QColor colorMissingFiles {colorError};
     // yellow
@@ -91,6 +93,9 @@ namespace
         {QStringLiteral("Finished"),
             {TorrentStatus::Finished, colorFinished, getFinishedIcon,
                 QStringLiteral("Finished")}},
+        {QStringLiteral("ForcedDownloading"),
+            {TorrentStatus::ForcedDownloading, colorForcedDownloading, getDownloadingIcon,
+                QStringLiteral("Forced Downloading")}},
         {QStringLiteral("MissingFiles"),
             {TorrentStatus::MissingFiles, colorMissingFiles, getErrorIcon,
                 QStringLiteral("Missing Files")}},

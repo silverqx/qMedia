@@ -3,6 +3,8 @@
 
 #include <QSqlTableModel>
 
+class TorrentTransferTableView;
+
 class TorrentSqlTableModel final : public QSqlTableModel
 {
     Q_OBJECT
@@ -31,7 +33,8 @@ public:
         UnderlyingDataRole = Qt::UserRole,
     };
 
-    explicit TorrentSqlTableModel(QObject *parent = nullptr, const QSqlDatabase db = QSqlDatabase());
+    explicit TorrentSqlTableModel(TorrentTransferTableView *parent = nullptr,
+                                  const QSqlDatabase db = QSqlDatabase());
 
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
     int getTorrentRowByInfoHash(const QString &infoHash);
@@ -53,6 +56,7 @@ private:
        \brief Map a torrent info hash to the torrent id.
      */
     QHash<QString, quint64> m_torrentIdMap;
+    const TorrentTransferTableView *const m_torrentTableView;
 };
 
 #endif // TORRENTSQLTABLEMODEL_H

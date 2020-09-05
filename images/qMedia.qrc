@@ -6,6 +6,7 @@
         <file>icons/csfd_w.svg</file>
         <file>icons/delete.svg</file>
         <file>icons/delete_w.svg</file>
+        <file>icons/document-edit-verify_w.svg</file>
         <file>icons/flags/ad.svg</file>
         <file>icons/flags/ae.svg</file>
         <file>icons/flags/af.svg</file>
@@ -260,6 +261,10 @@
         <file>icons/flags/zw.svg</file>
         <file>icons/imdb.svg</file>
         <file>icons/imdb_w.svg</file>
+        <file>icons/inode-directory_w.svg</file>
+        <file>icons/media-playback-pause.svg</file>
+        <file>icons/media-playback-start.svg</file>
+        <file>icons/media-seek-forward.svg</file>
         <file>icons/ondemand_video.svg</file>
         <file>icons/ondemand_video_w.svg</file>
         <file>icons/qmedia.svg</file>

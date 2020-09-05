@@ -58,6 +58,37 @@ win32-msvc* {
     QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF
 }
 
+# Stacktrace support
+# ---
+stacktrace {
+    DEFINES += STACKTRACE
+    win32 {
+        DEFINES += STACKTRACE_WIN_PROJECT_PATH=$$PWD
+        DEFINES += STACKTRACE_WIN_MAKEFILE_PATH=$$OUT_PWD
+    }
+    win32-g++* {
+        contains(QMAKE_HOST.arch, x86) {
+            # i686 arch requires frame pointer preservation
+            QMAKE_CXXFLAGS += -fno-omit-frame-pointer
+        }
+
+        QMAKE_LFLAGS += -Wl,--export-all-symbols
+
+        LIBS += libdbghelp
+    }
+    else:win32-msvc* {
+        contains(QMAKE_HOST.arch, x86) {
+            # i686 arch requires frame pointer preservation
+            QMAKE_CXXFLAGS += -Oy-
+        }
+
+        QMAKE_CXXFLAGS *= -Zi
+        QMAKE_LFLAGS *= /DEBUG
+
+        LIBS += dbghelp.lib
+    }
+}
+
 # Application files
 # ---
 SOURCES += \
@@ -82,6 +113,7 @@ SOURCES += \
 HEADERS += \
     abstractmoviedetailservice.h \
     common.h \
+    config.h \
     csfddetailservice.h \
     maineventfilter_win.h \
     mainwindow.h \
@@ -116,35 +148,4 @@ RESOURCES += \
 release {
     win32-msvc*: target.path = c:/optx64/$${TARGET}
     !isEmpty(target.path): INSTALLS += target
-}
-
-# Stacktrace support
-# ---
-stacktrace {
-    DEFINES += STACKTRACE
-    win32 {
-        DEFINES += STACKTRACE_WIN_PROJECT_PATH=$$PWD
-        DEFINES += STACKTRACE_WIN_MAKEFILE_PATH=$$OUT_PWD
-    }
-    win32-g++* {
-        contains(QMAKE_HOST.arch, x86) {
-            # i686 arch requires frame pointer preservation
-            QMAKE_CXXFLAGS += -fno-omit-frame-pointer
-        }
-
-        QMAKE_LFLAGS += -Wl,--export-all-symbols
-
-        LIBS += libdbghelp
-    }
-    else:win32-msvc* {
-        contains(QMAKE_HOST.arch, x86) {
-            # i686 arch requires frame pointer preservation
-            QMAKE_CXXFLAGS += -Oy-
-        }
-
-        QMAKE_CXXFLAGS *= -Zi
-        QMAKE_LFLAGS *= /DEBUG
-
-        LIBS += dbghelp.lib
-    }
 }

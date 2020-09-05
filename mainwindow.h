@@ -21,14 +21,12 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void setQBittorrentHwnd(const HWND hwnd);
-    inline HWND getQBittorrentHwnd() const { return m_qBittorrentHwnd; }
-
     static MainWindow *instance();
 
 signals:
     void torrentsAddedOrRemoved();
     void torrentsChanged(const QVector<QString> &torrentInfoHashes);
+    void qBittorrentHwndChanged(const HWND hwnd);
 
 protected:
     bool event(QEvent *event) override;
@@ -39,6 +37,7 @@ private:
     void createStatusBar();
     uint selectTorrentsCount() const;
     uint selectTorrentFilesCount() const;
+    bool isQBittorrentUp() const { return (m_qBittorrentHwnd != nullptr); };
 
     Ui::MainWindow *ui;
     QLabel *m_torrentsCountLabel;
@@ -50,6 +49,7 @@ private:
 private slots:
     void focusTorrentsFilterLineEdit();
     void refreshStatusBar();
+    void updateQBittorrentHwnd(const HWND hwnd) { m_qBittorrentHwnd = hwnd; };
 };
 
 #endif // MAINWINDOW_H
