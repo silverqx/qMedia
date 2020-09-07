@@ -31,6 +31,8 @@ namespace Utils
         QString fileExtension(const QString &filename);
         QString fileName(const QString &filePath);
         QString folderName(const QString &filePath);
+        QString expandPath(const QString &path);
+        QString expandPathAbs(const QString &path);
     }
 }
 

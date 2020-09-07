@@ -10,6 +10,8 @@
 
 #include "common.h"
 #include "previewlistdelegate.h"
+// TODO get rid of this include, move Column enum to separate file silverqx
+#include "torrentsqltablemodel.h"
 #include "utils/fs.h"
 #include "utils/misc.h"
 
@@ -72,6 +74,7 @@ PreviewSelectDialog::~PreviewSelectDialog()
 
 void PreviewSelectDialog::previewButtonClicked()
 {
+    // Only one file is allowed to select
     QModelIndexList selectedIndexes = ui->previewList->selectionModel()->selectedRows(TR_NAME);
     if (selectedIndexes.isEmpty())
         return;
@@ -79,17 +82,19 @@ void PreviewSelectDialog::previewButtonClicked()
     if (!selectedIndex.isValid())
         return;
 
-    // Only one file is allowed to select
-    const QString path = m_previewListModel->data(selectedIndex).toString();
-    if (!QFile::exists(path)) {
+    // Get file path to preview
+    const auto filePath = getTorrentFileFilePathAbs(
+                              m_previewListModel->data(selectedIndex).toString());
+
+    if (!QFile::exists(filePath)) {
         QMessageBox::critical(this, QStringLiteral("Preview impossible"),
                               QStringLiteral("Sorry, we can't preview this file:<br>"
                                              "<strong>%1</strong>")
-                              .arg(Utils::Fs::toNativePath(path)));
+                              .arg(Utils::Fs::toNativePath(filePath)));
         reject();
     }
 
-    emit readyToPreviewFile(path);
+    emit readyToPreviewFile(filePath);
     accept();
 }
 
@@ -144,6 +149,9 @@ void PreviewSelectDialog::populatePreviewListModel()
         // Setup row data
         m_previewListModel->setData(m_previewListModel->index(rowCount, TR_NAME),
                                     filePath);
+        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_NAME),
+                                    getTorrentFileFilePathAbs(filePath),
+                                    Qt::ToolTipRole);
         m_previewListModel->setData(m_previewListModel->index(rowCount, TR_SIZE),
                                     torrentFile.value("size").toULongLong());
         m_previewListModel->setData(m_previewListModel->index(rowCount, TR_PROGRESS),
@@ -151,4 +159,10 @@ void PreviewSelectDialog::populatePreviewListModel()
         m_previewListModel->setData(m_previewListModel->index(rowCount, TR_FILE_INDEX),
                                     torrentFile.value("id").toULongLong());
     }
+}
+
+QString PreviewSelectDialog::getTorrentFileFilePathAbs(const QString &relativePath) const
+{
+    const QDir saveDir(m_torrent.value(TorrentSqlTableModel::TR_SAVE_PATH).toString());
+    return Utils::Fs::expandPathAbs(saveDir.absoluteFilePath(relativePath));
 }

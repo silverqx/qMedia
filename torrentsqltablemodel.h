@@ -24,6 +24,7 @@ public:
         TR_CSFD_MOVIE_DETAIL,
         TR_STATUS,
         TR_MOVIE_DETAIL_INDEX,
+        TR_SAVE_PATH,
 
         NB_COLUMNS
     };

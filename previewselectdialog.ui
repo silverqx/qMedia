@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>820</width>
     <height>365</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>800</width>
+    <width>640</width>
     <height>280</height>
    </size>
   </property>
@@ -63,7 +63,7 @@
       <bool>true</bool>
      </property>
      <property name="textElideMode">
-      <enum>Qt::ElideRight</enum>
+      <enum>Qt::ElideMiddle</enum>
      </property>
      <property name="indentation">
       <number>25</number>

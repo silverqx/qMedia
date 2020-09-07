@@ -17,17 +17,20 @@ PreviewListDelegate::PreviewListDelegate(QObject *parent)
     : QItemDelegate(parent)
 {}
 
-void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
+                                const QModelIndex &index) const
 {
     painter->save();
 
     QStyleOptionViewItem opt = QItemDelegate::setOptions(index, option);
     drawBackground(painter, opt, index);
 
-    switch (index.column()) {
+    const auto column = index.column();
+    switch (column) {
     case PreviewSelectDialog::TR_SIZE:
         opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;
-        QItemDelegate::drawDisplay(painter, opt, option.rect, Utils::Misc::friendlyUnit(index.data().toLongLong()));
+        QItemDelegate::drawDisplay(painter, opt, option.rect,
+                                   Utils::Misc::friendlyUnit(index.data().toLongLong()));
         break;
 
     case PreviewSelectDialog::TR_PROGRESS: {
@@ -35,7 +38,8 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
         QStyleOptionProgressBar newopt;
         newopt.rect = opt.rect;
-        newopt.text = ((progress == 100) ? QStringLiteral("100%") : (Utils::String::fromDouble(progress, 1) + '%'));
+        newopt.text = ((progress == 100) ? QStringLiteral("100%")
+                                         : (Utils::String::fromDouble(progress, 1) + '%'));
         newopt.progress = static_cast<int>(progress);
         newopt.maximum = 100;
         newopt.minimum = 0;
@@ -65,13 +69,15 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     painter->restore();
 }
 
-QWidget *PreviewListDelegate::createEditor(QWidget *, const QStyleOptionViewItem &, const QModelIndex &) const
+QWidget *PreviewListDelegate::createEditor(QWidget *, const QStyleOptionViewItem &,
+                                           const QModelIndex &) const
 {
     // No editor here
     return nullptr;
 }
 
-QSize PreviewListDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+QSize PreviewListDelegate::sizeHint(const QStyleOptionViewItem &option,
+                                    const QModelIndex &index) const
 {
     // Increase line size to 28px, looks much nicer
     QSize size = QItemDelegate::sizeHint(option, index);

@@ -43,3 +43,17 @@ QString Utils::Fs::folderName(const QString &filePath)
 
     return path.left(slashIndex);
 }
+
+QString Utils::Fs::expandPath(const QString &path)
+{
+    const QString ret = path.trimmed();
+    if (ret.isEmpty())
+        return ret;
+
+    return QDir::cleanPath(ret);
+}
+
+QString Utils::Fs::expandPathAbs(const QString &path)
+{
+    return QDir(expandPath(path)).absolutePath();
+}
