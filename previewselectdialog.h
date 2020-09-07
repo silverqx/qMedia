@@ -58,6 +58,9 @@ public:
     PreviewSelectDialog(QWidget *parent, QSqlRecord torrent, const QVector<QSqlRecord> *const torrentFiles);
     ~PreviewSelectDialog();
 
+    /*! Assemble absolute file path for torrent file. */
+    inline QString getTorrentFileFilePathAbs(const QString &relativePath) const;
+
 signals:
     void readyToPreviewFile(QString);
 

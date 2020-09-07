@@ -327,22 +327,29 @@ void TorrentTransferTableView::previewSelectedTorrent()
 
     qDebug() << "Torrent doubleclicked :" << torrent.value("name").toString();
 
-    const QVector<QSqlRecord> *const torrentFiles = selectTorrentFilesById(torrent.value("id").toULongLong());
+    const QVector<QSqlRecord> *const torrentFiles =
+            selectTorrentFilesById(torrent.value("id").toULongLong());
     if (torrentFiles->isEmpty()) {
         QMessageBox::critical(this, QStringLiteral("Preview impossible"),
-                              QStringLiteral("Torrent <strong>%1</strong> does not contain any previewable files.")
+                              QStringLiteral("Torrent <strong>%1</strong> does not contain any "
+                                             "previewable files.")
                               .arg(torrent.value("name").toString()));
         return;
     }
 
     // If torrent contains only one file, do not show preview dialog
     if (torrentFiles->size() == 1) {
-        previewFile(torrentFiles->first().value("filepath").toString());
+        // TODO duplicit code in PreviewSelectDialog::getTorrentFileFilePathAbs() and also in self::openFolderForSelectedTorrent() silverqx
+        const QDir saveDir(torrent.value(TR_SAVE_PATH).toString());
+        previewFile(Utils::Fs::expandPathAbs(
+                        saveDir.absoluteFilePath(
+                            torrentFiles->first().value("filepath").toString())));
         return;
     }
 
     auto *const dialog = new PreviewSelectDialog(this, torrent, torrentFiles);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
+    // TODO set width to 90% of mainwindow silverqx
     connect(dialog, &PreviewSelectDialog::readyToPreviewFile, this, &TorrentTransferTableView::previewFile);
     dialog->show();
     // TODO set current selection to selected model, because after preview dialog is closed, current selection is at 0,0 silverqx
@@ -419,7 +426,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
     const auto actionOpenFolder =
             createActionForMenu(QIcon(":/icons/inode-directory_w.svg"),
                                 QStringLiteral("&Open folder"),
-                                Qt::ALT + Qt::Key_O, isQBittorrentUp(),
+                                Qt::ALT + Qt::Key_O,
                                 &TorrentTransferTableView::openFolderForSelectedTorrent, listMenu);
     const auto actionForceRecheck =
             createActionForMenu(QIcon(":/icons/document-edit-verify_w.svg"),
@@ -658,12 +665,17 @@ void TorrentTransferTableView::openFolderForSelectedTorrent()
     if (statusProperties.isMoving())
         return;
 
-    // Obtain folder name from fisrt torrent file, this is enough
-    const auto torrentFiles = selectTorrentFilesById(torrent.value("id").toULongLong());
-    if (torrentFiles->isEmpty())
+    // Obtain torrent storage location
+    const auto torrentSaveDir = torrent.value(TR_SAVE_PATH).toString();
+    if (torrentSaveDir.isEmpty()) {
+        qDebug() << QStringLiteral("Open folder '%1' failed (is empty), "
+                                   "for selected torrent :")
+                    .arg(torrentSaveDir)
+                 << torrent.value("name").toString();
         return;
-    const auto folderName = Utils::Fs::folderName(
-                                torrentFiles->first().value("filepath").toString());
+    }
+    const QDir saveDir(torrentSaveDir);
+    const auto folderName = Utils::Fs::folderName(saveDir.absolutePath());
     if (!QDir(folderName).exists()) {
         qDebug() << QStringLiteral("Open folder '%1' failed (doesn't exist), "
                                    "for selected torrent :")
