@@ -32,6 +32,8 @@ static const QString QB_EXT {QStringLiteral(".!qB")};
 static const int INFOHASH_SIZE = 40;
 /*! Above this cap show ∞ symbol. */
 static const qint64 MAX_ETA = 8640000;
+/*! Hide zero values in the main transfer view. */
+static const auto HIDE_ZERO_VALUES = true;
 
 static const char C_NON_BREAKING_SPACE[] = " ";
 static const char C_THIN_SPACE[] = " ";
