@@ -27,17 +27,17 @@ enum UserMessages
 };
 
 // TODO In qBittorent was this comment, investigaste: Make it inline in C++17 silverqx
-static const QString QB_EXT {QStringLiteral(".!qB")};
+static const QString QB_EXT {".!qB"};
 /*! Info hash size in bytes. */
-static const int INFOHASH_SIZE = 40;
+Q_DECL_UNUSED static const int INFOHASH_SIZE = 40;
 /*! Above this cap show ∞ symbol. */
-static const qint64 MAX_ETA = 8640000;
+Q_DECL_UNUSED static const qint64 MAX_ETA = 8640000;
 /*! Hide zero values in the main transfer view. */
-static const auto HIDE_ZERO_VALUES = true;
+Q_DECL_UNUSED static const auto HIDE_ZERO_VALUES = true;
 
-static const char C_NON_BREAKING_SPACE[] = " ";
-static const char C_THIN_SPACE[] = " ";
-static const char C_INFINITY[] = "∞";
+Q_DECL_UNUSED static const char C_NON_BREAKING_SPACE[] = " ";
+Q_DECL_UNUSED static const char C_THIN_SPACE[] = " ";
+Q_DECL_UNUSED static const char C_INFINITY[] = "∞";
 
 static inline const auto IpcSendByteArray =
         [](const HWND hwnd, const UserMessages message, const QByteArray &byteArray)
