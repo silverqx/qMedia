@@ -108,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent)
     // WARNING can occur edge case, when qBittorrent HWND was changed, before slots before was connected, also check TorrentTransferTableView::updateQBittorrentHwnd(), it relates silverqx
     connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
     connect(this, &MainWindow::qBittorrentHwndChanged, m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::applicationStateChanged);
     connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged, m_tableView, &TorrentTransferTableView::filterTextChanged);
     connect(ui->reloadTorrentsButton, &QPushButton::clicked, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::torrentsAddedOrRemoved, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
@@ -163,6 +164,28 @@ void MainWindow::refreshStatusBar()
     m_torrentFilesCountLabel->setText(QStringLiteral("Video Files: <strong>%1</strong>").arg(selectTorrentFilesCount()));
 }
 
+void MainWindow::applicationStateChanged(Qt::ApplicationState state)
+{
+    // Disable autoreload in development
+#ifndef QT_DEBUG
+    if (state == Qt::ApplicationActive)
+        m_tableView->reloadTorrentModel();
+#endif
+
+    // TODO message updates only when fully invisible silverqx
+    /* Here is more advanced solution to decide, if window is partially visible, I can
+       use this to decide, if window is fully invisible, so updates will keep running if
+       partially visible and updates will be disabled, if fully invisible:
+       https://stackoverflow.com/questions/3154214/can-i-detect-if-a-window-is-partly-hidden */
+
+    // Inform qBittorrent about qMedia is in foreground
+    if (state == Qt::ApplicationActive)
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_APPLICATION_ACTIVE, NULL, NULL);
+    if ((state == Qt::ApplicationInactive) || (state == Qt::ApplicationSuspended)
+        || (state == Qt::ApplicationHidden))
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_APPLICATION_DEACTIVE, NULL, NULL);
+}
+
 void MainWindow::connectToDb() const
 {
     QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"));
@@ -197,29 +220,6 @@ void MainWindow::initFilterTorrentsLineEdit()
     ui->filterTorrentsLineEdit->setMaximumHeight(std::max(ui->filterTorrentsLineEdit->sizeHint().height(),
                                                           m_searchButton->sizeHint().height()) + (frameWidth * 2));
     ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-}
-
-bool MainWindow::event(QEvent *event)
-{
-    // Do not want autoreload in development
-#ifndef QT_DEBUG
-    if (event->type() == QEvent::WindowActivate)
-        m_tableView->reloadTorrentModel();
-#endif
-
-    // TODO message updates only when fully invisible silverqx
-    /* Here is more advanced solution to decide, if window is partially visible, I can
-       use this to decide, if window is fully invisible, so updates will keep running if
-       partially visible and updates will be disabled, if fully invisible:
-       https://stackoverflow.com/questions/3154214/can-i-detect-if-a-window-is-partly-hidden */
-
-    // Inform qBittorrent about qMedia is in foreground
-    if (event->type() == QEvent::WindowActivate)
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_WINDOW_ACTIVATED, NULL, NULL);
-    if (event->type() == QEvent::WindowDeactivate)
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_WINDOW_DEACTIVATED, NULL, NULL);
-
-    return QMainWindow::event(event);
 }
 
 void MainWindow::createStatusBar()
