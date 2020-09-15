@@ -89,6 +89,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     hideColumn(TR_CSFD_MOVIE_DETAIL);
     hideColumn(TR_STATUS);
     hideColumn(TR_MOVIE_DETAIL_INDEX);
+    hideColumn(TR_SAVE_PATH);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
     // Init torrent context menu
@@ -137,6 +138,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
 
 TorrentTransferTableView::~TorrentTransferTableView()
 {
+    // TODO rewrite all to range-based for loop silverqx
     foreach (auto torrentFiles, m_torrentFilesCache)
         delete torrentFiles;
 }
@@ -447,13 +449,13 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
     // Add actions to menu
     // Pause, Resume and Force resume
     const auto statusProperties = g_statusHash[torrent.value("status").toString()];
-    if (statusProperties.isDownloading()) {
-        listMenu->addAction(actionPause);
-        listMenu->addAction(actionForceResume);
-    }
     if (statusProperties.isForced()) {
         listMenu->addAction(actionPause);
         listMenu->addAction(actionResume);
+    }
+    else if (statusProperties.isDownloading()) {
+        listMenu->addAction(actionPause);
+        listMenu->addAction(actionForceResume);
     }
     if (statusProperties.isPaused()) {
         listMenu->addAction(actionResume);
@@ -675,8 +677,8 @@ void TorrentTransferTableView::openFolderForSelectedTorrent()
         return;
     }
     const QDir saveDir(torrentSaveDir);
-    const auto folderName = Utils::Fs::folderName(saveDir.absolutePath());
-    if (!QDir(folderName).exists()) {
+    const auto folderName = saveDir.absolutePath();
+    if (!saveDir.exists()) {
         qDebug() << QStringLiteral("Open folder '%1' failed (doesn't exist), "
                                    "for selected torrent :")
                     .arg(folderName)

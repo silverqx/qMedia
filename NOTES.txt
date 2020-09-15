@@ -4,6 +4,13 @@ Todos to check in qBittorent torrentexporter:
  - set setForwardOnly(true) for all queries for better performance
  - solve explicit, default and delete for contructors, use this keywords correctly
  - use every where toNativePath()
+ - rewrite all to range-based for loop
+
+
+Todos to check in qMedia:
+-------------------------
+
+ - QHash::operator[] returns default when value not exists and silently inserts that item into the hash, check all code usage 😠
 
 
 Example code which heavily uses win32 api:

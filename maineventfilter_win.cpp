@@ -47,6 +47,7 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
     const COPYDATASTRUCT copyData = *reinterpret_cast<PCOPYDATASTRUCT>(msg->lParam);
     switch (static_cast<int>(msg->wParam)) {
     case MSG_QBT_TORRENTS_CHANGED:
+    case MSG_QBT_TORRENT_MOVED:
         // Put together QVector of torrent info hashes
         const int dataSize = static_cast<int>(copyData.cbData);
         const char *const begin = static_cast<const char *>(copyData.lpData);

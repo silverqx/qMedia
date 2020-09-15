@@ -11,6 +11,7 @@
 
 // TODO unify viewbox and width / height for all svg icons silverqx
 // TODO remove version from all svg icons silverqx
+// TODO detect qBittorrent crashes and do something like TorrentExporter::correctTorrentStatusesOnExit() silverqx
 void enableDarkTheme(QApplication &a);
 void applicationCleanup();
 

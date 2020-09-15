@@ -28,9 +28,6 @@ signals:
     void torrentsChanged(const QVector<QString> &torrentInfoHashes);
     void qBittorrentHwndChanged(const HWND hwnd);
 
-protected:
-    bool event(QEvent *event) override;
-
 private:
     void connectToDb() const;
     void initFilterTorrentsLineEdit();
@@ -50,6 +47,7 @@ private slots:
     void focusTorrentsFilterLineEdit();
     void refreshStatusBar();
     void updateQBittorrentHwnd(const HWND hwnd) { m_qBittorrentHwnd = hwnd; };
+    void applicationStateChanged(Qt::ApplicationState state);
 };
 
 #endif // MAINWINDOW_H
