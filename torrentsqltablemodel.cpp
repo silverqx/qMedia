@@ -33,7 +33,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
     const auto column = modelIndex.column();
     const auto row = modelIndex.row();
 
-    const auto hideValues = false;
+    const auto hideValues = ::HIDE_ZERO_VALUES;
     const auto amountString = [hideValues](const auto value, const auto total)
     {
         return ((value == 0) && (total == 0) && hideValues)
@@ -147,7 +147,7 @@ bool TorrentSqlTableModel::select()
 QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
                                            const int column) const
 {
-    const auto hideValues = false;
+    const auto hideValues = ::HIDE_ZERO_VALUES;
     const auto unitString =
             [hideValues](const qint64 value, const bool isSpeedUnit = false) -> QString
     {
