@@ -18,6 +18,10 @@ public:
         TR_PROGRESS,
         TR_ETA,
         TR_SIZE,
+        TR_SEEDS,
+        TR_TOTAL_SEEDS,
+        TR_LEECHERS,
+        TR_TOTAL_LEECHERS,
         TR_AMOUNT_LEFT,
         TR_ADDED_ON,
         TR_HASH,
@@ -42,6 +46,8 @@ public:
     quint64 getTorrentIdByInfoHash(const QString &infoHash);
     // TODO implement rowCount() and columnCount() and may be some others, look qbt model class as reference silverqx
 
+    /*! Map seeds/leechers column to total seeds/leechers counterparts. */
+    static const QHash<int, int> mapToTotal;
 public slots:
     bool select() override;
 

@@ -24,7 +24,9 @@ bool TorrentTableSortModel::lessThan(const QModelIndex &left, const QModelIndex 
     // It is like second sort, but only if items have the same values
     if (!leftRawValue.isValid() || !rightRawValue.isValid()
         || ((leftRawValue == rightRawValue) && (sortColumn != TorrentSqlTableModel::TR_ADDED_ON)
-            && (sortColumn != TorrentSqlTableModel::TR_ETA)))
+            && (sortColumn != TorrentSqlTableModel::TR_ETA)
+            && (sortColumn != TorrentSqlTableModel::TR_SEEDS)
+            && (sortColumn != TorrentSqlTableModel::TR_LEECHERS)))
         return invokeLessThanForColumn(TorrentSqlTableModel::TR_ADDED_ON);
 
     switch (sortColumn) {
@@ -35,7 +37,7 @@ bool TorrentTableSortModel::lessThan(const QModelIndex &left, const QModelIndex 
         return leftRawValue.toULongLong() < rightRawValue.toULongLong();
     case TorrentSqlTableModel::TR_PROGRESS:
         return leftRawValue.toUInt() < rightRawValue.toUInt();
-    case TorrentSqlTableModel::TR_ETA:
+    case TorrentSqlTableModel::TR_ETA: {
         auto leftValue = leftRawValue.toLongLong();
         auto rightValue = rightRawValue.toLongLong();
         /* Interpret values larger that max ETA cap as 0, to avoid always being sorted
@@ -50,6 +52,29 @@ bool TorrentTableSortModel::lessThan(const QModelIndex &left, const QModelIndex 
         if (leftRawValue == rightRawValue)
             return invokeLessThanForColumn(TorrentSqlTableModel::TR_ADDED_ON);
         return leftValue < rightValue;
+    }
+    case TorrentSqlTableModel::TR_SEEDS:
+    case TorrentSqlTableModel::TR_LEECHERS: {
+        const auto leftValue = leftRawValue.toInt();
+        const auto rightValue = rightRawValue.toInt();
+        // Active seeds/leechers take precedence over total seeds/leechers
+        if (leftValue != rightValue)
+            return (leftValue < rightValue);
+
+        // Second sort by total seeds/leechers
+        // Obtain Total seeds/leechers from sibling column
+        const auto leftValueTotal =
+                left.sibling(left.row(),TorrentSqlTableModel::mapToTotal.value(sortColumn))
+                .data(TorrentSqlTableModel::UnderlyingDataRole).toInt();
+        const auto rightValueTotal =
+                right.sibling(right.row(), TorrentSqlTableModel::mapToTotal.value(sortColumn))
+                .data(TorrentSqlTableModel::UnderlyingDataRole).toInt();
+        if (leftValueTotal != rightValueTotal)
+            return (leftValueTotal < rightValueTotal);
+
+        // Third sort by added on
+        return invokeLessThanForColumn(TorrentSqlTableModel::TR_ADDED_ON);
+    }
     }
 
     return QSortFilterProxyModel::lessThan(left, right);

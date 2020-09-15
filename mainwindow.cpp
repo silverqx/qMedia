@@ -87,13 +87,16 @@ MainWindow::MainWindow(QWidget *parent)
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
 
-    // Initial position
-    move(screen()->availableSize().width() - width() - 10, 10);
     // Override design values
+    const auto mainWindowWidth = 1300;
 #ifdef VISIBLE_CONSOLE
     // Set up smaller, so I can see console output
-    resize(geometry().width(), geometry().height() - 200);
+    resize(mainWindowWidth, geometry().height() - 200);
+#else
+    resize(mainWindowWidth, geometry().height());
 #endif
+    // Initial position
+    move(screen()->availableSize().width() - width() - 10, 10);
 
     connectToDb();
 
