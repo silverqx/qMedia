@@ -13,6 +13,11 @@
 #include "torrenttransfertableview.h"
 #include "utils/misc.h"
 
+const QHash<int, int> TorrentSqlTableModel::mapToTotal = {
+    {TorrentSqlTableModel::TR_SEEDS,    TorrentSqlTableModel::TR_TOTAL_SEEDS},
+    {TorrentSqlTableModel::TR_LEECHERS, TorrentSqlTableModel::TR_TOTAL_LEECHERS},
+};
+
 TorrentSqlTableModel::TorrentSqlTableModel(TorrentTransferTableView *parent,
                                            const QSqlDatabase db)
     : QSqlTableModel(parent, db)
@@ -25,9 +30,18 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
     if (!modelIndex.isValid())
         return {};
 
-    const int column = modelIndex.column();
+    const auto column = modelIndex.column();
+    const auto row = modelIndex.row();
 
-    const auto getTooltipForNameColumn = [this, &modelIndex, &column]()
+    const auto hideValues = false;
+    const auto amountString = [hideValues](const auto value, const auto total)
+    {
+        return ((value == 0) && (total == 0) && hideValues)
+                ? QString {}
+                : QString::number(value) + " (" + QString::number(total) + ')';
+    };
+
+    const auto getTooltipForNameColumn = [this, &modelIndex, &column, &row]()
     {
         // Relative cursor position from left side of TorrentTransferTableView
         const auto postitionX =
@@ -36,18 +50,28 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
         // TODO get decorationSize from QStyledItemDelegate ( see NOTES.txt ) silverqx
         static const auto iconWidth = 24;
         if (postitionX <= iconWidth)
-            return g_statusHash[record(modelIndex.row()).value("status").toString()].text;
+            return g_statusHash[record(row).value("status").toString()].text;
 
         return displayValue(modelIndex, column);
     };
 
+    const auto getPeersTooltip = [this, &row, &amountString]()
+    {
+        // Compute peers count
+        const auto peers = record(row).value("leechers").toInt() +
+                           record(row).value("seeds").toInt();
+        const auto peersTotal = record(row).value("total_leechers").toInt() +
+                                record(row).value("total_seeds").toInt();
+        return QStringLiteral("Peers: %1").arg(amountString(peers, peersTotal));
+    };
+
     switch (role) {
     case Qt::ForegroundRole:
-        return g_statusHash[record(modelIndex.row()).value("status").toString()].color;
+        return g_statusHash[record(row).value("status").toString()].color;
     case Qt::DisplayRole:
         return displayValue(modelIndex, column);
     case UnderlyingDataRole:
-        return record(modelIndex.row()).value(column);
+        return record(row).value(column);
     case Qt::TextAlignmentRole:
         switch (column) {
         case TR_ID:
@@ -55,6 +79,8 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
             return QVariant {Qt::AlignCenter};
         case TR_ETA:
         case TR_SIZE:
+        case TR_SEEDS:
+        case TR_LEECHERS:
         case TR_AMOUNT_LEFT:
         case TR_ADDED_ON:
         case TR_HASH:
@@ -73,7 +99,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
     case Qt::DecorationRole:
         switch (column) {
         case TR_NAME:
-            return g_statusHash[record(modelIndex.row()).value("status").toString()]
+            return g_statusHash[record(row).value("status").toString()]
                     .getIcon();
         }
         break;
@@ -81,6 +107,9 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
         switch (column) {
         case TR_NAME:
             return getTooltipForNameColumn();
+        case TR_SEEDS:
+        case TR_LEECHERS:
+            return getPeersTooltip();
         }
         break;
     }
@@ -118,16 +147,24 @@ bool TorrentSqlTableModel::select()
 QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
                                            const int column) const
 {
-    bool hideValues = false;
-    const auto unitString = [hideValues](const qint64 value,
-                            const bool isSpeedUnit = false) -> QString
+    const auto hideValues = false;
+    const auto unitString =
+            [hideValues](const qint64 value, const bool isSpeedUnit = false) -> QString
     {
         return ((value == 0) && hideValues)
             ? QString {} : Utils::Misc::friendlyUnit(value, isSpeedUnit);
     };
 
+    const auto amountString = [hideValues](const auto value, const auto total)
+    {
+        return ((value == 0) && (total == 0) && hideValues)
+                ? QString {}
+                : QString::number(value) + " (" + QString::number(total) + ')';
+    };
+
     // Get value from underlying model
-    const QVariant rawData = record(modelIndex.row()).value(column);
+    const auto row = modelIndex.row();
+    const QVariant rawData = record(row).value(column);
     if (!rawData.isValid() || rawData.isNull())
         return {};
 
@@ -148,6 +185,9 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
     case TR_SIZE:
     case TR_AMOUNT_LEFT:
         return unitString(rawData.toLongLong());
+    case TR_SEEDS:
+    case TR_LEECHERS:
+        return amountString(rawData.toInt(), record(row).value(mapToTotal.value(column)).toInt());
     }
 
     return {};

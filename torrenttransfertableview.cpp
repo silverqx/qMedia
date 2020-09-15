@@ -72,6 +72,10 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     m_model->setHeaderData(TR_PROGRESS, Qt::Horizontal, QStringLiteral("Done"));
     m_model->setHeaderData(TR_ETA, Qt::Horizontal, QStringLiteral("ETA"));
     m_model->setHeaderData(TR_SIZE, Qt::Horizontal, QStringLiteral("Size"));
+    m_model->setHeaderData(TR_SEEDS, Qt::Horizontal, QStringLiteral("Seeds"));
+    m_model->setHeaderData(TR_TOTAL_SEEDS, Qt::Horizontal, QStringLiteral("Total seeds"));
+    m_model->setHeaderData(TR_LEECHERS, Qt::Horizontal, QStringLiteral("Leechs"));
+    m_model->setHeaderData(TR_TOTAL_LEECHERS, Qt::Horizontal, QStringLiteral("Total leechers"));
     m_model->setHeaderData(TR_AMOUNT_LEFT, Qt::Horizontal, QStringLiteral("Remaining"));
     m_model->setHeaderData(TR_ADDED_ON, Qt::Horizontal, QStringLiteral("Added on"));
 
@@ -85,6 +89,8 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
 
     setModel(m_proxyModel);
     hideColumn(TR_ID);
+    hideColumn(TR_TOTAL_SEEDS);
+    hideColumn(TR_TOTAL_LEECHERS);
     hideColumn(TR_HASH);
     hideColumn(TR_CSFD_MOVIE_DETAIL);
     hideColumn(TR_STATUS);
@@ -190,6 +196,8 @@ void TorrentTransferTableView::resizeColumns()
     nameColWidth -= tableViewHeader->sectionSize(TR_PROGRESS);
     nameColWidth -= tableViewHeader->sectionSize(TR_ETA);
     nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
+    nameColWidth -= tableViewHeader->sectionSize(TR_SEEDS);
+    nameColWidth -= tableViewHeader->sectionSize(TR_LEECHERS);
     nameColWidth -= tableViewHeader->sectionSize(TR_AMOUNT_LEFT);
     nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
     nameColWidth -= 2; // Borders
