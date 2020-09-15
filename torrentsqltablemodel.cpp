@@ -30,16 +30,15 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
     if (!modelIndex.isValid())
         return {};
 
-    const auto column = modelIndex.column();
-    const auto row = modelIndex.row();
-
-    const auto hideValues = ::HIDE_ZERO_VALUES;
-    const auto amountString = [hideValues](const auto value, const auto total)
+    const auto amountString = [](const auto value, const auto total)
     {
-        return ((value == 0) && (total == 0) && hideValues)
+        return ((value == 0) && (total == 0) && ::HIDE_ZERO_VALUES)
                 ? QString {}
                 : QString::number(value) + " (" + QString::number(total) + ')';
     };
+
+    const auto column = modelIndex.column();
+    const auto row = modelIndex.row();
 
     const auto getTooltipForNameColumn = [this, &modelIndex, &column, &row]()
     {
@@ -147,17 +146,15 @@ bool TorrentSqlTableModel::select()
 QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
                                            const int column) const
 {
-    const auto hideValues = ::HIDE_ZERO_VALUES;
-    const auto unitString =
-            [hideValues](const qint64 value, const bool isSpeedUnit = false) -> QString
+    const auto unitString = [](const qint64 value, const bool isSpeedUnit = false) -> QString
     {
-        return ((value == 0) && hideValues)
+        return ((value == 0) && ::HIDE_ZERO_VALUES)
             ? QString {} : Utils::Misc::friendlyUnit(value, isSpeedUnit);
     };
 
-    const auto amountString = [hideValues](const auto value, const auto total)
+    const auto amountString = [](const auto value, const auto total)
     {
-        return ((value == 0) && (total == 0) && hideValues)
+        return ((value == 0) && (total == 0) && ::HIDE_ZERO_VALUES)
                 ? QString {}
                 : QString::number(value) + " (" + QString::number(total) + ')';
     };
