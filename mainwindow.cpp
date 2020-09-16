@@ -154,15 +154,6 @@ MainWindow::MainWindow(QWidget *parent)
     // Initial focus
     m_tableView->setFocus();
 
-    // Find qBittorent's main window HWND
-    ::EnumWindows(EnumWindowsProc, NULL);
-    // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
-    if (isQBittorrentUp()) {
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
-        emit qBittorrentUp(true);
-    } else
-        emit qBittorrentDown(true);
-
     // TODO node.exe on path checker in qtimer 1sec after start, may be also nodejs version silverqx
 }
 
@@ -177,6 +168,21 @@ MainWindow::~MainWindow()
 MainWindow *MainWindow::instance()
 {
     return l_mainWindow;
+}
+
+void MainWindow::show()
+{
+    // I had to put this code outside from ctor, to prevent clazy-incorrect-emit
+    // Find qBittorent's main window HWND
+    ::EnumWindows(EnumWindowsProc, NULL);
+    // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
+    if (isQBittorrentUp()) {
+        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
+        emit qBittorrentUp(true);
+    } else
+        emit qBittorrentDown(true);
+
+    QMainWindow::show();
 }
 
 void MainWindow::refreshStatusBar()
