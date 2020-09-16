@@ -21,14 +21,19 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
     const MSG *msg = static_cast<const MSG *>(message);
 
     switch (msg->message) {
-    case MSG_QBITTORRENT_UP:
+    case MSG_QBITTORRENT_UP: {
         qDebug() << "IPC qBittorrent : qBittorrent started";
-        emit m_mainWindow->qBittorrentHwndChanged(reinterpret_cast<HWND>(msg->wParam));
+        const auto qBittorrentHwndNew = reinterpret_cast<HWND>(msg->wParam);
+        if (m_mainWindow->getQBittorrentHwnd() != qBittorrentHwndNew)
+            emit m_mainWindow->qBittorrentHwndChanged(qBittorrentHwndNew);
+        emit m_mainWindow->qBittorrentUp();
         return true;
+    }
     case MSG_QBITTORRENT_DOWN:
         qDebug() << "IPC qBittorrent : qBittorrent closed";
-        // TODO keep track of hwnd and emit only when changed silverqx
-        emit m_mainWindow->qBittorrentHwndChanged(nullptr);
+        if (m_mainWindow->getQBittorrentHwnd() != nullptr)
+            emit m_mainWindow->qBittorrentHwndChanged(nullptr);
+        emit m_mainWindow->qBittorrentDown();
         return true;
     case MSG_QBT_TORRENT_REMOVED:
         qDebug() << "IPC qBittorrent : Torrent removed";
