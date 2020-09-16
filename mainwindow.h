@@ -25,6 +25,9 @@ public:
 
     static MainWindow *instance();
 
+public slots:
+    void show();
+
 signals:
     void torrentsAddedOrRemoved();
     void torrentsChanged(const QVector<QString> &torrentInfoHashes);
