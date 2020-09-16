@@ -228,7 +228,6 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     ui->setupUi(this);
 
     // Override design values
-    // TODO check how to correctly use my own DEFINES silverqx
 #ifdef VISIBLE_CONSOLE
     // Set up smaller, so I can see console output
     const auto height = minimumHeight();

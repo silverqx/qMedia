@@ -115,7 +115,6 @@ MainWindow::MainWindow(QWidget *parent)
     createStatusBar();
 
     // Connect events
-    // WARNING can occur edge case, when qBittorrent HWND was changed, before slots before was connected, also check TorrentTransferTableView::updateQBittorrentHwnd(), it relates silverqx
     connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
     connect(this, &MainWindow::qBittorrentHwndChanged, m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
     // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs for every torrent
