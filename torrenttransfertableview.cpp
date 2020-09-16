@@ -96,6 +96,9 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     hideColumn(TR_STATUS);
     hideColumn(TR_MOVIE_DETAIL_INDEX);
     hideColumn(TR_SAVE_PATH);
+#if LOG_GEOMETRY
+    qDebug() << "TorrentTransferTableView() ctor";
+#endif
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
 
     // Init torrent context menu
@@ -131,11 +134,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
 
     // Resize columns to default state after right click
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(horizontalHeader(), &QHeaderView::customContextMenuRequested, [this]()
-    {
-        m_showEventInitialized = false;
-        resizeColumns();
-    });
+    connect(horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &TorrentTransferTableView::resizeColumns);
 
     // Select torrent with latest / highest added on datetime
     selectionModel()->select(m_model->index(0, TR_NAME),
@@ -155,61 +154,16 @@ void TorrentTransferTableView::showEvent(QShowEvent *event)
     if (event->spontaneous())
         return QTableView::showEvent(event);
 
-    return resizeColumns();
-}
-
-void TorrentTransferTableView::resizeColumns()
-{
+#if LOG_GEOMETRY
+    qDebug() << "showEvent(), m_showEventInitialized ="
+             << (m_showEventInitialized ? "true" : "false");
+#endif
     if (m_showEventInitialized)
         return;
 
     // Move this as top as possible to prevent race condition
     m_showEventInitialized = true;
-
-    // Pixel perfectly sized torrentTransferTableView header
-    // Set Name column width to all remaining area
-    // Have to be called after show(), because torrentTransferTableView width is needed
-    QHeaderView *const tableViewHeader = horizontalHeader();
-    tableViewHeader->resizeSections(QHeaderView::ResizeToContents);
-
-    // Increase progress section size about 10%
-    const int sizeSize = tableViewHeader->sectionSize(TR_SIZE);
-    tableViewHeader->resizeSection(TR_SIZE, sizeSize + (sizeSize * 0.1));
-    // Increase size section size about 40%
-    const int progressSize = tableViewHeader->sectionSize(TR_PROGRESS);
-    tableViewHeader->resizeSection(TR_PROGRESS, progressSize + (progressSize * 0.4));
-    // Increase ETA section size about 30%
-    const int etaSize = tableViewHeader->sectionSize(TR_ETA);
-    tableViewHeader->resizeSection(TR_ETA, etaSize + (etaSize * 0.3));
-    // Remaining section do not need resize
-    // Increase added on section size about 10%
-    const int addedOnSize = tableViewHeader->sectionSize(TR_ADDED_ON);
-    tableViewHeader->resizeSection(TR_ADDED_ON, addedOnSize + (addedOnSize * 0.1));
-
-    // TODO also set minimum size for each section, based on above computed sizes silverqx
-
-    // Compute name section size
-    int nameColWidth = width();
-    const QScrollBar *const vScrollBar = verticalScrollBar();
-    if (vScrollBar->isVisible())
-        nameColWidth -= vScrollBar->width();
-    nameColWidth -= tableViewHeader->sectionSize(TR_PROGRESS);
-    nameColWidth -= tableViewHeader->sectionSize(TR_ETA);
-    nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
-    nameColWidth -= tableViewHeader->sectionSize(TR_SEEDS);
-    nameColWidth -= tableViewHeader->sectionSize(TR_LEECHERS);
-    nameColWidth -= tableViewHeader->sectionSize(TR_AMOUNT_LEFT);
-    nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
-    nameColWidth -= 2; // Borders
-
-    // TODO at the end set mainwindow width and height based on torrentTransferTableView ( inteligently 😎 ) silverqx
-
-    tableViewHeader->resizeSection(TR_NAME, nameColWidth);
-    horizontalHeader()->setStretchLastSection(true);
-
-    // Finally, I like this
-    tableViewHeader->setSectionResizeMode(QHeaderView::Interactive);
-    tableViewHeader->setCascadingSectionResizes(true);
+    resizeColumns();
 }
 
 QAction *TorrentTransferTableView::createActionForMenu(
@@ -322,7 +276,7 @@ void TorrentTransferTableView::removeRecordFromTorrentFilesCache(const quint64 t
     delete torrentFiles;
 }
 
-void TorrentTransferTableView::filterTextChanged(const QString &name)
+void TorrentTransferTableView::filterTextChanged(const QString &name) const
 {
     m_proxyModel->setFilterRegExp(
         // TODO port to QRegularExpression silverqx
@@ -362,10 +316,9 @@ void TorrentTransferTableView::previewSelectedTorrent()
     // TODO set width to 90% of mainwindow silverqx
     connect(dialog, &PreviewSelectDialog::readyToPreviewFile, this, &TorrentTransferTableView::previewFile);
     dialog->show();
-    // TODO set current selection to selected model, because after preview dialog is closed, current selection is at 0,0 silverqx
 }
 
-void TorrentTransferTableView::reloadTorrentModel()
+void TorrentTransferTableView::reloadTorrentModel() const
 {
     // TODO remember selected torrent by InfoHash, not by row silverqx
     // Remember currently selected row or first row, if was nothing selected
@@ -758,13 +711,72 @@ void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &tor
     }
 }
 
-void TorrentTransferTableView::updateQBittorrentHwnd(const HWND hwnd)
+void TorrentTransferTableView::resizeColumns() const
 {
-    // BUG if qMedia is started after qBittorrent, I'm not getting updates immediately, investigate, may be send back qMedia hwnd silverqx
-    // If qBittorrent was closed, reload model to display ETA ∞ for every torrent
-    if ((isQBittorrentUp() && (hwnd == nullptr))
-        || (!isQBittorrentUp() && (hwnd != nullptr)))
-        reloadTorrentModel();
+#if LOG_GEOMETRY
+    qDebug() << "resizeColumns(), m_showEventInitialized ="
+             << (m_showEventInitialized ? "true" : "false");
+#endif
+    // Pixel perfectly sized torrentTransferTableView header
+    // Set Name column width to all remaining area
+    // Have to be called after show(), because torrentTransferTableView width is needed
+    QHeaderView *const tableViewHeader = horizontalHeader();
+    tableViewHeader->resizeSections(QHeaderView::ResizeToContents);
 
-    m_qBittorrentHwnd = hwnd;
+    // Increase progress section size about 10%
+    const int sizeSize = tableViewHeader->sectionSize(TR_SIZE);
+    tableViewHeader->resizeSection(TR_SIZE, sizeSize + (sizeSize * 0.1));
+    // Increase size section size about 40%
+    const int progressSize = tableViewHeader->sectionSize(TR_PROGRESS);
+    tableViewHeader->resizeSection(TR_PROGRESS, progressSize + (progressSize * 0.4));
+    // Increase ETA section size about 30%
+    const int etaSize = tableViewHeader->sectionSize(TR_ETA);
+    tableViewHeader->resizeSection(TR_ETA, etaSize + (etaSize * 0.3));
+    // Remaining section do not need resize
+    // Increase added on section size about 10%
+    const int addedOnSize = tableViewHeader->sectionSize(TR_ADDED_ON);
+    tableViewHeader->resizeSection(TR_ADDED_ON, addedOnSize + (addedOnSize * 0.1));
+
+    // TODO also set minimum size for each section, based on above computed sizes silverqx
+
+    // Compute name section size
+    int nameColWidth = width();
+    const QScrollBar *const vScrollBar = verticalScrollBar();
+    if (vScrollBar->isVisible())
+        nameColWidth -= vScrollBar->width();
+    nameColWidth -= tableViewHeader->sectionSize(TR_PROGRESS);
+    nameColWidth -= tableViewHeader->sectionSize(TR_ETA);
+    nameColWidth -= tableViewHeader->sectionSize(TR_SIZE);
+    nameColWidth -= tableViewHeader->sectionSize(TR_SEEDS);
+    nameColWidth -= tableViewHeader->sectionSize(TR_LEECHERS);
+    nameColWidth -= tableViewHeader->sectionSize(TR_AMOUNT_LEFT);
+    nameColWidth -= tableViewHeader->sectionSize(TR_ADDED_ON);
+    nameColWidth -= 2; // Borders
+
+    // TODO at the end set mainwindow width and height based on torrentTransferTableView ( inteligently 😎 ) silverqx
+
+    tableViewHeader->resizeSection(TR_NAME, nameColWidth);
+    horizontalHeader()->setStretchLastSection(true);
+
+    // Finally, I like this
+    tableViewHeader->setSectionResizeMode(QHeaderView::Interactive);
+    tableViewHeader->setCascadingSectionResizes(true);
+}
+
+void TorrentTransferTableView::togglePeerColumns()
+{
+    setColumnHidden(TR_SEEDS, !isQBittorrentUp());
+    setColumnHidden(TR_LEECHERS, !isQBittorrentUp());
+
+    if (m_showEventInitialized == false) {
+#if LOG_GEOMETRY
+        qDebug() << "togglePeerColumns(), m_showEventInitialized = false";
+#endif
+        return;
+    }
+
+#if LOG_GEOMETRY
+    qDebug() << "togglePeerColumns(), m_showEventInitialized = true";
+#endif
+    resizeColumns();
 }

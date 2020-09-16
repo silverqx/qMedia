@@ -18,10 +18,26 @@
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 
+/*! Order of qBittorrentHwndChanged() or qBittorentUp/Down() slots:
+    updateQBittorrentHwnd()
+    reloadTorrentModel()
+    setGeometry()
+    togglePeerColumns()
+    resizeColumns()
+
+    There can be more combinations like initial show, when qBittorrent
+    is up or down, etc, but order above is crucial.
+ */
+
 namespace
 {
     // Needed in EnumWindowsProc()
     MainWindow *l_mainWindow = nullptr;
+    /*! Main window width by isQBittorrentUp().*/
+    const QHash<bool, int> l_mainWindowWidthHash {
+        {false, 1136},
+        {true,  1300},
+    };
 
     BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
     {
@@ -68,7 +84,9 @@ namespace
             return true;
 
         qDebug() << "HWND for qBittorrent window found :" << hwnd;
-        emit l_mainWindow->qBittorrentHwndChanged(hwnd);
+
+        if (l_mainWindow->getQBittorrentHwnd() != hwnd)
+            emit l_mainWindow->qBittorrentHwndChanged(hwnd);
 
         return false;
     }
@@ -87,17 +105,6 @@ MainWindow::MainWindow(QWidget *parent)
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
 
-    // Override design values
-    const auto mainWindowWidth = 1300;
-#ifdef VISIBLE_CONSOLE
-    // Set up smaller, so I can see console output
-    resize(mainWindowWidth, geometry().height() - 200);
-#else
-    resize(mainWindowWidth, geometry().height());
-#endif
-    // Initial position
-    move(screen()->availableSize().width() - width() - 10, 10);
-
     connectToDb();
 
     // Create and initialize widgets
@@ -111,6 +118,14 @@ MainWindow::MainWindow(QWidget *parent)
     // WARNING can occur edge case, when qBittorrent HWND was changed, before slots before was connected, also check TorrentTransferTableView::updateQBittorrentHwnd(), it relates silverqx
     connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
     connect(this, &MainWindow::qBittorrentHwndChanged, m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
+    // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs for every torrent
+    // Order is crucial here
+    connect(this, &MainWindow::qBittorrentDown, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::qBittorrentDown, this, &MainWindow::setGeometry);
+    connect(this, &MainWindow::qBittorrentDown, m_tableView, &TorrentTransferTableView::togglePeerColumns);
+    connect(this, &MainWindow::qBittorrentUp, this, &MainWindow::setGeometry);
+    connect(this, &MainWindow::qBittorrentUp, m_tableView, &TorrentTransferTableView::togglePeerColumns);
+    // End of crucial order
     connect(qApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::applicationStateChanged);
     connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged, m_tableView, &TorrentTransferTableView::filterTextChanged);
     connect(ui->reloadTorrentsButton, &QPushButton::clicked, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
@@ -143,8 +158,12 @@ MainWindow::MainWindow(QWidget *parent)
     // Find qBittorent's main window HWND
     ::EnumWindows(EnumWindowsProc, NULL);
     // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
-    if (isQBittorrentUp())
+    if (isQBittorrentUp()) {
         ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
+        emit qBittorrentUp(true);
+    } else
+        emit qBittorrentDown(true);
+
     // TODO node.exe on path checker in qtimer 1sec after start, may be also nodejs version silverqx
 }
 
@@ -187,6 +206,24 @@ void MainWindow::applicationStateChanged(Qt::ApplicationState state)
     if ((state == Qt::ApplicationInactive) || (state == Qt::ApplicationSuspended)
         || (state == Qt::ApplicationHidden))
         ::PostMessage(m_qBittorrentHwnd, MSG_QMD_APPLICATION_DEACTIVE, NULL, NULL);
+}
+
+void MainWindow::setGeometry(const bool initial)
+{
+#if LOG_GEOMETRY
+    qDebug("setGeometry(initial = %s)", initial ? "true" : "false");
+#endif
+
+    const auto mainWindowWidth = l_mainWindowWidthHash[isQBittorrentUp()];
+#ifdef VISIBLE_CONSOLE
+    // Set up smaller, so I can see console output, but only at initial
+    resize(mainWindowWidth,
+           initial ? (geometry().height() - 200) : geometry().height());
+#else
+    resize(mainWindowWidth, geometry().height());
+#endif
+    // Initial position
+    move(screen()->availableSize().width() - width() - 10, 10);
 }
 
 void MainWindow::connectToDb() const

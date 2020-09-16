@@ -19,13 +19,16 @@ public:
     ~TorrentTransferTableView();
 
     int getModelRowCount() const;
-    inline bool isQBittorrentUp() const { return (m_qBittorrentHwnd != nullptr); };
+    inline bool isQBittorrentUp() const noexcept { return (m_qBittorrentHwnd != nullptr); };
 
 public slots:
-    void filterTextChanged(const QString &name);
-    void reloadTorrentModel();
+    void filterTextChanged(const QString &name) const;
+    void reloadTorrentModel() const;
     void updateChangedTorrents(const QVector<QString> &torrentInfoHashes);
-    void updateQBittorrentHwnd(const HWND hwnd);
+    void resizeColumns() const;
+    inline void updateQBittorrentHwnd(const HWND hwnd) noexcept { m_qBittorrentHwnd = hwnd; };
+    /*! Show/hide seeds/leechs column by isQBittorrentUp() */
+    void togglePeerColumns();
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -60,7 +63,6 @@ private:
     QModelIndex getSelectedTorrentIndex() const;
     QSqlRecord getSelectedTorrentRecord() const;
     void removeRecordFromTorrentFilesCache(quint64 torrentId);
-    void resizeColumns();
     /*! Context menu action factory. */
     QAction *createActionForMenu(const QIcon &icon, const QString &text,
                                  const QKeySequence shortcut, const bool enabled,
