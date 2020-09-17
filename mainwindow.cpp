@@ -14,7 +14,7 @@
 #include <QScreen>
 #include <regex>
 
-#include "common.h"
+#include "commonglobal.h"
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 
@@ -160,7 +160,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     if (isQBittorrentUp())
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_DOWN, NULL, NULL);
+        ::PostMessage(m_qBittorrentHwnd, ::MSG_QMEDIA_DOWN, NULL, NULL);
 
     delete ui;
 }
@@ -177,7 +177,7 @@ void MainWindow::show()
     ::EnumWindows(EnumWindowsProc, NULL);
     // Send hwnd of MainWindow to qBittorrent, aka. inform that qMedia is running
     if (isQBittorrentUp()) {
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
+        ::PostMessage(m_qBittorrentHwnd, ::MSG_QMEDIA_UP, (WPARAM) winId(), NULL);
         emit qBittorrentUp(true);
     } else
         emit qBittorrentDown(true);
@@ -207,10 +207,10 @@ void MainWindow::applicationStateChanged(Qt::ApplicationState state)
 
     // Inform qBittorrent about qMedia is in foreground
     if (state == Qt::ApplicationActive)
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_APPLICATION_ACTIVE, NULL, NULL);
+        ::PostMessage(m_qBittorrentHwnd, ::MSG_QMD_APPLICATION_ACTIVE, NULL, NULL);
     if ((state == Qt::ApplicationInactive) || (state == Qt::ApplicationSuspended)
         || (state == Qt::ApplicationHidden))
-        ::PostMessage(m_qBittorrentHwnd, MSG_QMD_APPLICATION_DEACTIVE, NULL, NULL);
+        ::PostMessage(m_qBittorrentHwnd, ::MSG_QMD_APPLICATION_DEACTIVE, NULL, NULL);
 }
 
 void MainWindow::setGeometry(const bool initial)

@@ -16,7 +16,7 @@ QString Utils::Fs::toUniformPath(const QString &path)
 
 QString Utils::Fs::fileExtension(const QString &filename)
 {
-    const QString ext = QString(filename).remove(QB_EXT);
+    const QString ext = QString(filename).remove(::QB_EXT);
     const int pointIndex = ext.lastIndexOf('.');
     if (pointIndex == -1)
         return {};

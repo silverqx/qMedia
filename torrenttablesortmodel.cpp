@@ -42,9 +42,9 @@ bool TorrentTableSortModel::lessThan(const QModelIndex &left, const QModelIndex 
         auto rightValue = rightRawValue.toLongLong();
         /* Interpret values larger that max ETA cap as 0, to avoid always being sorted
            on top / bottom. */
-        if (leftValue >= MAX_ETA)
+        if (leftValue >= ::MAX_ETA)
             leftValue = 0;
-        if (rightValue >= MAX_ETA)
+        if (rightValue >= ::MAX_ETA)
             rightValue = 0;
         /* Here for performance reason, it could be all above, after QVariant declaration,
            but I don't want to do this MAX_ETA cap checks for every sort, so this second sorting
