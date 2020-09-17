@@ -14,7 +14,7 @@
 
 #include <qt_windows.h>
 
-#include "common.h"
+#include "commonglobal.h"
 #include "csfddetailservice.h"
 #include "moviedetaildialog.h"
 #include "previewselectdialog.h"
@@ -490,13 +490,8 @@ void TorrentTransferTableView::deleteSelectedTorrent()
 
     qDebug() << "Delete selected torrent :" << torrent.value("name").toString();
 
-    // TODO migrate similar code to IpcSendByteArray() silverqx
-    QByteArray infoHash = torrent.value("hash").toByteArray();
-    COPYDATASTRUCT torrentInfoHash;
-    torrentInfoHash.lpData = infoHash.data();
-    torrentInfoHash.cbData = infoHash.size();
-    torrentInfoHash.dwData = NULL;
-    ::SendMessage(m_qBittorrentHwnd, WM_COPYDATA, (WPARAM) MSG_QMD_DELETE_TORRENT, (LPARAM) (LPVOID) &torrentInfoHash);
+    const auto infoHash = torrent.value("hash").toByteArray();
+    ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_DELETE_TORRENT, infoHash);
 }
 
 void TorrentTransferTableView::showCsfdDetail()
@@ -535,7 +530,7 @@ void TorrentTransferTableView::pauseTorrent(const QSqlRecord &torrent)
 {
     qDebug() << "Pause selected torrent :" << torrent.value("name").toString();
 
-    QByteArray infoHash = torrent.value("hash").toByteArray();
+    const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_PAUSE_TORRENT, infoHash);
 }
 
@@ -558,7 +553,7 @@ void TorrentTransferTableView::resumeTorrent(const QSqlRecord &torrent)
 {
     qDebug() << "Resume selected torrent :" << torrent.value("name").toString();
 
-    QByteArray infoHash = torrent.value("hash").toByteArray();
+    const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_RESUME_TORRENT, infoHash);
 }
 
@@ -593,7 +588,7 @@ void TorrentTransferTableView::forceResumeSelectedTorrent()
 
     qDebug() << "Force resume selected torrent :" << torrent.value("name").toString();
 
-    QByteArray infoHash = torrent.value("hash").toByteArray();
+    const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RESUME_TORRENT, infoHash);
 }
 
@@ -612,7 +607,7 @@ void TorrentTransferTableView::forceRecheckSelectedTorrent()
 
     qDebug() << "Force recheck selected torrent :" << torrent.value("name").toString();
 
-    QByteArray infoHash = torrent.value("hash").toByteArray();
+    const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RECHECK_TORRENT, infoHash);
 }
 

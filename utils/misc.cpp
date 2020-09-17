@@ -50,7 +50,7 @@ QString Utils::Misc::friendlyUnit(const qint64 bytesValue, const bool isSpeed)
         return QStringLiteral("Unknown");
 
     return Utils::String::fromDouble(friendlyVal, friendlyUnitPrecision(unit))
-           + QString::fromUtf8(C_NON_BREAKING_SPACE)
+           + QString::fromUtf8(::C_NON_BREAKING_SPACE)
            + unitString(unit, isSpeed);
 }
 
@@ -134,9 +134,9 @@ QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlongl
                                           const DURATION_INPUT input)
 {
     if (duration == 0)
-        return QString::fromUtf8(C_INFINITY);
+        return QString::fromUtf8(::C_INFINITY);
     if ((maxCap >= 0) && (duration >= maxCap))
-        return QString::fromUtf8(C_INFINITY);
+        return QString::fromUtf8(::C_INFINITY);
 
     qlonglong seconds;
     qlonglong minutes;

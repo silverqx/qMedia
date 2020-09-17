@@ -3,6 +3,7 @@
 #include <QDebug>
 
 #include "common.h"
+#include "commonglobal.h"
 #include "config.h"
 #include "mainwindow.h"
 
@@ -21,7 +22,7 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
     const MSG *msg = static_cast<const MSG *>(message);
 
     switch (msg->message) {
-    case MSG_QBITTORRENT_UP: {
+    case ::MSG_QBITTORRENT_UP: {
         qDebug() << "IPC qBittorrent : qBittorrent started";
         const auto qBittorrentHwndNew = reinterpret_cast<HWND>(msg->wParam);
         if (m_mainWindow->getQBittorrentHwnd() != qBittorrentHwndNew)
@@ -29,17 +30,17 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
         emit m_mainWindow->qBittorrentUp();
         return true;
     }
-    case MSG_QBITTORRENT_DOWN:
+    case ::MSG_QBITTORRENT_DOWN:
         qDebug() << "IPC qBittorrent : qBittorrent closed";
         if (m_mainWindow->getQBittorrentHwnd() != nullptr)
             emit m_mainWindow->qBittorrentHwndChanged(nullptr);
         emit m_mainWindow->qBittorrentDown();
         return true;
-    case MSG_QBT_TORRENT_REMOVED:
+    case ::MSG_QBT_TORRENT_REMOVED:
         qDebug() << "IPC qBittorrent : Torrent removed";
         emit m_mainWindow->torrentsAddedOrRemoved();
         return true;
-    case MSG_QBT_TORRENTS_ADDED:
+    case ::MSG_QBT_TORRENTS_ADDED:
         qDebug() << "IPC qBittorrent : Torrents added";
         emit m_mainWindow->torrentsAddedOrRemoved();
         return true;
@@ -51,16 +52,16 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
 
     const COPYDATASTRUCT copyData = *reinterpret_cast<PCOPYDATASTRUCT>(msg->lParam);
     switch (static_cast<int>(msg->wParam)) {
-    case MSG_QBT_TORRENTS_CHANGED:
-    case MSG_QBT_TORRENT_MOVED:
+    case ::MSG_QBT_TORRENTS_CHANGED:
+    case ::MSG_QBT_TORRENT_MOVED:
         // Put together QVector of torrent info hashes
         const int dataSize = static_cast<int>(copyData.cbData);
         const char *const begin = static_cast<const char *>(copyData.lpData);
         QVector<QString> torrentInfoHashes;
         // One info hash has 40 bytes
-        for (int i = 0; i < dataSize / INFOHASH_SIZE ; ++i)
-            torrentInfoHashes << QString::fromLatin1(begin + (i * INFOHASH_SIZE),
-                                                     INFOHASH_SIZE);
+        for (int i = 0; i < dataSize / ::INFOHASH_SIZE ; ++i)
+            torrentInfoHashes << QString::fromLatin1(begin + (i * ::INFOHASH_SIZE),
+                                                     ::INFOHASH_SIZE);
 
 #if LOG_CHANGED_TORRENTS
         qDebug() << "IPC qBittorrent : Changed torrents copyData size :" << dataSize;

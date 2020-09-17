@@ -17,6 +17,10 @@ CONFIG(release, debug|release) {
     DEFINES += QT_NO_DEBUG_OUTPUT
 }
 
+# qMedia defines
+# ---
+DEFINES += PROJECT_QMEDIA
+
 # Qt defines
 # ---
 
@@ -110,6 +114,9 @@ PRECOMPILED_HEADER = pch.h
 precompile_header:!isEmpty(PRECOMPILED_HEADER) {
     DEFINES += USING_PCH
 }
+
+# Outsourced common files, so that they can be used in qBittorrent too
+include(../qMediaCommon/qmediacommon.pri)
 
 # Application files
 # ---

@@ -139,7 +139,7 @@ void PreviewSelectDialog::populatePreviewListModel()
         torrentFile = itTorrentFiles.next();
         filePath = torrentFile.value("filepath").toString();
         // Remove qBittorrent ext when needed
-        if (filePath.endsWith(QB_EXT))
+        if (filePath.endsWith(::QB_EXT))
             filePath.chop(4);
 
         // Insert new row

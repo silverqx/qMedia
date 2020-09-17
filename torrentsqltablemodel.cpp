@@ -175,8 +175,8 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
     case TR_ETA:
         // If qBittorrent is not running, show ∞ for every torrent
         if (!m_torrentTableView->isQBittorrentUp())
-            return QString::fromUtf8(C_INFINITY);
-        return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), MAX_ETA);
+            return QString::fromUtf8(::C_INFINITY);
+        return Utils::Misc::userFriendlyDuration(rawData.toLongLong(), ::MAX_ETA);
     case TR_ADDED_ON:
         return QLocale::system().toString(rawData.toDateTime(), QLocale::ShortFormat);
     case TR_SIZE:
