@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QStandardPaths>
 
 #include <qt_windows.h>
 
@@ -21,6 +22,11 @@ int main(int argc, char *argv[])
     // Can run only one instance
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
         return 1;
+
+#ifdef QT_DEBUG
+    // Redirect writable locations to %APPDATA%/qttest
+    QStandardPaths::setTestModeEnabled(true);
+#endif
 
     QApplication app(argc, argv);
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);

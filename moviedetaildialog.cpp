@@ -3,6 +3,7 @@
 
 #include <QDesktopServices>
 #include <QMouseEvent>
+#include <QNetworkDiskCache>
 #include <QNetworkReply>
 #include <QShortcut>
 #include <QTimer>
@@ -261,6 +262,11 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     m_resizeTimer->setInterval(100);
     connect(m_resizeTimer, &QTimer::timeout, this, &MovieDetailDialog::resizeTimeout);
 
+    // Initialize NetworkAccessManager
+    auto diskCache = new QNetworkDiskCache(this);
+    diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    m_networkManager.setCache(diskCache);
+
     // Connect events
     connect(&m_networkManager, &QNetworkAccessManager::finished, this, &MovieDetailDialog::finishedMoviePoster);
     // saveButton
@@ -394,9 +400,11 @@ void MovieDetailDialog::prepareMoviePosterSection()
 {
     // TODO handle errors silverqx
     // TODO add empty poster, if poster missing silverqx
-    auto url = QUrl(m_movieDetail["poster"].toString(), QUrl::StrictMode);
+    QUrl url(m_movieDetail["poster"].toString(), QUrl::StrictMode);
     url.setQuery(QUrlQuery({{"w250", nullptr}}));
-    m_networkManager.get(QNetworkRequest(url));
+    QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
+    m_networkManager.get(request);
 }
 
 void MovieDetailDialog::renderTitleSection()

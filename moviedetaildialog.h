@@ -54,7 +54,6 @@ private:
     Ui::MovieDetailDialog *ui;
     QJsonObject m_movieDetail;
     QJsonArray m_movieSearchResult;
-    // TODO implement QNetworkDiskCache silverqx
     QNetworkAccessManager m_networkManager;
     QTimer *m_resizeTimer;
     bool m_resizeInProgress = false;
