@@ -34,7 +34,7 @@ namespace
     // Needed in EnumWindowsProc()
     MainWindow *l_mainWindow = nullptr;
     /*! Main window width by isQBittorrentUp().*/
-    const QHash<bool, int> l_mainWindowWidthHash {
+    static const QHash<bool, int> l_mainWindowWidthHash {
         {false, 1136},
         {true,  1300},
     };
