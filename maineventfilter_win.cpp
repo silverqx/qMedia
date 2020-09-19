@@ -64,8 +64,10 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
                                                      ::INFOHASH_SIZE);
 
 #if LOG_CHANGED_TORRENTS
-        qDebug() << "IPC qBittorrent : Changed torrents copyData size :" << dataSize;
-        qDebug() << "IPC qBittorrent : Changed torrents info hashes :" << torrentInfoHashes;
+        qDebug() << "IPC qBittorrent : Changed torrents copyData size :"
+                 << dataSize;
+        qDebug() << "IPC qBittorrent : Changed torrents info hashes :"
+                 << torrentInfoHashes;
 #endif
 
         emit m_mainWindow->torrentsChanged(torrentInfoHashes);

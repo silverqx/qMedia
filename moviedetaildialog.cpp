@@ -820,7 +820,8 @@ void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
     const auto filmId = ui->movieDetailComboBox->currentData().toULongLong();
     qDebug() << "Movie detail ComboBox changed, current csfd id :"
              << filmId;
-    qDebug() << "Selected movie detail index :" << index;
+    qDebug() << "Selected movie detail index :"
+             << index;
 
     prepareData(filmId);
 
