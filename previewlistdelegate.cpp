@@ -34,7 +34,7 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
         break;
 
     case PreviewSelectDialog::TR_PROGRESS: {
-        const qreal progress = index.data().toReal() / 10;
+        const auto progress = index.data().toReal() / 10;
 
         QStyleOptionProgressBar newopt;
         newopt.rect = opt.rect;
@@ -52,7 +52,7 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
         QProxyStyle fusionStyle("fusion");
-        QStyle *style = &fusionStyle;
+        const QStyle *const style = &fusionStyle;
 #else
         QStyle *style = option.widget ? option.widget->style() : QApplication::style();
 #endif
@@ -80,7 +80,7 @@ QSize PreviewListDelegate::sizeHint(const QStyleOptionViewItem &option,
                                     const QModelIndex &index) const
 {
     // Increase line size to 28px, looks much nicer
-    QSize size = QItemDelegate::sizeHint(option, index);
+    auto size = QItemDelegate::sizeHint(option, index);
     size.setHeight(28);
     return size;
 

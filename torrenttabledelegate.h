@@ -11,12 +11,16 @@ class TorrentTableDelegate final : public QStyledItemDelegate
 public:
     explicit TorrentTableDelegate(QObject *parent);
 
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    QWidget *createEditor(QWidget *, const QStyleOptionViewItem &, const QModelIndex &) const override;
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override;
+    QWidget *createEditor(QWidget *, const QStyleOptionViewItem &,
+                          const QModelIndex &) const override;
 
 private:
-    void paintSelectedItem(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void paintProgressBar(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    void paintSelectedItem(QPainter *painter, const QStyleOptionViewItem &option,
+                           const QModelIndex &index) const;
+    void paintProgressBar(QPainter *painter, const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const;
 };
 
 #endif // TORRENTTABLEDELEGATE_H

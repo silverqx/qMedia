@@ -52,13 +52,15 @@ namespace
 #endif
 
         // Example: [D: 0 B/s, U: 1,3 MiB/s] qBittorrent v4.2.5
-        const std::wregex re(L"^(\\[\\D: .*\\, U\\: .*\\] )?qBittorrent (v\\d+\\.\\d+\\.\\d+([a-zA-Z]+\\d{0,2})?)$");
+        const std::wregex re(L"^(\\[\\D: .*\\, U\\: .*\\] )?qBittorrent "
+                             "(v\\d+\\.\\d+\\.\\d+([a-zA-Z]+\\d{0,2})?)$");
         if (!std::regex_match(windowText.get(), re))
             return true;
 
         DWORD pid;
         ::GetWindowThreadProcessId(hwnd, &pid);
-        const HANDLE processHandle = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+        const HANDLE processHandle = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                                                   false, pid);
         if (processHandle == NULL) {
             qDebug() << "OpenProcess() in EnumWindows() failed :" << ::GetLastError();
             return true;
@@ -76,7 +78,8 @@ namespace
         if (::wcsstr(moduleFilePath, L"C:\\Program Files\\qBittorrent") != &moduleFilePath[0])
             return true;
 #endif
-        const QString moduleFileName = Utils::Fs::fileName(QString::fromWCharArray(moduleFilePath));
+        const QString moduleFileName =
+                Utils::Fs::fileName(QString::fromWCharArray(moduleFilePath));
         // TODO create finally helper https://www.modernescpp.com/index.php/c-core-guidelines-when-you-can-t-throw-an-exception silverqx
         // Or https://www.codeproject.com/Tips/476970/finally-clause-in-Cplusplus
         ::CloseHandle(processHandle);
@@ -116,36 +119,60 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Connect events
     connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
-    connect(this, &MainWindow::qBittorrentHwndChanged, m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
-    // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs for every torrent
-    // Order is crucial here
-    connect(this, &MainWindow::qBittorrentDown, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::qBittorrentHwndChanged,
+            m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
+    // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs
+    // for every torrent.
+    // Order is crucial here.
+    connect(this, &MainWindow::qBittorrentDown,
+            m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::qBittorrentDown, this, &MainWindow::setGeometry);
-    connect(this, &MainWindow::qBittorrentDown, m_tableView, &TorrentTransferTableView::togglePeerColumns);
+    connect(this, &MainWindow::qBittorrentDown,
+            m_tableView, &TorrentTransferTableView::togglePeerColumns);
     connect(this, &MainWindow::qBittorrentUp, this, &MainWindow::setGeometry);
-    connect(this, &MainWindow::qBittorrentUp, m_tableView, &TorrentTransferTableView::togglePeerColumns);
+    connect(this, &MainWindow::qBittorrentUp,
+            m_tableView, &TorrentTransferTableView::togglePeerColumns);
     // End of crucial order
-    connect(qApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::applicationStateChanged);
-    connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged, m_tableView, &TorrentTransferTableView::filterTextChanged);
-    connect(ui->reloadTorrentsButton, &QPushButton::clicked, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
-    connect(this, &MainWindow::torrentsAddedOrRemoved, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
-    connect(this, &MainWindow::torrentsChanged, m_tableView, &TorrentTransferTableView::updateChangedTorrents);
+    connect(qApp, &QGuiApplication::applicationStateChanged,
+            this, &MainWindow::applicationStateChanged);
+    connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged,
+            m_tableView, &TorrentTransferTableView::filterTextChanged);
+    connect(ui->reloadTorrentsButton, &QPushButton::clicked,
+            m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsAddedOrRemoved,
+            m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    connect(this, &MainWindow::torrentsChanged,
+            m_tableView, &TorrentTransferTableView::updateChangedTorrents);
 
     // Hotkeys
     // filterTorrentsLineEdit
-    const auto *doubleClickHotkeyF2 = new QShortcut(Qt::Key_F2, this, nullptr, nullptr, Qt::WindowShortcut);
-    connect(doubleClickHotkeyF2, &QShortcut::activated, this, &MainWindow::focusTorrentsFilterLineEdit);
-    const auto *switchSearchFilterShortcut = new QShortcut(QKeySequence::Find, this);
-    connect(switchSearchFilterShortcut, &QShortcut::activated, this, &MainWindow::focusTorrentsFilterLineEdit);
-    const auto *doubleClickHotkeyDown = new QShortcut(Qt::Key_Down, ui->filterTorrentsLineEdit, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyDown, &QShortcut::activated, m_tableView, qOverload<>(&TorrentTransferTableView::setFocus));
-    const auto *doubleClickHotkeyEsc = new QShortcut(Qt::Key_Escape, ui->filterTorrentsLineEdit, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(doubleClickHotkeyEsc, &QShortcut::activated, ui->filterTorrentsLineEdit, &QLineEdit::clear);
+    const auto *const doubleClickHotkeyF2 =
+            new QShortcut(Qt::Key_F2, this, nullptr, nullptr, Qt::WindowShortcut);
+    connect(doubleClickHotkeyF2, &QShortcut::activated,
+            this, &MainWindow::focusTorrentsFilterLineEdit);
+    const auto *const switchSearchFilterShortcut =
+            new QShortcut(QKeySequence::Find, this);
+    connect(switchSearchFilterShortcut, &QShortcut::activated,
+            this, &MainWindow::focusTorrentsFilterLineEdit);
+    const auto *const doubleClickHotkeyDown =
+            new QShortcut(Qt::Key_Down, ui->filterTorrentsLineEdit, nullptr, nullptr,
+                          Qt::WidgetShortcut);
+    connect(doubleClickHotkeyDown, &QShortcut::activated,
+            m_tableView, qOverload<>(&TorrentTransferTableView::setFocus));
+    const auto *const doubleClickHotkeyEsc =
+            new QShortcut(Qt::Key_Escape, ui->filterTorrentsLineEdit, nullptr, nullptr,
+                          Qt::WidgetShortcut);
+    connect(doubleClickHotkeyEsc, &QShortcut::activated,
+            ui->filterTorrentsLineEdit, &QLineEdit::clear);
     // Reload model from DB
-    const auto *doubleClickHotkeyF5 = new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::ApplicationShortcut);
-    connect(doubleClickHotkeyF5, &QShortcut::activated, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
-    const auto *doubleClickCtrlR = new QShortcut(Qt::CTRL + Qt::Key_R, this, nullptr, nullptr, Qt::ApplicationShortcut);
-    connect(doubleClickCtrlR, &QShortcut::activated, m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    const auto *const doubleClickHotkeyF5 =
+            new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::ApplicationShortcut);
+    connect(doubleClickHotkeyF5, &QShortcut::activated,
+            m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+    const auto *const doubleClickCtrlR =
+            new QShortcut(Qt::CTRL + Qt::Key_R, this, nullptr, nullptr, Qt::ApplicationShortcut);
+    connect(doubleClickCtrlR, &QShortcut::activated,
+            m_tableView, &TorrentTransferTableView::reloadTorrentModel);
 
     // Tab order
     setTabOrder(m_tableView, ui->filterTorrentsLineEdit);
@@ -185,13 +212,15 @@ void MainWindow::show()
     QMainWindow::show();
 }
 
-void MainWindow::refreshStatusBar()
+void MainWindow::refreshStatusBar() const
 {
-    m_torrentsCountLabel->setText(QStringLiteral("Torrents: <strong>%1</strong>").arg(selectTorrentsCount()));
-    m_torrentFilesCountLabel->setText(QStringLiteral("Video Files: <strong>%1</strong>").arg(selectTorrentFilesCount()));
+    m_torrentsCountLabel->setText(QStringLiteral("Torrents: <strong>%1</strong>")
+                                  .arg(selectTorrentsCount()));
+    m_torrentFilesCountLabel->setText(QStringLiteral("Video Files: <strong>%1</strong>")
+                                      .arg(selectTorrentFilesCount()));
 }
 
-void MainWindow::applicationStateChanged(Qt::ApplicationState state)
+void MainWindow::applicationStateChanged(Qt::ApplicationState state) const
 {
     // Disable autoreload in development
 #ifndef QT_DEBUG
@@ -254,23 +283,26 @@ void MainWindow::initFilterTorrentsLineEdit()
     const QIcon searchIcon(QStringLiteral(":/icons/search_w.svg"));
     m_searchButton->setIcon(searchIcon);
     m_searchButton->setCursor(Qt::ArrowCursor);
-    m_searchButton->setStyleSheet(QStringLiteral("QToolButton {border: none; padding: 2px 0 2px 4px;}"));
+    m_searchButton->setStyleSheet(
+                QStringLiteral("QToolButton {border: none; padding: 2px 0 2px 4px;}"));
     m_searchButton->setFocusPolicy(Qt::NoFocus);
 
     // Padding between text and widget borders
-    ui->filterTorrentsLineEdit->setStyleSheet(QString::fromLatin1("QLineEdit {padding-left: %1px;}")
+    ui->filterTorrentsLineEdit->setStyleSheet(QStringLiteral("QLineEdit {padding-left: %1px;}")
                                               .arg(m_searchButton->sizeHint().width()));
 
-    const int frameWidth = ui->filterTorrentsLineEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-    ui->filterTorrentsLineEdit->setMaximumHeight(std::max(ui->filterTorrentsLineEdit->sizeHint().height(),
-                                                          m_searchButton->sizeHint().height()) + (frameWidth * 2));
+    const int frameWidth = ui->filterTorrentsLineEdit->style()
+                           ->pixelMetric(QStyle::PM_DefaultFrameWidth);
+    ui->filterTorrentsLineEdit->setMaximumHeight(
+                std::max(ui->filterTorrentsLineEdit->sizeHint().height(),
+                         m_searchButton->sizeHint().height()) + (frameWidth * 2));
     ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 }
 
 void MainWindow::createStatusBar()
 {
-    QWidget *container = new QWidget(this);
-    auto *layout = new QHBoxLayout(container);
+    auto *const container = new QWidget(this);
+    auto *const layout = new QHBoxLayout(container);
     layout->setContentsMargins(11, 0, 16, 5);
     container->setLayout(layout);
 
@@ -289,7 +321,7 @@ void MainWindow::createStatusBar()
     m_torrentFilesCountLabel->setFont(font);
 
     // Create needed splitters
-    auto splitter1 = new QFrame(statusBar());
+    auto *const splitter1 = new QFrame(statusBar());
     splitter1->setFrameStyle(QFrame::VLine);
     splitter1->setFrameShadow(QFrame::Plain);
     // Make splitter little darker
@@ -302,39 +334,39 @@ void MainWindow::createStatusBar()
     statusBar()->addPermanentWidget(container);
 }
 
-uint MainWindow::selectTorrentsCount() const
+quint64 MainWindow::selectTorrentsCount() const
 {
     QSqlQuery query;
     query.setForwardOnly(true);
 
     const bool ok = query.exec("SELECT COUNT(*) as count FROM torrents");
     if (!ok) {
-        qDebug() << QStringLiteral("Select of torrents count failed :")
+        qDebug() << "Select of torrents count failed :"
                  << query.lastError().text();
         return 0;
     }
 
     query.first();
-    return query.value(0).toUInt();
+    return query.value(0).toULongLong();
 }
 
-uint MainWindow::selectTorrentFilesCount() const
+quint64 MainWindow::selectTorrentFilesCount() const
 {
     QSqlQuery query;
     query.setForwardOnly(true);
 
     const bool ok = query.exec("SELECT COUNT(*) as count FROM torrents_previewable_files");
     if (!ok) {
-        qDebug() << QStringLiteral("Select of torrent files count failed :")
+        qDebug() << "Select of torrent files count failed :"
                  << query.lastError().text();
         return 0;
     }
 
     query.first();
-    return query.value(0).toUInt();
+    return query.value(0).toULongLong();
 }
 
-void MainWindow::focusTorrentsFilterLineEdit()
+void MainWindow::focusTorrentsFilterLineEdit() const
 {
     ui->filterTorrentsLineEdit->setFocus();
     ui->filterTorrentsLineEdit->selectAll();

@@ -9,14 +9,14 @@ class CsfdDetailService final : public AbstractMovieDetailService
     Q_DISABLE_COPY(CsfdDetailService)
 
 public:
-    static void initInstance(TorrentSqlTableModel *model);
+    static void initInstance(TorrentSqlTableModel *const model);
     static CsfdDetailService *instance();
     static void freeInstance();
 
 protected:
     MovieDetail searchMovieDetail(const QSqlRecord &torrent) const override;
     MovieDetail obtainMovieDetail(quint64 filmId) const override;
-    inline QString getMovieDetailColumnName() const override
+    inline QString getMovieDetailColumnName() const noexcept override
     { return QStringLiteral("csfd_movie_detail"); }
 
 private:

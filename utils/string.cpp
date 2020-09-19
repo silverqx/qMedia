@@ -12,6 +12,6 @@ QString Utils::String::fromDouble(const double n, const int precision)
     ** our 'wanted' is >= 5. In this case our last digit gets rounded up. So for each
     ** precision we add an extra 0 behind 1 in the below algorithm. */
 
-    const double prec = std::pow(10.0, precision);
+    const auto prec = std::pow(10.0, precision);
     return QLocale::system().toString(std::floor(n * prec) / prec, 'f', precision);
 }

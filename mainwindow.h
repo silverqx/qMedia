@@ -39,8 +39,8 @@ private:
     void connectToDb() const;
     void initFilterTorrentsLineEdit();
     void createStatusBar();
-    uint selectTorrentsCount() const;
-    uint selectTorrentFilesCount() const;
+    quint64 selectTorrentsCount() const;
+    quint64 selectTorrentFilesCount() const;
     inline bool isQBittorrentUp() const noexcept { return (m_qBittorrentHwnd != nullptr); };
 
     Ui::MainWindow *ui;
@@ -51,10 +51,10 @@ private:
     TorrentTransferTableView *m_tableView;
 
 private slots:
-    void focusTorrentsFilterLineEdit();
-    void refreshStatusBar();
+    void focusTorrentsFilterLineEdit() const;
+    void refreshStatusBar() const;
     void updateQBittorrentHwnd(const HWND hwnd) noexcept { m_qBittorrentHwnd = hwnd; };
-    void applicationStateChanged(Qt::ApplicationState state);
+    void applicationStateChanged(Qt::ApplicationState state) const;
     void setGeometry(bool initial = false);
 };
 

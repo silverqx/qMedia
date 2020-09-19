@@ -12,7 +12,7 @@ CsfdDetailService::CsfdDetailService(TorrentSqlTableModel *const model)
 CsfdDetailService::~CsfdDetailService()
 {}
 
-void CsfdDetailService::initInstance(TorrentSqlTableModel *model)
+void CsfdDetailService::initInstance(TorrentSqlTableModel *const model)
 {
     if (!m_instance)
         m_instance = new CsfdDetailService(model);
@@ -48,7 +48,7 @@ MovieDetail CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) cons
     if (!movieScrapper.waitForFinished())
         return {};
 
-    QByteArray movieDetailRaw = movieScrapper.readAll();
+    const auto movieDetailRaw = movieScrapper.readAll();
 
     qDebug() << "Searched movie detail obtained from čsfd.cz";
 
@@ -71,7 +71,7 @@ MovieDetail CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
     if (!movieScrapper.waitForFinished())
         return {};
 
-    QByteArray movieDetailRaw = movieScrapper.readAll();
+    const auto movieDetailRaw = movieScrapper.readAll();
 
     qDebug() << "Obtained movie detail obtained from čsfd.cz";
 

@@ -12,8 +12,10 @@ public:
     explicit PreviewListDelegate(QObject *parent = nullptr);
 
 private:
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    QWidget *createEditor(QWidget *, const QStyleOptionViewItem &, const QModelIndex &) const override;
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override;
+    QWidget *createEditor(QWidget *, const QStyleOptionViewItem &,
+                          const QModelIndex &) const override;
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 };
 

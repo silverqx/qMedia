@@ -15,7 +15,8 @@ class AbstractMovieDetailService : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractMovieDetailService(TorrentSqlTableModel *const model, QObject *parent = nullptr);
+    explicit AbstractMovieDetailService(TorrentSqlTableModel *const model,
+                                        QObject *parent = nullptr);
     virtual ~AbstractMovieDetailService();
 
     MovieDetail getMovieDetail(const QSqlRecord &torrent) const;
@@ -31,7 +32,8 @@ protected:
     virtual MovieDetail searchMovieDetail(const QSqlRecord &torrent) const = 0;
     /*! Obtain only a movie detail like descendat wants, json api, call other program, ... */
     virtual MovieDetail obtainMovieDetail(quint64 filmId) const = 0;
-    /*! Column name for a movie detail in torrents table, currently csfd_movie_detail and imdb_movie_detail. */
+    /*! Column name for a movie detail in torrents table, currently csfd_movie_detail and
+        imdb_movie_detail. */
     virtual QString getMovieDetailColumnName() const = 0;
 
     /*! String used to search a movie detail on the internet. */
