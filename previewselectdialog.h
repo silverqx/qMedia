@@ -55,7 +55,8 @@ public:
         NB_COLUMNS
     };
 
-    PreviewSelectDialog(QWidget *parent, QSqlRecord torrent, const QVector<QSqlRecord> *const torrentFiles);
+    PreviewSelectDialog(QWidget *parent, QSqlRecord torrent,
+                        const QVector<QSqlRecord> *const torrentFiles);
     ~PreviewSelectDialog();
 
     /*! Assemble absolute file path for torrent file. */
@@ -68,7 +69,7 @@ protected:
     void showEvent(QShowEvent *event) override;
 
 private:
-    void populatePreviewListModel();
+    void populatePreviewListModel() const;
 
     Ui::PreviewSelectDialog *ui;
     QStandardItemModel *m_previewListModel;

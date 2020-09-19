@@ -92,9 +92,8 @@ int AbstractMovieDetailService::updateObtainedMovieDetailInDb(
 
     const auto ok = m_model->submit();
     if (!ok) {
-        qDebug() << QStringLiteral("Update of a movie detail for the torrent(ID%1) failed :")
-                    .arg(torrentId)
-                 << m_model->lastError().text();
+        qDebug("Update of a movie detail for the torrent(ID%llu) failed : \"%s\"",
+               torrentId, qUtf8Printable(m_model->lastError().text()));
         return 1;
     }
 
@@ -113,7 +112,8 @@ MovieDetail AbstractMovieDetailService::parseMovieDetail(const QByteArray &movie
     return movieDetail;
 }
 
-MovieDetail AbstractMovieDetailService::parseSearchedMovieDetail(const QByteArray &movieDetailRaw) const
+MovieDetail
+AbstractMovieDetailService::parseSearchedMovieDetail(const QByteArray &movieDetailRaw) const
 {
     QJsonDocument movieDetail = QJsonDocument::fromJson(movieDetailRaw);
     if (movieDetail.isEmpty() || movieDetail.isNull()
@@ -157,19 +157,19 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
                   .arg(getMovieDetailColumnName()));
     query.addBindValue(id);
 
-    const bool ok = query.exec();
+    const auto ok = query.exec();
     if (!ok) {
-        qDebug() << QStringLiteral("Select of a movie detail for the torrent(ID%1) failed :").arg(id)
-                 << query.lastError().text();
+        qDebug("Select of a movie detail for the torrent(ID%llu) failed : \"%s\"",
+               id, qUtf8Printable(query.lastError().text()));
         return {};
     }
 
     const auto querySize = query.size();
     if (querySize != 1) {
         // TODO decide how to handle this type of situations, asserts vs exceptions, ... silverqx
-        qWarning() << QStringLiteral("Select of a movie detail for the torrent(ID%1) doesn't have "
-                                     "size of 1, current size is :")
-                      .arg(id, querySize);
+        qWarning().noquote() << QStringLiteral("Select of a movie detail for the torrent(ID%1) "
+                                               "doesn't have size of 1, current size is : %2")
+                                .arg(id, querySize);
         return {};
     }
 
@@ -211,11 +211,10 @@ void AbstractMovieDetailService::saveSearchedMovieDetailToDb(
 
     const auto torrentId = torrent.value("id").toULongLong();
 
-    const bool ok = m_model->submit();
+    const auto ok = m_model->submit();
     if (!ok) {
-        qDebug() << QStringLiteral("Update of a movie detail for the torrent(ID%1) failed :")
-                    .arg(torrentId)
-                 << m_model->lastError().text();
+        qDebug("Update of a movie detail for the torrent(ID%llu) failed : \"%s\"",
+               torrentId, qUtf8Printable(m_model->lastError().text()));
         return;
     }
 

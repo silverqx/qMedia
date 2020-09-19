@@ -16,8 +16,8 @@ QString Utils::Fs::toUniformPath(const QString &path)
 
 QString Utils::Fs::fileExtension(const QString &filename)
 {
-    const QString ext = QString(filename).remove(::QB_EXT);
-    const int pointIndex = ext.lastIndexOf('.');
+    const auto ext = QString(filename).remove(::QB_EXT);
+    const auto pointIndex = ext.lastIndexOf('.');
     if (pointIndex == -1)
         return {};
 
@@ -26,8 +26,8 @@ QString Utils::Fs::fileExtension(const QString &filename)
 
 QString Utils::Fs::fileName(const QString &filePath)
 {
-    const QString path = toUniformPath(filePath);
-    const int slashIndex = path.lastIndexOf('/');
+    const auto path = toUniformPath(filePath);
+    const auto slashIndex = path.lastIndexOf('/');
     if (slashIndex == -1)
         return path;
 
@@ -36,8 +36,8 @@ QString Utils::Fs::fileName(const QString &filePath)
 
 QString Utils::Fs::folderName(const QString &filePath)
 {
-    const QString path = toUniformPath(filePath);
-    const int slashIndex = path.lastIndexOf(QLatin1String("/"));
+    const auto path = toUniformPath(filePath);
+    const auto slashIndex = path.lastIndexOf('/');
     if (slashIndex == -1)
         return path;
 
@@ -46,7 +46,7 @@ QString Utils::Fs::folderName(const QString &filePath)
 
 QString Utils::Fs::expandPath(const QString &path)
 {
-    const QString ret = path.trimmed();
+    const auto ret = path.trimmed();
     if (ret.isEmpty())
         return ret;
 

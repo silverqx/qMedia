@@ -58,11 +58,11 @@ private:
         NB_COLUMNS
     };
 
-    QVector<QSqlRecord> *selectTorrentFilesById(quint64 id);
+    QVector<QSqlRecord> *selectTorrentFilesById(quint64 id) const;
     void displayListMenu(const QContextMenuEvent *const event);
     QModelIndex getSelectedTorrentIndex() const;
     QSqlRecord getSelectedTorrentRecord() const;
-    void removeRecordFromTorrentFilesCache(quint64 torrentId);
+    void removeRecordFromTorrentFilesCache(quint64 torrentId) const;
     /*! Context menu action factory. */
     QAction *createActionForMenu(const QIcon &icon, const QString &text,
                                  const QKeySequence shortcut, const bool enabled,
@@ -73,23 +73,20 @@ private:
                                  const QKeySequence shortcut,
                                  void (TorrentTransferTableView::*const slot)(),
                                  QWidget *parent = nullptr) const;
-    void resumeTorrent(const QSqlRecord &torrent);
-    void pauseTorrent(const QSqlRecord &torrent);
+    void resumeTorrent(const QSqlRecord &torrent) const;
+    void pauseTorrent(const QSqlRecord &torrent) const;
 
     QSqlTableModel *m_model;
     QSortFilterProxyModel *m_proxyModel;
     TorrentTableDelegate *m_tableDelegate;
-    /*!
-       \brief Contains torrent files by torrent id.
-     */
-    QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
+    /*! Contains torrent files by torrent id. */
+    mutable QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
     bool m_showEventInitialized = false;
     HWND m_qBittorrentHwnd = nullptr;
 
 private slots:
-    // TODO use const slots where appropriate silverqx
     void previewSelectedTorrent();
-    void previewFile(const QString &filePath);
+    void previewFile(const QString &filePath) const;
     void deleteSelectedTorrent();
     void showCsfdDetail();
     void showImdbDetail();
@@ -98,7 +95,7 @@ private slots:
     void forceResumeSelectedTorrent();
     void forceRecheckSelectedTorrent();
     void openFolderForSelectedTorrent();
-    void pauseResumeSelectedTorrent();
+    void pauseResumeSelectedTorrent() const;
 };
 
 #endif // TORRENTTRANSFERTABLEVIEW_H

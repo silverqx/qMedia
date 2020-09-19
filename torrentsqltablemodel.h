@@ -42,8 +42,8 @@ public:
                                   const QSqlDatabase db = QSqlDatabase());
 
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
-    int getTorrentRowByInfoHash(const QString &infoHash);
-    quint64 getTorrentIdByInfoHash(const QString &infoHash);
+    int getTorrentRowByInfoHash(const QString &infoHash) const;
+    quint64 getTorrentIdByInfoHash(const QString &infoHash) const;
     // TODO implement rowCount() and columnCount() and may be some others, look qbt model class as reference silverqx
 
     /*! Map seeds/leechers column to total seeds/leechers counterparts. */
@@ -55,13 +55,9 @@ private:
     QString displayValue(const QModelIndex &modelIndex, int column) const;
     void createInfoHashToRowTorrentMap();
 
-    /*!
-       \brief Map a torrent info hash to the table row.
-     */
+    /*! Map a torrent info hash to the table row. */
     QHash<QString, int> m_torrentMap;
-    /*!
-       \brief Map a torrent info hash to the torrent id.
-     */
+    /*! Map a torrent info hash to the torrent id. */
     QHash<QString, quint64> m_torrentIdMap;
     const TorrentTransferTableView *const m_torrentTableView;
 };

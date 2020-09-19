@@ -38,14 +38,14 @@ protected:
 
 private:
     void prepareMoviePosterSection();
-    void renderTitleSection();
+    void renderTitleSection() const;
     void prepareTitlesSection();
-    void renderTitlesSection(int maxLines = 0);
-    void prepareImdbLink();
-    void prepareMovieInfoSection();
+    void renderTitlesSection(int maxLines = 0) const;
+    void prepareImdbLink() const;
+    void prepareMovieInfoSection() const;
     void prepareCreatorsSection();
     void prepareMovieDetailComboBox();
-    void populateMovieDetailComboBox();
+    void populateMovieDetailComboBox() const;
     QIcon getFlagIcon(const QString &countryIsoCode) const;
     /*! Prepare data by movie id and populate ui with them. */
     void prepareData(quint64 filmId);
@@ -57,7 +57,6 @@ private:
     QNetworkAccessManager m_networkManager;
     QTimer *m_resizeTimer;
     bool m_resizeInProgress = false;
-    // TODO use mutable where appropriate silverqx
     mutable QHash<QString, QIcon> m_flagCache;
     QGridLayout *m_gridLayoutTitles = nullptr;
     QVBoxLayout *m_verticalLayoutCreators = nullptr;
@@ -70,7 +69,7 @@ private:
     QPushButton *m_saveButton;
 
 private slots:
-    void finishedMoviePoster(QNetworkReply *reply);
+    void finishedMoviePoster(QNetworkReply *reply) const;
     void resizeTimeout();
     void saveButtonClicked();
     void previewButtonClicked();

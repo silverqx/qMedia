@@ -30,8 +30,10 @@ PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torre
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("&Preview"));
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &PreviewSelectDialog::previewButtonClicked);
-    connect(ui->previewList, &QAbstractItemView::doubleClicked, this, &PreviewSelectDialog::previewButtonClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted,
+            this, &PreviewSelectDialog::previewButtonClicked);
+    connect(ui->previewList, &QAbstractItemView::doubleClicked,
+            this, &PreviewSelectDialog::previewButtonClicked);
 
     // Create and apply delegate
     m_listDelegate = new PreviewListDelegate(this);
@@ -75,10 +77,10 @@ PreviewSelectDialog::~PreviewSelectDialog()
 void PreviewSelectDialog::previewButtonClicked()
 {
     // Only one file is allowed to select
-    QModelIndexList selectedIndexes = ui->previewList->selectionModel()->selectedRows(TR_NAME);
+    const auto selectedIndexes = ui->previewList->selectionModel()->selectedRows(TR_NAME);
     if (selectedIndexes.isEmpty())
         return;
-    QModelIndex selectedIndex = selectedIndexes.first();
+    const auto selectedIndex = selectedIndexes.first();
     if (!selectedIndex.isValid())
         return;
 
@@ -110,12 +112,12 @@ void PreviewSelectDialog::showEvent(QShowEvent *event)
     // Pixel perfectly sized previewList header
     // Set Name column width to all remaining area
     // Have to be called after show(), because previewList width is needed
-    QHeaderView *const previewListHeader = ui->previewList->header();
+    auto *const previewListHeader = ui->previewList->header();
     previewListHeader->resizeSections(QHeaderView::ResizeToContents);
 
     // Compute name column width
-    int nameColWidth = ui->previewList->width();
-    const QScrollBar *const vScrollBar = ui->previewList->verticalScrollBar();
+    auto nameColWidth = ui->previewList->width();
+    const auto *const vScrollBar = ui->previewList->verticalScrollBar();
     if (vScrollBar->isVisible())
         nameColWidth -= vScrollBar->width();
     nameColWidth -= previewListHeader->sectionSize(TR_SIZE);
@@ -128,7 +130,7 @@ void PreviewSelectDialog::showEvent(QShowEvent *event)
     m_showEventInitialized = true;
 }
 
-void PreviewSelectDialog::populatePreviewListModel()
+void PreviewSelectDialog::populatePreviewListModel() const
 {
     // It is a const iterator
     QVectorIterator<QSqlRecord> itTorrentFiles(*m_torrentFiles);

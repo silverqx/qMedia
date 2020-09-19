@@ -17,10 +17,10 @@
 namespace
 {
     // Popular delimiters
-    static const auto delimiterSlash       = " / ";
-    static const QString delimiterNewLine  = "\n";
-    static const auto delimiterComma       = ", ";
-    static const auto delimiterHtmlNewLine = "<br>";
+    static const auto delimiterSlash       = QStringLiteral(" / ");
+    static const auto delimiterNewLine     = QStringLiteral("\n");
+    static const auto delimiterComma       = QStringLiteral(", ");
+    static const auto delimiterHtmlNewLine = QStringLiteral("<br>");
 
     /*! Join QJsonArray, all values in array have to be strings. */
     const auto joinJsonStringArray = [](const QJsonArray &jsonArray, const QString &delimiter)
@@ -68,9 +68,9 @@ namespace
     QString joinJsonObjectArrayWithWrapPaged(const QJsonArray &jsonArray, const QString &delimiter,
             const QString &wrappIn, const int maxLetters, const Args &...args)
     {
-        const int argsSize = sizeof ...(args);
+        const auto argsSize = sizeof ...(args);
         if (argsSize == 0)
-            qCritical() << QStringLiteral("Empty argsSize in joinJsonObjectArrayWithWrap()");
+            qCritical() << "Empty argsSize in joinJsonObjectArrayWithWrap()";
 
         QString result = "";
         QString value;
@@ -87,7 +87,7 @@ namespace
             if (!jsonValue.isObject() || jsonValue.isNull()
                 || jsonValue.isUndefined())
                 continue;
-            QString wrapInTmp = wrappIn;
+            auto wrapInTmp = wrappIn;
             // Replace all occurences
             for (const auto &arg : argsList) {
                 jsonValueInner = jsonValue[arg];
@@ -101,9 +101,10 @@ namespace
                     break;
                 default:
                     value = "";
-                    qWarning() << QStringLiteral("Unsupported jsonValueType '%1' in "
-                                                 "joinJsonObjectArrayWithWrap()")
-                                  .arg(jsonValueType);
+                    qWarning().noquote()
+                            << QStringLiteral("Unsupported jsonValueType '%1' in "
+                                              "joinJsonObjectArrayWithWrap()")
+                               .arg(jsonValueType);
                     break;
                 }
                 // Letters are counted only for first substitution
@@ -188,8 +189,8 @@ namespace
 
     /*! Resulting string will contain max. letters defined by maxLetters parameter,
         including 'show more' link text. */
-    Q_DECL_UNUSED const auto paginateString =
-            [](const QString &string, const int maxLetters) -> QString
+    Q_DECL_UNUSED
+    const auto paginateString = [](const QString &string, const int maxLetters) -> QString
     {
         // Pagination not needed
         if (string.size() <= maxLetters)
@@ -249,7 +250,8 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     m_saveButton->hide();
     m_saveButton->setText(QStringLiteral("&Save"));
     // TODO create tooltip wrapper function for tooltips with shortcuts silverqx
-    m_saveButton->setToolTip("<html><head/><body><p style='white-space:pre;'>Save current movie detail as default "
+    m_saveButton->setToolTip("<html><head/><body><p style='white-space:pre;'>"
+                             "Save current movie detail as default "
                              "<br><span style='font-size:7pt; color:#8c8c8c;'>ALT+S</span></p>"
                              "</body></html>");
     m_saveButton->setToolTipDuration(2500);
@@ -263,12 +265,13 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     connect(m_resizeTimer, &QTimer::timeout, this, &MovieDetailDialog::resizeTimeout);
 
     // Initialize NetworkAccessManager
-    auto diskCache = new QNetworkDiskCache(this);
+    auto *const diskCache = new QNetworkDiskCache(this);
     diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     m_networkManager.setCache(diskCache);
 
     // Connect events
-    connect(&m_networkManager, &QNetworkAccessManager::finished, this, &MovieDetailDialog::finishedMoviePoster);
+    connect(&m_networkManager, &QNetworkAccessManager::finished,
+            this, &MovieDetailDialog::finishedMoviePoster);
     // saveButton
     connect(ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
     // buttonBox
@@ -278,10 +281,16 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     // Hotkeys
     // movieDetailComboBox
-    const auto *doubleClickHotkeyCtrlM = new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
-    connect(doubleClickHotkeyCtrlM, &QShortcut::activated, ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
-    const auto *doubleClickHotkeyF12 = new QShortcut(Qt::Key_F12, ui->movieDetailComboBox, nullptr, nullptr, Qt::WindowShortcut);
-    connect(doubleClickHotkeyF12, &QShortcut::activated, ui->movieDetailComboBox, &QComboBox::showPopup);
+    const auto *const doubleClickHotkeyCtrlM =
+            new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr,
+                          Qt::WindowShortcut);
+    connect(doubleClickHotkeyCtrlM, &QShortcut::activated,
+            ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
+    const auto *const doubleClickHotkeyF12 =
+            new QShortcut(Qt::Key_F12, ui->movieDetailComboBox, nullptr, nullptr,
+                          Qt::WindowShortcut);
+    connect(doubleClickHotkeyF12, &QShortcut::activated,
+            ui->movieDetailComboBox, &QComboBox::showPopup);
 
     // Center on active screen
     Utils::Gui::centerDialog(this);
@@ -308,8 +317,7 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
 
 void MovieDetailDialog::prepareData(const quint64 filmId)
 {
-    const auto movieDetail = CsfdDetailService::instance()
-                             ->getMovieDetail(filmId);
+    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(filmId);
     m_movieDetail = movieDetail.object();
 
     populateUi();
@@ -387,7 +395,7 @@ bool MovieDetailDialog::eventFilter(QObject *watched, QEvent *event)
         QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent *>(event);
         if (m_resizeInProgress && (mouseEvent->button() == Qt::MouseButton::LeftButton)) {
             m_resizeInProgress = false;
-            qDebug() << QStringLiteral("Resizing of the movie detail dialog ended");
+            qDebug() << "Resizing of the movie detail dialog ended";
             // I don't delete this timer logic and reuse it, even if it worked without it
             m_resizeTimer->start();
         }
@@ -407,7 +415,7 @@ void MovieDetailDialog::prepareMoviePosterSection()
     m_networkManager.get(request);
 }
 
-void MovieDetailDialog::renderTitleSection()
+void MovieDetailDialog::renderTitleSection() const
 {
     const auto movieTitle = m_movieDetail["title"].toString();
     const auto movieTitleElided = ui->title->fontMetrics()
@@ -442,7 +450,8 @@ void MovieDetailDialog::prepareTitlesSection()
 
     // Nothing to render
     if (m_movieDetail["titles"].toArray().isEmpty()) {
-        qDebug() << "Empty titles for movie :" << m_movieDetail["title"].toString();
+        qDebug() << "Empty titles for movie :"
+                 << m_movieDetail["title"].toString();
         return;
     }
 
@@ -450,7 +459,7 @@ void MovieDetailDialog::prepareTitlesSection()
     renderTitlesSection(3);
 }
 
-void MovieDetailDialog::renderTitlesSection(const int maxLines)
+void MovieDetailDialog::renderTitlesSection(const int maxLines) const
 {
     auto titlesArr = m_movieDetail["titles"].toArray();
     // My prefered sort
@@ -482,7 +491,7 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines)
             flag = flagIcon.pixmap(flagIcon.actualSize(QSize(flagWidth, 16)));
             labelFlag->setPixmap(flag);
         } else {
-            qDebug() << QStringLiteral("titlesHash doesn't contain this language :")
+            qDebug() << "titlesHash doesn't contain this language :"
                      << titleLanguage;
         }
         labelFlag->setToolTip(titleLanguage);
@@ -510,7 +519,7 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines)
         return;
 
     // Show more link
-    auto labelMoreLink = new QLabel;
+    auto *const labelMoreLink = new QLabel;
     labelMoreLink->setTextInteractionFlags(Qt::LinksAccessibleByMouse |
                                            Qt::LinksAccessibleByKeyboard);
     labelMoreLink->setText(moreLinkText(false, false));
@@ -528,7 +537,7 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines)
     });
 }
 
-void MovieDetailDialog::prepareImdbLink()
+void MovieDetailDialog::prepareImdbLink() const
 {
     const auto imdbIdRaw = m_movieDetail["imdbId"];
     if (imdbIdRaw.isNull()) {
@@ -544,7 +553,7 @@ void MovieDetailDialog::prepareImdbLink()
     ui->imdbLink->show();
 }
 
-void MovieDetailDialog::prepareMovieInfoSection()
+void MovieDetailDialog::prepareMovieInfoSection() const
 {
     // Movie info section - genre, shot places, year and length
     // Line 1
@@ -606,8 +615,8 @@ namespace
 void MovieDetailDialog::prepareCreatorsSection()
 {
     // Creators section
-    const auto keyName = QStringLiteral("name");
-    const auto keyId = QStringLiteral("id");
+    const auto keyName    = QStringLiteral("name");
+    const auto keyId      = QStringLiteral("id");
     const auto wrapInLink = QStringLiteral("<a href='https://www.csfd.cz/tvurce/%2' "
                                            "style='text-decoration: none;'>%1</a>");
     // 60 for 960px
@@ -616,20 +625,20 @@ void MovieDetailDialog::prepareCreatorsSection()
     static const auto maxLetters = 105;
 
     // Directors
-    const QString directors = joinJsonObjectArrayWithWrapPaged(
+    const auto directors = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_DIRECTORS].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Screenplay
-    const QString screenplay = joinJsonObjectArrayWithWrapPaged(
+    const auto screenplay = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_SCREENPLAY].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // TODO camera is missing silverqx
     // Music
-    const QString music = joinJsonObjectArrayWithWrapPaged(
+    const auto music = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_MUSIC].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Actors
-    const QString actors = joinJsonObjectArrayWithWrapPaged(
+    const auto actors = joinJsonObjectArrayWithWrapPaged(
             m_movieDetail[creatorsMap[NAMES_ACTORS].keyName].toArray(),
             // 200 for 960px
             // 320 for 1316px
@@ -668,7 +677,8 @@ void MovieDetailDialog::prepareCreatorsSection()
     });
     // All was empty
     if (result == creatorsList.constEnd()) {
-        qDebug() << "Empty creators for movie :" << m_movieDetail["title"].toString();
+        qDebug() << "Empty creators for movie :"
+                 << m_movieDetail["title"].toString();
         return;
     }
 
@@ -702,7 +712,7 @@ void MovieDetailDialog::prepareCreatorsSection()
             }
 
             // Re-populate label
-            const QString joinedText = joinJsonObjectArrayWithWrap(
+            const auto joinedText = joinJsonObjectArrayWithWrap(
                     m_movieDetail[creatorsMap[i].keyName].toArray(), delimiterComma,
                     wrapInLink, keyName, keyId);
             label->setText(creatorsMap[i].label.arg(joinedText));
@@ -727,7 +737,7 @@ void MovieDetailDialog::prepareMovieDetailComboBox()
             this, &MovieDetailDialog::movieDetailComboBoxChanged);
 }
 
-void MovieDetailDialog::populateMovieDetailComboBox()
+void MovieDetailDialog::populateMovieDetailComboBox() const
 {
     for (const auto &searchItem : qAsConst(m_movieSearchResult)) {
         const auto itemObject = searchItem.toObject();
@@ -735,7 +745,7 @@ void MovieDetailDialog::populateMovieDetailComboBox()
         const auto year = itemObject["year"].toInt();
         const auto typeRaw = itemObject["type"];
         // Compose item
-        auto item = QString("%1 (%2)").arg(name).arg(year);
+        auto item = QStringLiteral("%1 (%2)").arg(name).arg(year);
         if (!typeRaw.isNull())
             item += " - " + typeRaw.toString();
 
@@ -751,7 +761,7 @@ QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
 {
     if (countryIsoCode.isEmpty()) return {};
 
-    const QString key = countryIsoCode.toLower();
+    const auto key = countryIsoCode.toLower();
     // Return from flag cache
     const auto iter = m_flagCache.find(key);
     if (iter != m_flagCache.end())
@@ -763,7 +773,7 @@ QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
     return icon;
 }
 
-void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply)
+void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply) const
 {
     // TODO handle network errors silverqx
     // TODO avangers poster not downloaded silverqx

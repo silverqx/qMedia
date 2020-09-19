@@ -66,6 +66,7 @@ private:
     const QHash<QString, StatusProperties> &getStatusHash() const;
 };
 
+Q_DECL_UNUSED
 static StatusHash g_statusHash;
 
 #endif // TORRENTSTATUS_H

@@ -12,7 +12,7 @@
 
 bool Utils::Gui::openPath(const QString &absolutePath)
 {
-    const QString path = Utils::Fs::toUniformPath(absolutePath);
+    const auto path = Utils::Fs::toUniformPath(absolutePath);
     // Hack to access samba shares with QDesktopServices::openUrl
     if (path.startsWith(QStringLiteral("//")))
         return QDesktopServices::openUrl(Utils::Fs::toNativePath("file:" + path));
@@ -35,7 +35,7 @@ void Utils::Gui::centerDialog(QWidget *const widget)
     const auto yCoeficient = 2;
 #endif
     // Compute a Y position
-    int y = (screenGeometry.height() - widget->frameGeometry().height()) / yCoeficient;
+    auto y = (screenGeometry.height() - widget->frameGeometry().height()) / yCoeficient;
 #ifndef QT_DEBUG
     // Move a little to the top, better for an eye
     if (y > 30)
