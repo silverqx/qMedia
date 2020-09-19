@@ -62,7 +62,8 @@ namespace
         const HANDLE processHandle = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
                                                    false, pid);
         if (processHandle == NULL) {
-            qDebug() << "OpenProcess() in EnumWindows() failed :" << ::GetLastError();
+            qDebug() << "OpenProcess() in EnumWindows() failed :"
+                     << ::GetLastError();
             return true;
         }
 
@@ -86,7 +87,8 @@ namespace
         if (moduleFileName != "qbittorrent.exe")
             return true;
 
-        qDebug() << "HWND for qBittorrent window found :" << hwnd;
+        qDebug() << "HWND for qBittorrent window found :"
+                 << hwnd;
 
         if (l_mainWindow->getQBittorrentHwnd() != hwnd)
             emit l_mainWindow->qBittorrentHwndChanged(hwnd);
@@ -274,7 +276,8 @@ void MainWindow::connectToDb() const
 
     bool ok = db.open();
     if (!ok)
-        qDebug() << "Connect to database failed :" << db.lastError().text();
+        qDebug() << "Connect to database failed :"
+                 << db.lastError().text();
 }
 
 void MainWindow::initFilterTorrentsLineEdit()

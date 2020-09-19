@@ -47,7 +47,8 @@ MovieDetail AbstractMovieDetailService::getMovieDetail(quint64 filmId) const
 {
     // Return from cache
     if (m_obtainedMovieDetailsCache.contains(filmId)) {
-        qDebug() << "Obtained movie detail obtained from cache, film :" << filmId;
+        qDebug() << "Obtained movie detail obtained from cache, film :"
+                 << filmId;
         return m_obtainedMovieDetailsCache.value(filmId);
     }
 
@@ -97,7 +98,8 @@ int AbstractMovieDetailService::updateObtainedMovieDetailInDb(
         return 1;
     }
 
-    qDebug() << "Searched movie detail updated in db, torrent :" << torrentId;
+    qDebug() << "Searched movie detail updated in db, torrent :"
+             << torrentId;
 
     return 0;
 }
@@ -147,7 +149,8 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
 {
     // Return from cache
     if (m_movieDetailsCache.contains(id)) {
-        qDebug() << "Searched movie detail obtained from cache, torrent :" << id;
+        qDebug() << "Searched movie detail obtained from cache, torrent :"
+                 << id;
         return m_movieDetailsCache.value(id);
     }
 
@@ -189,7 +192,8 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
                 movieDetail["detail"]["id"].toInt(),
                 QJsonDocument(movieDetail["detail"].toObject()));
 
-    qDebug() << "Searched movie detail obtained from db, torrent :" << id;
+    qDebug() << "Searched movie detail obtained from db, torrent :"
+             << id;
 
     return movieDetail;
 }
@@ -218,5 +222,6 @@ void AbstractMovieDetailService::saveSearchedMovieDetailToDb(
         return;
     }
 
-    qDebug() << "Searched movie detail saved to db, torrent :" << torrentId;
+    qDebug() << "Searched movie detail saved to db, torrent :"
+             << torrentId;
 }

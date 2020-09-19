@@ -292,7 +292,8 @@ QSqlRecord TorrentTransferTableView::getSelectedTorrentRecord() const
 void TorrentTransferTableView::removeRecordFromTorrentFilesCache(const quint64 torrentId) const
 {
     if (!m_torrentFilesCache.contains(torrentId)) {
-        qDebug() << "Torrent files cache doesn't contain torrent :" << torrentId;
+        qDebug() << "Torrent files cache doesn't contain torrent :"
+                 << torrentId;
         return;
     }
 
@@ -314,7 +315,8 @@ void TorrentTransferTableView::previewSelectedTorrent()
     if (torrent.isEmpty())
         return;
 
-    qDebug() << "Torrent doubleclicked :" << torrent.value("name").toString();
+    qDebug() << "Torrent doubleclicked :"
+             << torrent.value("name").toString();
 
     const auto *const torrentFiles =
             selectTorrentFilesById(torrent.value("id").toULongLong());
@@ -514,7 +516,8 @@ void TorrentTransferTableView::deleteSelectedTorrent()
     if (result != QMessageBox::Yes)
         return;
 
-    qDebug() << "Delete selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Delete selected torrent :"
+             << torrent.value("name").toString();
 
     const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_DELETE_TORRENT, infoHash);
@@ -528,7 +531,8 @@ void TorrentTransferTableView::showCsfdDetail()
         return;
     }
 
-    qDebug() << "Show CSFD detail :" << torrent.value("name").toString();
+    qDebug() << "Show CSFD detail :"
+             << torrent.value("name").toString();
 
     auto *const dialog = new MovieDetailDialog(this);
     // TODO measure with and w/o Qt::WA_DeleteOnClose, idea is to reuse dialog and not to create and destroy everytime silverqx
@@ -547,7 +551,8 @@ void TorrentTransferTableView::showImdbDetail()
         return;
     }
 
-    qDebug() << "Show IMDB detail :" << torrent.value("name").toString();
+    qDebug() << "Show IMDB detail :"
+             << torrent.value("name").toString();
 
     QMessageBox::information(this, QStringLiteral("imdb movie detail"),
                              QStringLiteral("Currently not implemented."));
@@ -555,7 +560,8 @@ void TorrentTransferTableView::showImdbDetail()
 
 void TorrentTransferTableView::pauseTorrent(const QSqlRecord &torrent) const
 {
-    qDebug() << "Pause selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Pause selected torrent :"
+             << torrent.value("name").toString();
 
     const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_PAUSE_TORRENT, infoHash);
@@ -578,7 +584,8 @@ void TorrentTransferTableView::pauseSelectedTorrent()
 
 void TorrentTransferTableView::resumeTorrent(const QSqlRecord &torrent) const
 {
-    qDebug() << "Resume selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Resume selected torrent :"
+             << torrent.value("name").toString();
 
     const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_RESUME_TORRENT, infoHash);
@@ -613,7 +620,8 @@ void TorrentTransferTableView::forceResumeSelectedTorrent()
         || (!statusProperties.isDownloading() && !statusProperties.isPaused()))
         return;
 
-    qDebug() << "Force resume selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Force resume selected torrent :"
+             << torrent.value("name").toString();
 
     const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RESUME_TORRENT, infoHash);
@@ -632,7 +640,8 @@ void TorrentTransferTableView::forceRecheckSelectedTorrent()
         || statusProperties.isMoving())
         return;
 
-    qDebug() << "Force recheck selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Force recheck selected torrent :"
+             << torrent.value("name").toString();
 
     const auto infoHash = torrent.value("hash").toByteArray();
     ::IpcSendByteArray(m_qBittorrentHwnd, ::MSG_QMD_FORCE_RECHECK_TORRENT, infoHash);
@@ -701,7 +710,8 @@ void TorrentTransferTableView::pauseResumeSelectedTorrent() const
     if (!isQBittorrentUp())
         return;
 
-    qDebug() << "Pause / Resume selected torrent :" << torrent.value("name").toString();
+    qDebug() << "Pause / Resume selected torrent :"
+             << torrent.value("name").toString();
 
     const auto statusProperties = g_statusHash[torrent.value("status").toString()];
     if (statusProperties.isPaused())

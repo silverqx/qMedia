@@ -118,7 +118,8 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
 
 int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) const {
     if (!m_torrentMap.contains(infoHash)) {
-        qDebug() << "Torrent with this info hash doesn't exist:" << infoHash;
+        qDebug() << "Torrent with this info hash doesn't exist:"
+                 << infoHash;
         return -1;
     }
 
@@ -129,7 +130,8 @@ quint64 TorrentSqlTableModel::getTorrentIdByInfoHash(const QString &infoHash) co
 {
     // TODO investigate return value 0 and alternatives like exception and similar, or nullable type, std::optional is right solution, leaving it for now, may be refactor later silverqx
     if (!m_torrentIdMap.contains(infoHash)) {
-        qDebug() << "Torrent with this info hash doesn't exist:" << infoHash;
+        qDebug() << "Torrent with this info hash doesn't exist:"
+                 << infoHash;
         return 0;
     }
 
