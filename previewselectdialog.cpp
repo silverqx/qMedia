@@ -15,8 +15,10 @@
 #include "utils/fs.h"
 #include "utils/misc.h"
 
-PreviewSelectDialog::PreviewSelectDialog(QWidget *parent, const QSqlRecord torrent,
-                                         const QVector<QSqlRecord> *const torrentFiles)
+PreviewSelectDialog::PreviewSelectDialog(
+        QWidget *parent, const QSqlRecord torrent,
+        const QSharedPointer<const QVector<QSqlRecord>> torrentFiles
+)
     : QDialog(parent)
     , ui(new Ui::PreviewSelectDialog)
     , m_torrent(torrent)
