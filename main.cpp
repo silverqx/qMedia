@@ -4,6 +4,7 @@
 #include <qt_windows.h>
 
 #include "csfddetailservice.h"
+#include "torrentstatus.h"
 
 #ifdef Q_OS_WIN32
 #include "maineventfilter_win.h"
@@ -98,4 +99,5 @@ void enableDarkTheme(QApplication &a)
 void applicationCleanup()
 {
     CsfdDetailService::freeInstance();
+    StatusHash::freeInstance();
 }

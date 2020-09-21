@@ -2,122 +2,178 @@
 
 namespace
 {
-    static QIcon getPausedIcon()
+    // Icons section
+    const QIcon &getPausedIcon()
     {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/paused.svg"));
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/paused.svg"));
         return cached;
-    }
-
-    static QIcon getQueuedIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/queued.svg"));
-        return cached;
-    }
-
-    static QIcon getDownloadingIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/downloading.svg"));
-        return cached;
-    }
-
-    static QIcon getStalledIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/stalled.svg"));
-        return cached;
-    }
-
-    static QIcon getFinishedIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/finished.svg"));
-        return cached;
-    }
-
-    static QIcon getCheckingIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/checking.svg"));
-        return cached;
-    }
-
-    static QIcon getErrorIcon()
-    {
-        static QIcon cached =
-            QIcon(QStringLiteral(":/icons/torrent_statuses/error.svg"));
-        return cached;
-    }
-
-    // yellow
-    static const QColor colorChecking(214, 197, 64);
-    // green
-    static const QColor colorDownloading(111, 172, 61);
-    // orange
-    static const QColor colorError(214, 86, 69);
-    // blue
-    static const QColor colorFinished(69, 198, 214);
-    // green
-    static const QColor colorForcedDownloading {colorDownloading};
-    // orange
-    static const QColor colorMissingFiles {colorError};
-    // yellow
-    static const QColor colorMoving {colorChecking};
-    // purple
-    static const QColor colorPaused(154, 167, 214);
-    // pink
-    static const QColor colorQueued(255, 106, 173);
-    // salmon
-    static const QColor colorStalled(255, 128, 128);
-
-    // TODO check Q_GLOBAL_STATIC_WITH_ARGS for static maps initialization silverqx
-    static const QHash<QString, StatusProperties> l_statusHash
-    {
-        {QStringLiteral("Allocating"),
-            {TorrentStatus::Allocating, colorStalled, getStalledIcon,
-                QStringLiteral("Allocating Files Storage")}},
-        {QStringLiteral("Checking"),
-            {TorrentStatus::Checking, colorChecking, getCheckingIcon,
-                QStringLiteral("Checking Torrent Files")}},
-        {QStringLiteral("CheckingResumeData"),
-            {TorrentStatus::CheckingResumeData, colorChecking, getCheckingIcon,
-                QStringLiteral("Checking Resume Data")}},
-        {QStringLiteral("Downloading"),
-            {TorrentStatus::Downloading, colorDownloading, getDownloadingIcon,
-                QStringLiteral("Downloading")}},
-        {QStringLiteral("Error"),
-            {TorrentStatus::Error, colorError, getErrorIcon,
-                QStringLiteral("Error")}},
-        {QStringLiteral("Finished"),
-            {TorrentStatus::Finished, colorFinished, getFinishedIcon,
-                QStringLiteral("Finished")}},
-        {QStringLiteral("ForcedDownloading"),
-            {TorrentStatus::ForcedDownloading, colorForcedDownloading, getDownloadingIcon,
-                QStringLiteral("Forced Downloading")}},
-        {QStringLiteral("MissingFiles"),
-            {TorrentStatus::MissingFiles, colorMissingFiles, getErrorIcon,
-                QStringLiteral("Missing Files")}},
-        {QStringLiteral("Moving"),
-            {TorrentStatus::Moving, colorMoving, getCheckingIcon,
-                QStringLiteral("Moving")}},
-        {QStringLiteral("Paused"),
-            {TorrentStatus::Paused, colorPaused, getPausedIcon,
-                QStringLiteral("Paused")}},
-        {QStringLiteral("Queued"),
-            {TorrentStatus::Queued, colorQueued, getQueuedIcon,
-                QStringLiteral("Queued")}},
-        {QStringLiteral("Stalled"),
-            {TorrentStatus::Stalled, colorStalled, getStalledIcon,
-                QStringLiteral("Stalled")}},
-        {QStringLiteral("Unknown"),
-            {TorrentStatus::Unknown, colorError, getErrorIcon,
-                QStringLiteral("Unknown")}},
     };
+
+    const QIcon &getQueuedIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/queued.svg"));
+        return cached;
+    }
+
+    const QIcon &getDownloadingIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/downloading.svg"));
+        return cached;
+    }
+
+    const QIcon &getStalledIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/stalled.svg"));
+        return cached;
+    }
+
+    const QIcon &getFinishedIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/finished.svg"));
+        return cached;
+    }
+
+    const QIcon &getCheckingIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/checking.svg"));
+        return cached;
+    }
+
+    const QIcon &getErrorIcon()
+    {
+        static const QIcon cached(QStringLiteral(":/icons/torrent_statuses/error.svg"));
+        return cached;
+    }
+
+    // Colors section
+    // yellow
+    const QColor &getCheckingColor()
+    {
+        static const QColor cached(214, 197, 64);
+        return cached;
+    }
+
+    // green
+    const QColor &getDownloadingColor()
+    {
+        static const QColor cached(111, 172, 61);
+        return cached;
+    }
+
+    // orange
+    const QColor &getErrorColor()
+    {
+        static const QColor cached(214, 86, 69);
+        return cached;
+    }
+
+    // blue
+    const QColor &getFinishedColor()
+    {
+        static const QColor cached(69, 198, 214);
+        return cached;
+    }
+
+    // green
+    const QColor &getForcedDownloadingColor()
+    {
+        static const QColor cached {getDownloadingColor()};
+        return cached;
+    }
+
+    // orange
+    const QColor &getMissingFilesColor()
+    {
+        static const QColor cached {getErrorColor()};
+        return cached;
+    }
+
+    // yellow
+    const QColor &getMovingColor()
+    {
+        static const QColor cached {getCheckingColor()};
+        return cached;
+    }
+
+    // purple
+    const QColor &getPausedColor()
+    {
+        static const QColor cached(154, 167, 214);
+        return cached;
+    }
+
+    // pink
+    const QColor &getQueuedColor()
+    {
+        static const QColor cached(255, 106, 173);
+        return cached;
+    }
+
+    // salmon
+    const QColor &getStalledColor()
+    {
+        static const QColor cached(255, 128, 128);
+        return cached;
+    }
 }
 
-const QHash<QString, StatusProperties> &StatusHash::getStatusHash() const
+StatusHash *StatusHash::m_instance = nullptr;
+
+StatusHash *StatusHash::instance()
 {
-    return l_statusHash;
+    if (!m_instance)
+        m_instance = new StatusHash();
+    return m_instance;
+}
+
+void StatusHash::freeInstance()
+{
+    delete m_instance;
+    m_instance = nullptr;
+}
+
+QHash<QString, StatusProperties> &StatusHash::getStatusHash() const
+{
+    static QHash<QString, StatusProperties> cached {
+        {QStringLiteral("Allocating"),
+            {TorrentStatus::Allocating, getStalledColor, getStalledIcon,
+                QStringLiteral("Allocating Files Storage")}},
+        {QStringLiteral("Checking"),
+            {TorrentStatus::Checking, getCheckingColor, getCheckingIcon,
+                QStringLiteral("Checking Torrent Files")}},
+        {QStringLiteral("CheckingResumeData"),
+            {TorrentStatus::CheckingResumeData, getCheckingColor, getCheckingIcon,
+                QStringLiteral("Checking Resume Data")}},
+        {QStringLiteral("Downloading"),
+            {TorrentStatus::Downloading, getDownloadingColor, getDownloadingIcon,
+                QStringLiteral("Downloading")}},
+        {QStringLiteral("Error"),
+            {TorrentStatus::Error, getErrorColor, getErrorIcon,
+                QStringLiteral("Error")}},
+        {QStringLiteral("Finished"),
+            {TorrentStatus::Finished, getFinishedColor, getFinishedIcon,
+                QStringLiteral("Finished")}},
+        {QStringLiteral("ForcedDownloading"),
+            {TorrentStatus::ForcedDownloading, getForcedDownloadingColor, getDownloadingIcon,
+                QStringLiteral("Forced Downloading")}},
+        {QStringLiteral("MissingFiles"),
+            {TorrentStatus::MissingFiles, getMissingFilesColor, getErrorIcon,
+                QStringLiteral("Missing Files")}},
+        {QStringLiteral("Moving"),
+            {TorrentStatus::Moving, getMovingColor, getCheckingIcon,
+                QStringLiteral("Moving")}},
+        {QStringLiteral("Paused"),
+            {TorrentStatus::Paused, getPausedColor, getPausedIcon,
+                QStringLiteral("Paused")}},
+        {QStringLiteral("Queued"),
+            {TorrentStatus::Queued, getQueuedColor, getQueuedIcon,
+                QStringLiteral("Queued")}},
+        {QStringLiteral("Stalled"),
+            {TorrentStatus::Stalled, getStalledColor, getStalledIcon,
+                QStringLiteral("Stalled")}},
+        {QStringLiteral("Unknown"),
+            {TorrentStatus::Unknown, getErrorColor, getErrorIcon,
+                QStringLiteral("Unknown")}},
+    };
+    return cached;
 }

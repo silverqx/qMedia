@@ -1,9 +1,6 @@
 #ifndef TORRENTSTATUS_H
 #define TORRENTSTATUS_H
 
-#include <QHash>
-#include <QIcon>
-
 // Starts from 1 because of MySQL enums starts from 1
 enum struct TorrentStatus
 {
@@ -25,8 +22,8 @@ enum struct TorrentStatus
 struct StatusProperties
 {
     TorrentStatus status;
-    QColor color;
-    std::function<QIcon()> getIcon;
+    std::function<const QColor &()> getColor;
+    std::function<const QIcon &()> getIcon;
     QString text;
 
     inline bool isPaused() const       { return status == TorrentStatus::Paused; }
@@ -54,19 +51,26 @@ struct StatusProperties
 
 class StatusHash final
 {
+    Q_DISABLE_COPY(StatusHash);
+
 public:
+    static StatusHash *instance();
+    static void freeInstance();
+
     inline const StatusProperties &operator[](const QString &key) const
     {
-        // Cached statusHash
-        static auto statusHash {getStatusHash()};
+        // Cached reference to statusHash, wtf 😂
+        static auto &statusHash {getStatusHash()};
         return statusHash[key];
     }
 
 private:
-    const QHash<QString, StatusProperties> &getStatusHash() const;
-};
+    StatusHash() = default;
+    ~StatusHash() = default;
 
-Q_DECL_UNUSED
-static StatusHash g_statusHash;
+    QHash<QString, StatusProperties> &getStatusHash() const;
+
+    static StatusHash *m_instance;
+};
 
 #endif // TORRENTSTATUS_H

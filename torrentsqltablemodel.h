@@ -3,6 +3,7 @@
 
 #include <QSqlTableModel>
 
+class StatusHash;
 class TorrentTransferTableView;
 
 class TorrentSqlTableModel final : public QSqlTableModel
@@ -60,6 +61,7 @@ private:
     /*! Map a torrent info hash to the torrent id. */
     QHash<QString, quint64> m_torrentIdMap;
     const TorrentTransferTableView *const m_torrentTableView;
+    const StatusHash *const m_statusHash;
 };
 
 #endif // TORRENTSQLTABLEMODEL_H

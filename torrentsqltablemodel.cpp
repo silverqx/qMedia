@@ -22,6 +22,7 @@ TorrentSqlTableModel::TorrentSqlTableModel(TorrentTransferTableView *parent,
                                            const QSqlDatabase db)
     : QSqlTableModel(parent, db)
     , m_torrentTableView(parent)
+    , m_statusHash(StatusHash::instance())
 {}
 
 QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
@@ -49,7 +50,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
         // TODO get decorationSize from QStyledItemDelegate ( see NOTES.txt ) silverqx
         static const auto iconWidth = 24;
         if (postitionX <= iconWidth)
-            return g_statusHash[record(row).value("status").toString()].text;
+            return (*m_statusHash)[record(row).value("status").toString()].text;
 
         return displayValue(modelIndex, column);
     };
@@ -66,7 +67,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
 
     switch (role) {
     case Qt::ForegroundRole:
-        return g_statusHash[record(row).value("status").toString()].color;
+        return (*m_statusHash)[record(row).value("status").toString()].getColor();
     case Qt::DisplayRole:
         return displayValue(modelIndex, column);
     case UnderlyingDataRole:
@@ -98,7 +99,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
     case Qt::DecorationRole:
         switch (column) {
         case TR_NAME:
-            return g_statusHash[record(row).value("status").toString()]
+            return (*m_statusHash)[record(row).value("status").toString()]
                     .getIcon();
         }
         break;
