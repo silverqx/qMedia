@@ -166,12 +166,6 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
                              QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
-TorrentTransferTableView::~TorrentTransferTableView()
-{
-    for (const auto *const torrentFiles : qAsConst(m_torrentFilesCache))
-        delete torrentFiles;
-}
-
 void TorrentTransferTableView::showEvent(QShowEvent *event)
 {
     // Event originated from system
@@ -232,7 +226,8 @@ void TorrentTransferTableView::previewFile(const QString &filePath) const
     Utils::Gui::openPath(filePath);
 }
 
-QVector<QSqlRecord> *TorrentTransferTableView::selectTorrentFilesById(quint64 id) const
+QSharedPointer<const QVector<QSqlRecord>>
+TorrentTransferTableView::selectTorrentFilesById(quint64 id) const
 {
     // Return from cache
     if (m_torrentFilesCache.contains(id))
@@ -251,7 +246,7 @@ QVector<QSqlRecord> *TorrentTransferTableView::selectTorrentFilesById(quint64 id
         return {};
     }
 
-    auto *const torrentFiles = new QVector<QSqlRecord>;
+    const auto torrentFiles = QSharedPointer<QVector<QSqlRecord>>::create();
     while (query.next())
         torrentFiles->append(query.record());
 
@@ -298,9 +293,7 @@ void TorrentTransferTableView::removeRecordFromTorrentFilesCache(const quint64 t
         return;
     }
 
-    const auto *const torrentFiles = m_torrentFilesCache[torrentId];
     m_torrentFilesCache.remove(torrentId);
-    delete torrentFiles;
 }
 
 void TorrentTransferTableView::filterTextChanged(const QString &name) const
@@ -319,8 +312,7 @@ void TorrentTransferTableView::previewSelectedTorrent()
     qDebug() << "Torrent doubleclicked :"
              << torrent.value("name").toString();
 
-    const auto *const torrentFiles =
-            selectTorrentFilesById(torrent.value("id").toULongLong());
+    const auto torrentFiles = selectTorrentFilesById(torrent.value("id").toULongLong());
     if (torrentFiles->isEmpty()) {
         QMessageBox::critical(this, QStringLiteral("Preview impossible"),
                               QStringLiteral("Torrent <strong>%1</strong> does not contain any "

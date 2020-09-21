@@ -17,7 +17,6 @@ class TorrentTransferTableView final : public QTableView
 
 public:
     explicit TorrentTransferTableView(const HWND qBittorrentHwnd, QWidget *parent = nullptr);
-    ~TorrentTransferTableView();
 
     int getModelRowCount() const;
     inline bool isQBittorrentUp() const noexcept { return (m_qBittorrentHwnd != nullptr); };
@@ -59,7 +58,7 @@ private:
         NB_COLUMNS
     };
 
-    QVector<QSqlRecord> *selectTorrentFilesById(quint64 id) const;
+    QSharedPointer<const QVector<QSqlRecord>> selectTorrentFilesById(quint64 id) const;
     void displayListMenu(const QContextMenuEvent *const event);
     QModelIndex getSelectedTorrentIndex() const;
     QSqlRecord getSelectedTorrentRecord() const;
@@ -81,7 +80,7 @@ private:
     QSortFilterProxyModel *m_proxyModel;
     TorrentTableDelegate *m_tableDelegate;
     /*! Contains torrent files by torrent id. */
-    mutable QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
+    mutable QHash<quint64, QSharedPointer<const QVector<QSqlRecord>>> m_torrentFilesCache;
     bool m_showEventInitialized = false;
     HWND m_qBittorrentHwnd = nullptr;
     const StatusHash *const m_statusHash;

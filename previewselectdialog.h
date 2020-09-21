@@ -56,7 +56,7 @@ public:
     };
 
     PreviewSelectDialog(QWidget *parent, QSqlRecord torrent,
-                        const QVector<QSqlRecord> *const torrentFiles);
+                        const QSharedPointer<const QVector<QSqlRecord>> torrentFiles);
     ~PreviewSelectDialog();
 
     /*! Assemble absolute file path for torrent file. */
@@ -74,7 +74,7 @@ private:
     Ui::PreviewSelectDialog *ui;
     QStandardItemModel *m_previewListModel;
     const QSqlRecord m_torrent;
-    const QVector<QSqlRecord> *m_torrentFiles;
+    const QSharedPointer<const QVector<QSqlRecord>> m_torrentFiles;
     bool m_showEventInitialized = false;
     PreviewListDelegate *m_listDelegate;
 
