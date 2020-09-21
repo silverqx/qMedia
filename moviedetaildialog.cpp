@@ -17,10 +17,10 @@
 namespace
 {
     // Popular delimiters
-    static const auto delimiterSlash       = QStringLiteral(" / ");
-    static const auto delimiterNewLine     = QStringLiteral("\n");
-    static const auto delimiterComma       = QStringLiteral(", ");
-    static const auto delimiterHtmlNewLine = QStringLiteral("<br>");
+    const auto delimiterSlash       = QStringLiteral(" / ");
+    const auto delimiterNewLine     = QStringLiteral("\n");
+    const auto delimiterComma       = QStringLiteral(", ");
+    const auto delimiterHtmlNewLine = QStringLiteral("<br>");
 
     /*! Join QJsonArray, all values in array have to be strings. */
     const auto joinJsonStringArray = [](const QJsonArray &jsonArray, const QString &delimiter)
@@ -45,7 +45,7 @@ namespace
     };
 
     // Used in pagination
-    static const auto moreLinkText = [](const bool withDots = true,
+    const auto moreLinkText = [](const bool withDots = true,
                                      const bool withParenthesis = true)
     {
         return (withDots ? QStringLiteral("<strong>...</strong> ") : QStringLiteral("")) +
@@ -55,7 +55,7 @@ namespace
                           ">more</a>") +
             (withParenthesis ? QStringLiteral(")") : QStringLiteral(""));
     };
-    static const auto moreLinkSize = QStringLiteral("... (more)").size();
+    const auto moreLinkSize = QStringLiteral("... (more)").size();
 
     /*! Join QJsonArray, all values in array have to be QJsonObject, values will be searched
         in the jsonArray by keys stored in args pack and wrapped in wrapIn. If maxLetters
@@ -164,25 +164,28 @@ namespace
         QString flag;
     };
     // TODO populate missing flags silverqx
-    static const QHash<QString, TitlesValue> titlesHash
+    const auto titlesHash = []() -> const QHash<QString, TitlesValue> &
     {
-        {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
-        {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
-        {QStringLiteral("USA"),            { 3, QStringLiteral("us")}},
-        {QStringLiteral("Slovensko"),      { 4, QStringLiteral("sk")}},
-        {QStringLiteral("Velká Británie"), { 5, QStringLiteral("gb")}},
-        {QStringLiteral("Kanada"),         { 6, QStringLiteral("ca")}},
-        {QStringLiteral("Německo"),        { 7, QStringLiteral("de")}},
-        {QStringLiteral("Francie"),        { 8, QStringLiteral("fr")}},
-        {QStringLiteral("Nový Zéland"),    { 9, QStringLiteral("nz")}},
-        {QStringLiteral("Austrálie"),      {10, QStringLiteral("au")}},
+        static const QHash<QString, TitlesValue> cached {
+            {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
+            {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
+            {QStringLiteral("USA"),            { 3, QStringLiteral("us")}},
+            {QStringLiteral("Slovensko"),      { 4, QStringLiteral("sk")}},
+            {QStringLiteral("Velká Británie"), { 5, QStringLiteral("gb")}},
+            {QStringLiteral("Kanada"),         { 6, QStringLiteral("ca")}},
+            {QStringLiteral("Německo"),        { 7, QStringLiteral("de")}},
+            {QStringLiteral("Francie"),        { 8, QStringLiteral("fr")}},
+            {QStringLiteral("Nový Zéland"),    { 9, QStringLiteral("nz")}},
+            {QStringLiteral("Austrálie"),      {10, QStringLiteral("au")}},
+        };
+        return cached;
     };
-    static const auto titlesPriorityHashNew = titlesHash.size() + 1;
+    const auto titlesPriorityHashNew = titlesHash().size() + 1;
     const auto compareTitlesByLang = [](const QJsonValue &left, const QJsonValue &right) -> bool
     {
         // TODO if two keys are same and one is pracovní název, so flag it and give him titlesPriorityHashNew priority, see eg how to train dragon 3 silverqx
-        const auto leftTmp = titlesHash[left["language"].toString()].priority;
-        const auto rightTmp = titlesHash[right["language"].toString()].priority;
+        const auto leftTmp = titlesHash().value(left["language"].toString()).priority;
+        const auto rightTmp = titlesHash().value(right["language"].toString()).priority;
         return (leftTmp == 0 ? titlesPriorityHashNew : leftTmp)
             < (rightTmp == 0 ? titlesPriorityHashNew : rightTmp);
     };
@@ -201,7 +204,7 @@ namespace
     };
 
     /*! Remove all items from layout. */
-    inline const auto wipeOutLayout = [](QLayout &layout)
+    const auto wipeOutLayout = [](QLayout &layout)
     {
         // Nothing to remove
         if (layout.count() == 0)
@@ -215,8 +218,9 @@ namespace
     };
 }
 
-// Needed when sorting QJsonArray
-inline void swap(QJsonValueRef v1, QJsonValueRef v2)
+// Needed when sorting QJsonArray.
+// I need it only here, so I defined it in the cpp file.
+void swap(QJsonValueRef v1, QJsonValueRef v2)
 {
     QJsonValue temp(v1);
     v1 = QJsonValue(v2);
@@ -226,6 +230,7 @@ inline void swap(QJsonValueRef v1, QJsonValueRef v2)
 MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::MovieDetailDialog)
+    , m_statusHash(StatusHash::instance())
 {
     ui->setupUi(this);
 
@@ -338,10 +343,10 @@ void MovieDetailDialog::populateUi()
     // Status icon before movie titles
     if (m_initialPopulate) {
         const auto status = m_selectedTorrent.value("status").toString();
-        const auto statusIcon = g_statusHash[status].getIcon();
+        const auto statusIcon = (*m_statusHash)[status].getIcon();
         const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
         ui->status->setPixmap(statusPixmap);
-        ui->status->setToolTip(g_statusHash[status].text);
+        ui->status->setToolTip((*m_statusHash)[status].text);
         ui->status->setToolTipDuration(2500);
     }
     // Title
@@ -428,7 +433,7 @@ void MovieDetailDialog::renderTitleSection() const
 
 namespace
 {
-    static const int flagWidth = 21;
+    const int flagWidth = 21;
 }
 
 void MovieDetailDialog::prepareTitlesSection()
@@ -462,7 +467,7 @@ void MovieDetailDialog::prepareTitlesSection()
 void MovieDetailDialog::renderTitlesSection(const int maxLines) const
 {
     auto titlesArr = m_movieDetail["titles"].toArray();
-    // My prefered sort
+    // My preferred sort
     std::sort(titlesArr.begin(), titlesArr.end(), compareTitlesByLang);
 
     // Populate grid layout with flags and titles
@@ -486,8 +491,8 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
         titleLanguage = titleObject["language"].toString();
         // Flag
         labelFlag = new QLabel;
-        if (titlesHash.contains(titleLanguage)) {
-            flagIcon = getFlagIcon(titlesHash[titleLanguage].flag);
+        if (titlesHash().contains(titleLanguage)) {
+            flagIcon = getFlagIcon(titlesHash().value(titleLanguage).flag);
             flag = flagIcon.pixmap(flagIcon.actualSize(QSize(flagWidth, 16)));
             labelFlag->setPixmap(flag);
         } else {

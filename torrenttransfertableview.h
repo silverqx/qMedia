@@ -7,6 +7,7 @@ class QSortFilterProxyModel;
 class QSqlRecord;
 class QSqlTableModel;
 
+class StatusHash;
 class TorrentTableDelegate;
 
 class TorrentTransferTableView final : public QTableView
@@ -83,6 +84,7 @@ private:
     mutable QHash<quint64, QVector<QSqlRecord> *> m_torrentFilesCache;
     bool m_showEventInitialized = false;
     HWND m_qBittorrentHwnd = nullptr;
+    const StatusHash *const m_statusHash;
 
 private slots:
     void previewSelectedTorrent();

@@ -33,10 +33,15 @@ namespace
 {
     // Needed in EnumWindowsProc()
     MainWindow *l_mainWindow = nullptr;
+
     /*! Main window width by isQBittorrentUp().*/
-    static const QHash<bool, int> l_mainWindowWidthHash {
-        {false, 1136},
-        {true,  1300},
+    const auto mainWindowWidth = [](const bool isQBittorrentUp)
+    {
+        static const QHash<bool, int> cached {
+            {false, 1136},
+            {true,  1300},
+        };
+        return cached.value(isQBittorrentUp);
     };
 
     BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
@@ -250,13 +255,12 @@ void MainWindow::setGeometry(const bool initial)
     qDebug("setGeometry(initial = %s)", initial ? "true" : "false");
 #endif
 
-    const auto mainWindowWidth = l_mainWindowWidthHash[isQBittorrentUp()];
 #ifdef VISIBLE_CONSOLE
     // Set up smaller, so I can see console output, but only at initial
-    resize(mainWindowWidth,
+    resize(mainWindowWidth(isQBittorrentUp()),
            initial ? (geometry().height() - 200) : geometry().height());
 #else
-    resize(mainWindowWidth, geometry().height());
+    resize(mainWindowWidth(isQBittorrentUp()), geometry().height());
 #endif
     // Initial position
     move(screen()->availableSize().width() - width() - 10, 10);

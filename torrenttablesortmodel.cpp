@@ -11,13 +11,19 @@ TorrentTableSortModel::TorrentTableSortModel(QObject *parent)
 
 namespace
 {
-    /*! Column which can not be sorted by added on when left and right values are same.
-        This columns have their own special sorting rules. */
-    static const QVector<int> dontSortByAddedOn {
-        TorrentSqlTableModel::TR_ADDED_ON,
-        TorrentSqlTableModel::TR_ETA,
-        TorrentSqlTableModel::TR_SEEDS,
-        TorrentSqlTableModel::TR_LEECHERS,
+    /*! Check, whether the torrent transfer table can be sorted by added on column,
+        when left and right values in lessThan() are the same.
+        Columns defined in the vector have their own special sorting rules. */
+    const auto sortByAddedOn = [](const auto column)
+    {
+        static const QVector<int> cached {
+            TorrentSqlTableModel::TR_ADDED_ON,
+            TorrentSqlTableModel::TR_ETA,
+            TorrentSqlTableModel::TR_SEEDS,
+            TorrentSqlTableModel::TR_LEECHERS,
+        };
+        // Don't sort by columns in the vector
+        return !cached.contains(column);
     };
 }
 
@@ -32,10 +38,10 @@ bool TorrentTableSortModel::lessThan(const QModelIndex &left, const QModelIndex 
 
     const QVariant leftRawValue = left.data(TorrentSqlTableModel::UnderlyingDataRole);
     const QVariant rightRawValue = right.data(TorrentSqlTableModel::UnderlyingDataRole);
-    // If not valid or is the same value, than sort by added on column
-    // It is like second sort, but only if items have the same values
+    // If not valid or is the same value, than sort by added on column.
+    // It is like second sort, but only if items have the same values.
     if (!leftRawValue.isValid() || !rightRawValue.isValid()
-        || (!dontSortByAddedOn.contains(sortColumn) && (leftRawValue == rightRawValue)))
+        || (sortByAddedOn(sortColumn) && (leftRawValue == rightRawValue)))
         return invokeLessThanForColumn(TorrentSqlTableModel::TR_ADDED_ON);
 
     switch (sortColumn) {

@@ -28,6 +28,7 @@
 TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, QWidget *parent)
     : QTableView(parent)
     , m_qBittorrentHwnd(qBittorrentHwnd)
+    , m_statusHash(StatusHash::instance())
 {
     // QObject
     setObjectName(QStringLiteral("torrentTransferTableView"));
@@ -437,7 +438,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
 
     // Add actions to menu
     // Pause, Resume and Force resume
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (statusProperties.isForced()) {
         listMenu->addAction(actionPause);
         listMenu->addAction(actionResume);
@@ -496,7 +497,7 @@ void TorrentTransferTableView::deleteSelectedTorrent()
     if (torrent.isEmpty())
         return;
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (statusProperties.isAllocating() || statusProperties.isChecking()
         || statusProperties.isMoving()
     ) {
@@ -575,7 +576,7 @@ void TorrentTransferTableView::pauseSelectedTorrent()
         return;
     }
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (!isQBittorrentUp() || !statusProperties.isDownloading())
         return;
 
@@ -599,7 +600,7 @@ void TorrentTransferTableView::resumeSelectedTorrent()
         return;
     }
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (!isQBittorrentUp()
         || (!statusProperties.isPaused() && !statusProperties.isForced()))
         return;
@@ -615,7 +616,7 @@ void TorrentTransferTableView::forceResumeSelectedTorrent()
         return;
     }
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (!isQBittorrentUp()
         || (!statusProperties.isDownloading() && !statusProperties.isPaused()))
         return;
@@ -635,7 +636,7 @@ void TorrentTransferTableView::forceRecheckSelectedTorrent()
         return;
     }
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (!isQBittorrentUp() || statusProperties.isAllocating() || statusProperties.isChecking()
         || statusProperties.isMoving())
         return;
@@ -655,7 +656,7 @@ void TorrentTransferTableView::openFolderForSelectedTorrent()
         return;
     }
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (statusProperties.isMoving())
         return;
 
@@ -713,7 +714,7 @@ void TorrentTransferTableView::pauseResumeSelectedTorrent() const
     qDebug() << "Pause / Resume selected torrent :"
              << torrent.value("name").toString();
 
-    const auto statusProperties = g_statusHash[torrent.value("status").toString()];
+    const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
     if (statusProperties.isPaused())
         resumeTorrent(torrent);
     else if (statusProperties.isDownloading() || statusProperties.isForced())

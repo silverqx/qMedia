@@ -12,6 +12,8 @@ class QGridLayout;
 class QSqlRecord;
 class QVBoxLayout;
 
+class StatusHash;
+
 namespace Ui {
     class MovieDetailDialog;
 }
@@ -67,6 +69,7 @@ private:
     int m_movieDetailIndex;
     /*! Save button in the buttonBox. */
     QPushButton *m_saveButton;
+    const StatusHash *const m_statusHash;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply) const;
