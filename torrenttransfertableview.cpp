@@ -50,14 +50,16 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     setSortingEnabled(true);
     setWordWrap(true);
     setCornerButtonEnabled(false);
-    // Horizontal / Vertical Header
-    horizontalHeader()->setHighlightSections(false);
-    horizontalHeader()->setStretchLastSection(false);
-    verticalHeader()->setVisible(false);
-    verticalHeader()->setMinimumSectionSize(32);
-    verticalHeader()->setDefaultSectionSize(36);
-    verticalHeader()->setHighlightSections(false);
-    verticalHeader()->setStretchLastSection(false);
+    // Horizontal / Vertical Headers
+    auto horizontalHeaderTmp = horizontalHeader();
+    horizontalHeaderTmp->setHighlightSections(false);
+    horizontalHeaderTmp->setStretchLastSection(false);
+    auto verticalHeaderTmp = verticalHeader();
+    verticalHeaderTmp->setVisible(false);
+    verticalHeaderTmp->setMinimumSectionSize(32);
+    verticalHeaderTmp->setDefaultSectionSize(36);
+    verticalHeaderTmp->setHighlightSections(false);
+    verticalHeaderTmp->setStretchLastSection(false);
 
     // Create and apply delegate
     m_tableDelegate = new TorrentTableDelegate(this);
@@ -157,8 +159,8 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
             this, &TorrentTransferTableView::pauseResumeSelectedTorrent);
 
     // Resize columns to default state after right click
-    horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(horizontalHeader(), &QHeaderView::customContextMenuRequested,
+    horizontalHeaderTmp->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(horizontalHeaderTmp, &QHeaderView::customContextMenuRequested,
             this, &TorrentTransferTableView::resizeColumns);
 
     // Select torrent with latest / highest added on datetime
@@ -745,15 +747,20 @@ void TorrentTransferTableView::resizeColumns() const
     auto *const tableViewHeader = horizontalHeader();
     tableViewHeader->resizeSections(QHeaderView::ResizeToContents);
 
-    // Increase progress section size about 10%
-    const auto sizeSize = tableViewHeader->sectionSize(TR_SIZE);
-    tableViewHeader->resizeSection(TR_SIZE, sizeSize + (sizeSize * 0.1));
     // Increase size section size about 40%
     const auto progressSize = tableViewHeader->sectionSize(TR_PROGRESS);
     tableViewHeader->resizeSection(TR_PROGRESS, progressSize + (progressSize * 0.4));
     // Increase ETA section size about 30%
     const auto etaSize = tableViewHeader->sectionSize(TR_ETA);
     tableViewHeader->resizeSection(TR_ETA, etaSize + (etaSize * 0.3));
+    // Increase progress section size about 10%
+    const auto sizeSize = tableViewHeader->sectionSize(TR_SIZE);
+    tableViewHeader->resizeSection(TR_SIZE, sizeSize + (sizeSize * 0.1));
+    // Decrease seeds/leechs sections size about 10%
+    const auto seedsSize = tableViewHeader->sectionSize(TR_SEEDS);
+    tableViewHeader->resizeSection(TR_SEEDS, seedsSize - (sizeSize * 0.1));
+    const auto leechsSize = tableViewHeader->sectionSize(TR_LEECHERS);
+    tableViewHeader->resizeSection(TR_LEECHERS, leechsSize - (sizeSize * 0.1));
     // Remaining section do not need resize
     // Increase added on section size about 10%
     const auto addedOnSize = tableViewHeader->sectionSize(TR_ADDED_ON);
