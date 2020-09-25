@@ -29,8 +29,13 @@ int main(int argc, char *argv[])
     QStandardPaths::setTestModeEnabled(true);
 #endif
 
+    // TODO support High DPI scaling, it's all wrong now, I think I postpone this until QT6 will be out silverqx
+//    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+//    QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+
     QApplication app(argc, argv);
-    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+    // TODO High DPI pixmaps silverqx
+//    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         // TODO remove after upgrade to Qt6, this is the default in Qt6 silverqx
         app.setAttribute(Qt::AA_DisableWindowContextHelpButton);
