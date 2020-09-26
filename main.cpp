@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     // TODO High DPI pixmaps silverqx
+    // https://doc.qt.io/qt-5/qpainter.html#drawing-high-resolution-versions-of-pixmaps-and-images
 //    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         // TODO remove after upgrade to Qt6, this is the default in Qt6 silverqx
