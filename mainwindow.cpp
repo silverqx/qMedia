@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QLabel>
+#include <QScreen>
 #include <QShortcut>
 #include <QToolButton>
 #include <QtSql/QSqlError>
@@ -11,7 +12,6 @@
 #include <qt_windows.h>
 #include <Psapi.h>
 
-#include <QScreen>
 #include <regex>
 
 #include "commonglobal.h"

@@ -27,6 +27,7 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
         const auto qBittorrentHwndNew = reinterpret_cast<HWND>(msg->wParam);
         if (m_mainWindow->getQBittorrentHwnd() != qBittorrentHwndNew)
             emit m_mainWindow->qBittorrentHwndChanged(qBittorrentHwndNew);
+        // WARNING Qt docs: We recommend to only emit them from the class that defines the signal and its subclasses silverqx
         emit m_mainWindow->qBittorrentUp();
         return true;
     }
