@@ -362,7 +362,7 @@ quint64 MainWindow::selectTorrentFilesCount() const
     QSqlQuery query;
     query.setForwardOnly(true);
 
-    const bool ok = query.exec("SELECT COUNT(*) as count FROM torrents_previewable_files");
+    const bool ok = query.exec("SELECT COUNT(*) as count FROM torrent_previewable_files");
     if (!ok) {
         qDebug() << "Select of torrent files count failed :"
                  << query.lastError().text();
