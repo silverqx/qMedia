@@ -237,7 +237,7 @@ TorrentTransferTableView::selectTorrentFilesById(quint64 id) const
 
     QSqlQuery query;
     query.setForwardOnly(true);
-    query.prepare(QStringLiteral("SELECT * FROM torrents_previewable_files "
+    query.prepare(QStringLiteral("SELECT * FROM torrent_previewable_files "
                                  "WHERE torrent_id = ?"));
     query.addBindValue(id);
 

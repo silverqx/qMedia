@@ -276,3 +276,115 @@ QSize actualSize = option->icon.actualSize(option->decorationSize, mode, state);
 // For highdpi icons actualSize might be larger than decorationSize, which we don't want. Clamp it to decorationSize.
 option->decorationSize = QSize(qMin(option->decorationSize.width(), actualSize.width()),
                                qMin(option->decorationSize.height(), actualSize.height()));
+
+
+Merge torrents' changed properties:
+-----------------------------------
+
+torrentexporter.h:
+--
+    class TorrentExporter final : public QObject
+    private:
+        struct ChangedPropertiesStore
+        {
+            TorrentsChangedHash torrents;
+            TorrentsFilesChangedHash torrentsFiles;
+
+            inline bool isEmpty() const
+            {
+                if (torrents.isEmpty() && torrentsFiles.isEmpty())
+                    return true;
+                return false;
+            }
+
+            inline void clear()
+            {
+                torrents.clear();
+                torrentsFiles.clear();
+            }
+        } m_changedPropertiesStore;
+        
+        void mergeTorrentChangedProperties(const TorrentId torrentId,
+                const QSharedPointer<TorrentChangedProperties> &torrentsChangedProperties);
+        void mergeTorrentFilesChangedProperties(
+                const TorrentId torrentId,
+                const QSharedPointer<TorrentFilesChangedHash> &filesChangedProperties);
+        void mergeChangedProperties(
+                const QSharedPointer<QVariantHash> &propertiesStore,
+                const QSharedPointer<const QVariantHash> &changedProperties);
+
+
+
+torrentexporter.cpp:
+--
+void TorrentExporter::mergeTorrentChangedProperties(
+        const TorrentId torrentId,
+        const QSharedPointer<TorrentChangedProperties> &changedProperties)
+{
+    auto &torrentsStore = m_changedPropertiesStore.torrents;
+
+    // If this torrent's changed properties aren't in the store, simply insert them
+    if (!torrentsStore.contains(torrentId)) {
+        torrentsStore.insert(torrentId, changedProperties);
+        return;
+    }
+
+    // Process/Merge changed properties
+    mergeChangedProperties(torrentsStore[torrentId], changedProperties);
+}
+
+void TorrentExporter::mergeTorrentFilesChangedProperties(
+        const TorrentId torrentId,
+        const QSharedPointer<TorrentFilesChangedHash> &filesChangedProperties)
+{
+    auto &torrentsFilesStore = m_changedPropertiesStore.torrentsFiles;
+
+    // If these torrent files changed properties are not in the store, simply insert them
+    if (!torrentsFilesStore.contains(torrentId)) {
+        torrentsFilesStore.insert(torrentId, filesChangedProperties);
+        return;
+    }
+
+    // Iterate over a changed files
+    auto itFiles = filesChangedProperties->constBegin();
+    while (itFiles != filesChangedProperties->constEnd())
+    {
+        const auto fileId = itFiles.key();
+        const auto changedFileProperties = itFiles.value();
+
+        ++itFiles;
+
+        auto &changedFilesStore = torrentsFilesStore[torrentId];
+
+        // If this torrent file is not in the store, simply insert it
+        if (!changedFilesStore->contains(fileId)) {
+            changedFilesStore->insert(fileId, changedFileProperties);
+            continue;
+        }
+
+        // Process/Merge changed file properties
+        mergeChangedProperties((*changedFilesStore)[fileId], changedFileProperties);
+    }
+}
+
+void TorrentExporter::mergeChangedProperties(
+        const QSharedPointer<QVariantHash> &propertiesStore,
+        const QSharedPointer<const QVariantHash> &changedProperties)
+{
+    // Process/Merge changed properties
+    auto itTorrent = changedProperties->constBegin();
+    while (itTorrent != changedProperties->constEnd())
+    {
+        const auto property = itTorrent.key();
+        const auto value = itTorrent.value();
+
+        ++itTorrent;
+
+        // Torrent property value is the same, can be skipped
+        if (propertiesStore->value(property) == value)
+            continue;
+
+        // Insert new or overwrite the old one
+        propertiesStore->insert(property, value);
+    }
+}
