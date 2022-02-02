@@ -1,12 +1,13 @@
 #include "previewselectdialog.h"
 #include "ui_previewselectdialog.h"
 
+#include <QDir>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QShowEvent>
-#include <QtSql/QSqlRecord>
 #include <QStandardItemModel>
+#include <QtSql/QSqlRecord>
 
 #include "common.h"
 #include "previewlistdelegate.h"
@@ -17,7 +18,7 @@
 
 PreviewSelectDialog::PreviewSelectDialog(
         QWidget *parent, const QSqlRecord torrent,
-        const QSharedPointer<const QVector<QSqlRecord>> torrentFiles
+        const QSharedPointer<const QVector<QSqlRecord>> &torrentFiles
 )
     : QDialog(parent)
     , ui(new Ui::PreviewSelectDialog)
@@ -86,6 +87,7 @@ void PreviewSelectDialog::previewButtonClicked()
     if (!selectedIndex.isValid())
         return;
 
+    // BUG can't preview if saveing incomplete directory is provided, I don't even have incomplete folder in torrents table, I have savepath column only 😭 silverqx
     // Get file path to preview
     const auto filePath = getTorrentFileFilePathAbs(
                               m_previewListModel->data(selectedIndex).toString());
@@ -168,5 +170,6 @@ void PreviewSelectDialog::populatePreviewListModel() const
 QString PreviewSelectDialog::getTorrentFileFilePathAbs(const QString &relativePath) const
 {
     const QDir saveDir(m_torrent.value(TorrentSqlTableModel::TR_SAVE_PATH).toString());
+
     return Utils::Fs::expandPathAbs(saveDir.absoluteFilePath(relativePath));
 }
