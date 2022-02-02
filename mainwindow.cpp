@@ -18,6 +18,7 @@
 #include "commonglobal.h"
 
 #include "torrenttransfertableview.h"
+#include "version.h"
 #include "utils/fs.h"
 
 /*! Order of qBittorrentHwndChanged() or qBittorentUp/Down() slots:
@@ -54,7 +55,7 @@ namespace
         auto windowText = std::make_unique<wchar_t[]>(windowTextLength);
 
         ::GetWindowText(hwnd, windowText.get(), windowTextLength);
-#ifdef QT_DEBUG
+#ifdef QMEDIA_DEBUG
         std::wstring text(windowText.get());
 #endif
 
@@ -77,7 +78,7 @@ namespace
         wchar_t moduleFilePath[MAX_PATH];
         ::GetModuleFileNameEx(processHandle, NULL, moduleFilePath, ARRAYSIZE(moduleFilePath));
         // More instances of qBittorrent can run, so find proper one
-#ifdef QT_DEBUG
+#ifdef QMEDIA_DEBUG
         // String has to start with moduleFileName
         if (::wcsstr(moduleFilePath, L"O:\\Code\\c\\qbittorrent_64-dev\\qBittorrent\\qBittorrent-builds")
             != &moduleFilePath[0])
@@ -113,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // MainWindow
-    setWindowTitle(" qMedia v0.0.1");
+    setWindowTitle(QStringLiteral(" qMedia %1").arg(QMEDIA_VERSION_STR_2));
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
 
@@ -240,7 +241,7 @@ void MainWindow::refreshStatusBar() const
 void MainWindow::applicationStateChanged(Qt::ApplicationState state) const
 {
     // Disable autoreload in development
-#ifndef QT_DEBUG
+#ifdef QMEDIA_NO_DEBUG
     if (state == Qt::ApplicationActive)
         m_tableView->reloadTorrentModel();
 #endif

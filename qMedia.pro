@@ -1,26 +1,26 @@
 QT += core gui widgets sql network
 
+TEMPLATE = app
+TARGET = qMedia
+
 # Configuration
 # ---
-CONFIG += c++2a strict_c++ silent utf8_source
+
+CONFIG += c++2a strict_c++ silent utf8_source warn_on
 CONFIG -= c++11
+
 # Enable stack trace support
 #CONFIG += stacktrace
 
-# Some info output
-# ---
-CONFIG(debug, debug|release): message( "Project is built in DEBUG mode." )
-CONFIG(release, debug|release): message( "Project is built in RELEASE mode." )
-
-# Disable debug output in release mode
-CONFIG(release, debug|release) {
-    message( "Disabling debug output." )
-    DEFINES += QT_NO_DEBUG_OUTPUT
-}
-
 # qMedia defines
 # ---
+
 DEFINES += PROJECT_QMEDIA
+
+# Release build
+CONFIG(release, debug|release): DEFINES *= QMEDIA_NO_DEBUG
+# Debug build
+CONFIG(debug, debug|release): DEFINES *= QMEDIA_DEBUG
 
 # Qt defines
 # ---
@@ -41,6 +41,7 @@ DEFINES += QT_STRICT_ITERATORS
 
 # WinApi
 # ---
+
 # All have to be defined because of checks at the beginning of the qt_windows.h
 # Windows 10 1903 "19H1" - 0x0A000007
 DEFINES += WINVER=_WIN32_WINNT_WIN10
@@ -70,67 +71,14 @@ win32-msvc* {
     QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF=5
 }
 
-# File version and windows manifest
-# ---
-win32:VERSION = 0.1.0.0
-else:VERSION = 0.1.0
-
-win32-msvc* {
-    QMAKE_TARGET_PRODUCT = qMedia
-    QMAKE_TARGET_DESCRIPTION = qMedia media library for qBittorrent
-    QMAKE_TARGET_COMPANY = Crystal Studio
-    QMAKE_TARGET_COPYRIGHT = Copyright (©) 2020 Crystal Studio
-    RC_ICONS = images/qMedia.ico
-    RC_LANG = 1033
-}
-
-# Stacktrace support
-# ---
-stacktrace {
-    DEFINES += STACKTRACE
-    win32 {
-        DEFINES += STACKTRACE_WIN_PROJECT_PATH=$$PWD
-        DEFINES += STACKTRACE_WIN_MAKEFILE_PATH=$$OUT_PWD
-    }
-    win32-g++* {
-        contains(QMAKE_HOST.arch, x86) {
-            # i686 arch requires frame pointer preservation
-            QMAKE_CXXFLAGS += -fno-omit-frame-pointer
-        }
-
-        QMAKE_LFLAGS += -Wl,--export-all-symbols
-
-        LIBS += libdbghelp
-    }
-    else:win32-msvc* {
-        contains(QMAKE_HOST.arch, x86) {
-            # i686 arch requires frame pointer preservation
-            QMAKE_CXXFLAGS += -Oy-
-        }
-
-        QMAKE_CXXFLAGS *= -Zi
-        QMAKE_LFLAGS *= /DEBUG
-
-        LIBS += dbghelp.lib
-    }
-}
-
-# Use Precompiled headers (PCH)
-# ---
-
-PRECOMPILED_HEADER = $$quote($$PWD/pch.h)
-HEADERS += $$PRECOMPILED_HEADER
-
-precompile_header: \
-    DEFINES *= USING_PCH
-
 # qMediaCommon project
 # ---
 
 include(../qMediaCommon/qmediacommon.pri)
 
-# Application files
+# qMedia header and source files
 # ---
+
 SOURCES += \
     abstractmoviedetailservice.cpp \
     csfddetailservice.cpp \
@@ -169,6 +117,7 @@ HEADERS += \
     utils/gui.h \
     utils/misc.h \
     utils/string.h \
+    version.h \
 
 FORMS += \
     mainwindow.ui \
@@ -176,16 +125,85 @@ FORMS += \
     previewselectdialog.ui \
 
 RESOURCES += \
-    images/qMedia.qrc
+    images/qMedia.qrc \
+
+# File version
+# ---
+
+# Find version numbers in the version header file and assign them to the
+# <TARGET>_VERSION_<MAJOR,MINOR,PATCH,TWEAK> and also to the VERSION variable.
+load(tiny_version_numbers)
+tiny_version_numbers()
+
+# Windows resource and manifest files
+# ---
+
+load(tiny_resource_and_manifest)
+tiny_resource_and_manifest(                    \
+    # RC_INCLUDEPATH - find icons, Windows manifest on MinGW and orm/version.hpp
+    $$quote($$PWD/) $$quote($$PWD/resources/), \
+)
+
+# Use Precompiled headers (PCH)
+# ---
+
+PRECOMPILED_HEADER = $$quote($$PWD/pch.h)
+HEADERS += $$PRECOMPILED_HEADER
+
+precompile_header: \
+    DEFINES *= USING_PCH
+
+# Stacktrace support
+# ---
+
+stacktrace {
+    DEFINES += STACKTRACE
+    win32 {
+        DEFINES += STACKTRACE_WIN_PROJECT_PATH=$$PWD
+        DEFINES += STACKTRACE_WIN_MAKEFILE_PATH=$$OUT_PWD
+    }
+    win32-g++* {
+        contains(QMAKE_HOST.arch, x86) {
+            # i686 arch requires frame pointer preservation
+            QMAKE_CXXFLAGS += -fno-omit-frame-pointer
+        }
+
+        QMAKE_LFLAGS += -Wl,--export-all-symbols
+
+        LIBS += libdbghelp
+    }
+    else:win32-msvc* {
+        contains(QMAKE_HOST.arch, x86) {
+            # i686 arch requires frame pointer preservation
+            QMAKE_CXXFLAGS += -Oy-
+        }
+
+        QMAKE_CXXFLAGS *= -Zi
+        QMAKE_LFLAGS *= /DEBUG
+
+        LIBS += dbghelp.lib
+    }
+}
+
+# Deployment
+# ---
+
+release {
+    win32-msvc*: target.path = c:/optx64/$${TARGET}
+    !isEmpty(target.path): INSTALLS += target
+}
 
 # For Qt Creator beautifier
 # not using for now
 #DISTFILES += \
 #    uncrustify.cfg
 
-# Default rules for deployment.
+# Some info output
 # ---
-release {
-    win32-msvc*: target.path = c:/optx64/$${TARGET}
-    !isEmpty(target.path): INSTALLS += target
-}
+
+CONFIG(debug, debug|release):!build_pass: message( "Project is built in DEBUG mode." )
+CONFIG(release, debug|release):!build_pass: message( "Project is built in RELEASE mode." )
+
+# Disable debug output in release mode
+CONFIG(release, debug|release): \
+    DEFINES *= QT_NO_DEBUG_OUTPUT

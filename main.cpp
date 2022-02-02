@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
         return 1;
 
-#ifdef QT_DEBUG
+#ifdef QMEDIA_DEBUG
     // Redirect writable locations to %APPDATA%/qttest
     QStandardPaths::setTestModeEnabled(true);
 #endif

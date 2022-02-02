@@ -27,7 +27,7 @@ void Utils::Gui::centerDialog(QWidget *const widget)
     const auto screenGeometry = screens[currentScreen]->geometry();
     // X position to center
     const int x = (screenGeometry.width() - widget->frameGeometry().width()) / 2;
-#ifdef QT_DEBUG
+#ifdef QMEDIA_DEBUG
     // Move little up in the development, to see console output
     const auto yCoeficient = 4;
 #else
@@ -36,7 +36,7 @@ void Utils::Gui::centerDialog(QWidget *const widget)
 #endif
     // Compute a Y position
     auto y = (screenGeometry.height() - widget->frameGeometry().height()) / yCoeficient;
-#ifndef QT_DEBUG
+#ifdef QMEDIA_NO_DEBUG
     // Move a little to the top, better for an eye
     if (y > 30)
         y -= 14;
