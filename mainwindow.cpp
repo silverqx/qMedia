@@ -59,7 +59,7 @@ namespace
 #endif
 
         // Example: [D: 0 B/s, U: 1,3 MiB/s] qBittorrent v4.2.5
-        const std::wregex re(L"^(\\[\\D: .*\\, U\\: .*\\] )?qBittorrent "
+        const std::wregex re(L"^(\\[D: .*, U: .*\\] )?qBittorrent "
                              "(v\\d+\\.\\d+\\.\\d+([a-zA-Z]+\\d{0,2})?)$");
         if (!std::regex_match(windowText.get(), re))
             return true;
@@ -79,7 +79,7 @@ namespace
         // More instances of qBittorrent can run, so find proper one
 #ifdef QT_DEBUG
         // String has to start with moduleFileName
-        if (::wcsstr(moduleFilePath, L"E:\\c\\qbittorrent_64-dev\\qBittorrent\\qBittorrent-builds")
+        if (::wcsstr(moduleFilePath, L"O:\\Code\\c\\qbittorrent_64-dev\\qBittorrent\\qBittorrent-builds")
             != &moduleFilePath[0])
             return true;
 #else
