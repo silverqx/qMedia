@@ -2,7 +2,8 @@ QT += core gui widgets sql network
 
 # Configuration
 # ---
-CONFIG += c++17 silent utf8_source
+CONFIG += c++2a strict_c++ silent utf8_source
+CONFIG -= c++11
 # Enable stack trace support
 #CONFIG += stacktrace
 
@@ -24,41 +25,47 @@ DEFINES += PROJECT_QMEDIA
 # Qt defines
 # ---
 
-# The following define makes your compiler emit warnings if you use
-# any Qt feature that has been marked deprecated (the exact warnings
-# depend on your compiler). Please consult the documentation of the
-# deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
-
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
+# Disables all the APIs deprecated before Qt 6.0.0
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-#DEFINES += QT_NO_CAST_TO_ASCII
-#DEFINES += QT_NO_CAST_FROM_BYTEARRAY
-#DEFINES += QT_USE_QSTRINGBUILDER
+#DEFINES *= QT_ASCII_CAST_WARNINGS
+#DEFINES += QT_NO_CAST_FROM_ASCII
+#DEFINES += QT_RESTRICTED_CAST_FROM_ASCII
+DEFINES += QT_NO_CAST_TO_ASCII
+DEFINES += QT_NO_CAST_FROM_BYTEARRAY
+DEFINES += QT_USE_QSTRINGBUILDER
 DEFINES += QT_STRICT_ITERATORS
 
 # WinApi
 # ---
+# All have to be defined because of checks at the beginning of the qt_windows.h
 # Windows 10 1903 "19H1" - 0x0A000007
-DEFINES += NTDDI_VERSION=0x0A000007
-# Windows 10 - 0x0A00
-DEFINES += _WIN32_WINNT=0x0A00
-DEFINES += _WIN32_IE=0x0A00
+DEFINES += WINVER=_WIN32_WINNT_WIN10
+DEFINES += NTDDI_VERSION=NTDDI_WIN10_19H1
+DEFINES += _WIN32_WINNT=_WIN32_WINNT_WIN10
+# Internet Explorer 11
+DEFINES += _WIN32_IE=_WIN32_IE_IE110
 DEFINES += UNICODE
 DEFINES += _UNICODE
 DEFINES += WIN32
 DEFINES += _WIN32
+# Exclude unneeded header files
 DEFINES += WIN32_LEAN_AND_MEAN
 DEFINES += NOMINMAX
 
 win32-msvc* {
+    # MySQL C library is used by ORM and it uses mysql_ping()
+    INCLUDEPATH += $$quote(C:/Program Files/MySQL/MySQL Server 8.0/include)
+    LIBS += $$quote(-LC:/Program Files/MySQL/MySQL Server 8.0/lib)
+
+    LIBS += libmysql.lib
     LIBS += User32.lib
 
     # I don't use -MP flag, because using jom
-    QMAKE_CXXFLAGS += /guard:cf
+    QMAKE_CXXFLAGS += -guard:cf
     QMAKE_LFLAGS += /guard:cf
     QMAKE_LFLAGS_RELEASE += /OPT:REF /OPT:ICF=5
 }
@@ -72,7 +79,7 @@ win32-msvc* {
     QMAKE_TARGET_PRODUCT = qMedia
     QMAKE_TARGET_DESCRIPTION = qMedia media library for qBittorrent
     QMAKE_TARGET_COMPANY = Crystal Studio
-    QMAKE_TARGET_COPYRIGHT = Copyright (�) 2020 Crystal Studio
+    QMAKE_TARGET_COPYRIGHT = Copyright (©) 2020 Crystal Studio
     RC_ICONS = images/qMedia.ico
     RC_LANG = 1033
 }
@@ -109,13 +116,17 @@ stacktrace {
 }
 
 # Use Precompiled headers (PCH)
-PRECOMPILED_HEADER = pch.h
+# ---
 
-precompile_header:!isEmpty(PRECOMPILED_HEADER) {
-    DEFINES += USING_PCH
-}
+PRECOMPILED_HEADER = $$quote($$PWD/pch.h)
+HEADERS += $$PRECOMPILED_HEADER
 
-# Outsourced common files, so that they can be used in qBittorrent too
+precompile_header: \
+    DEFINES *= USING_PCH
+
+# qMediaCommon project
+# ---
+
 include(../qMediaCommon/qmediacommon.pri)
 
 # Application files
