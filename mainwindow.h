@@ -46,6 +46,7 @@ private:
     Ui::MainWindow *ui;
     QLabel *m_torrentsCountLabel;
     QLabel *m_torrentFilesCountLabel;
+    QLabel *m_qBittorrentConnectedLabel;
     QToolButton *m_searchButton;
     HWND m_qBittorrentHwnd = nullptr;
     TorrentTransferTableView *m_tableView;
@@ -56,6 +57,8 @@ private slots:
     void updateQBittorrentHwnd(const HWND hwnd) noexcept { m_qBittorrentHwnd = hwnd; };
     void applicationStateChanged(Qt::ApplicationState state) const;
     void setGeometry(bool initial = false);
+    void qBittorrentConnected() const;
+    void qBittorrentDisconnected() const;
 };
 
 #endif // MAINWINDOW_H

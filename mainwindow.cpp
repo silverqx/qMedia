@@ -10,11 +10,13 @@
 #include <QtSql/QSqlQuery>
 
 #include <qt_windows.h>
+
 #include <Psapi.h>
 
 #include <regex>
 
 #include "commonglobal.h"
+
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 
@@ -131,11 +133,14 @@ MainWindow::MainWindow(QWidget *parent)
     // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs
     // for every torrent.
     // Order is crucial here.
+    // qBittorentDown
     connect(this, &MainWindow::qBittorrentDown,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::qBittorrentDown, this, &MainWindow::setGeometry);
     connect(this, &MainWindow::qBittorrentDown,
             m_tableView, &TorrentTransferTableView::togglePeerColumns);
+    /* qBittorentUp - reloadTorrentModel on qBittorrentUp is not needed, it is handled
+       in the applicationStateChanged event. */
     connect(this, &MainWindow::qBittorrentUp, this, &MainWindow::setGeometry);
     connect(this, &MainWindow::qBittorrentUp,
             m_tableView, &TorrentTransferTableView::togglePeerColumns);
@@ -256,7 +261,7 @@ void MainWindow::setGeometry(const bool initial)
 #endif
 
 #ifdef VISIBLE_CONSOLE
-    // Set up smaller, so I can see console output, but only at initial
+    // Set up smaller, so I can see console output in the QtCreator, but only at initial
     resize(mainWindowWidth(isQBittorrentUp()),
            initial ? (geometry().height() - 200) : geometry().height());
 #else
@@ -306,6 +311,13 @@ void MainWindow::initFilterTorrentsLineEdit()
     ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 }
 
+namespace
+{
+    const auto QB_CONNECTED_TMPL = QStringLiteral("<span style='color: %1;'>•</span>");
+    const auto QB_CONNECTED_TOOLTIP_TMPL =
+            QStringLiteral("qBittorrent&nbsp;is&nbsp;<strong>%1</strong>");
+} // namespace
+
 void MainWindow::createStatusBar()
 {
     auto *const container = new QWidget(this);
@@ -313,19 +325,26 @@ void MainWindow::createStatusBar()
     layout->setContentsMargins(11, 0, 16, 5);
     container->setLayout(layout);
 
-    // Create widgets displayed statusbar
+    // Create widgets displayed in the statusbar
     m_torrentsCountLabel = new QLabel(QStringLiteral("Torrents: <strong>%1</strong>")
                                       .arg(m_tableView->getModelRowCount()), this);
     m_torrentFilesCountLabel = new QLabel(QStringLiteral("Video Files: <strong>%1</strong>")
                                           .arg(selectTorrentFilesCount()), this);
-    connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::refreshStatusBar);
+    m_qBittorrentConnectedLabel = new QLabel(QB_CONNECTED_TMPL.arg("#d65645"), this);
 
-    // TODO when I set font size on qapplication isntance, then font is not inherited from containers? I can not set font size on container silverqx
+    connect(this, &MainWindow::torrentsAddedOrRemoved, this, &MainWindow::refreshStatusBar);
+    connect(this, &MainWindow::qBittorrentDown, this, &MainWindow::qBittorrentDisconnected);
+    connect(this, &MainWindow::qBittorrentUp, this, &MainWindow::qBittorrentConnected);
+
+    // TODO when I set font size on qapplication instance, then font is not inherited from containers? I can not set font size on container silverqx
     // Set smaller font size by 1pt
     QFont font = m_torrentsCountLabel->font();
     font.setPointSize(8);
     m_torrentsCountLabel->setFont(font);
     m_torrentFilesCountLabel->setFont(font);
+    font.setBold(true);
+    m_qBittorrentConnectedLabel->setFont(font);
+    m_qBittorrentConnectedLabel->setToolTip(QB_CONNECTED_TOOLTIP_TMPL.arg("Disconnected"));
 
     // Create needed splitters
     auto *const splitter1 = new QFrame(statusBar());
@@ -334,9 +353,17 @@ void MainWindow::createStatusBar()
     // Make splitter little darker
     splitter1->setStyleSheet("QFrame { color: #8c8c8c; }");
 
+    auto *const splitter2 = new QFrame(statusBar());
+    splitter2->setFrameStyle(QFrame::VLine);
+    splitter2->setFrameShadow(QFrame::Plain);
+    // Make splitter little darker
+    splitter2->setStyleSheet("QFrame { color: #8c8c8c; }");
+
     layout->addWidget(m_torrentsCountLabel);
     layout->addWidget(splitter1);
     layout->addWidget(m_torrentFilesCountLabel);
+    layout->addWidget(splitter2);
+    layout->addWidget(m_qBittorrentConnectedLabel);
 
     statusBar()->addPermanentWidget(container);
 }
@@ -377,4 +404,16 @@ void MainWindow::focusTorrentsFilterLineEdit() const
 {
     ui->filterTorrentsLineEdit->setFocus();
     ui->filterTorrentsLineEdit->selectAll();
+}
+
+void MainWindow::qBittorrentConnected() const
+{
+    m_qBittorrentConnectedLabel->setText(QB_CONNECTED_TMPL.arg("#6fac3d"));
+    m_qBittorrentConnectedLabel->setToolTip(QB_CONNECTED_TOOLTIP_TMPL.arg("Connected"));
+}
+
+void MainWindow::qBittorrentDisconnected() const
+{
+    m_qBittorrentConnectedLabel->setText(QB_CONNECTED_TMPL.arg("#d65645"));
+    m_qBittorrentConnectedLabel->setToolTip(QB_CONNECTED_TOOLTIP_TMPL.arg("Disconnected"));
 }
