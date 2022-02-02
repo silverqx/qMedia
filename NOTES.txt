@@ -13,6 +13,21 @@ Todos to check in qMedia:
  - QHash::operator[] returns default when value not exists and silently inserts that item into the hash, check all code usage 😠
 
 
+C preprocessor macros:
+----------------------
+
+ - LOG_CHANGED_TORRENTS - log debug messages about changed torrents, messages are logged every second
+ - LOG_GEOMETRY - debug geometry changes, like resize and show/hide columns during qBittorent up/down
+ - VISIBLE_CONSOLE - set up smaller, so I can see console output in the QtCreator, but only at initial
+
+
+questions:
+----------
+
+ - laravel Grammar/Grammar::whereBasic()
+    - $operator = str_replace('?', '??', $where['operator']);
+
+
 Example code which heavily uses win32 api:
 ------------------------------------------
 
@@ -134,7 +149,7 @@ Performance measure timer:
 #include <QElapsedTimer>
 QElapsedTimer timer;
 timer.start();
-qDebug() << "Elapsed for handleTorrentsUpdated :" << timer.elapsed();
+qDebug().noquote() << QStringLiteral("Elapsed in XX : %1ms").arg(timer.elapsed());
 
 
 Dark theme by Windows settings:
@@ -155,7 +170,7 @@ class AbstractMovieDetailService:
 signals:
     void searchPageFetched();
     void movieDetailPageFetched();
-    
+
 protected:
     virtual QString getMovieDetailUrl(QString searchPage) = 0;
 
@@ -303,7 +318,7 @@ torrentexporter.h:
                 torrentsFiles.clear();
             }
         } m_changedPropertiesStore;
-        
+
         void mergeTorrentChangedProperties(const TorrentId torrentId,
                 const QSharedPointer<TorrentChangedProperties> &torrentsChangedProperties);
         void mergeTorrentFilesChangedProperties(
@@ -388,3 +403,181 @@ void TorrentExporter::mergeChangedProperties(
         propertiesStore->insert(property, value);
     }
 }
+
+
+qBittorrent deduce return type:
+-------------------------------
+
+template <typename T>
+struct return_type;
+template <typename R, typename... Args>
+struct return_type<R(*)(Args...)> { using type = R; };
+template <typename R, typename C, typename... Args>
+struct return_type<R(C::*)(Args...)> { using type = R; };
+template <typename R, typename C, typename... Args>
+struct return_type<R(C::*)(Args...) const> { using type = R; };
+template <typename R, typename C, typename... Args>
+struct return_type<R(C::*)(Args...) volatile> { using type = R; };
+template <typename R, typename C, typename... Args>
+struct return_type<R(C::*)(Args...) const volatile> { using type = R; };
+template <typename T>
+using return_type_t = typename return_type<T>::type;
+
+header:
+--
+class BaseRepository
+    template<typename P>
+    Export::return_type_t<decltype (&P::present)>
+    presentResult(QSqlQuery &query);
+
+source:
+--
+template<typename P>
+Export::return_type_t<decltype (&P::present)>
+BaseRepository::presentResult(QSqlQuery &query)
+{
+    return P().present(query);
+}
+
+presenters test code:
+--
+    const auto hash = static_cast<QString>(torrents.first()->hash());
+    const auto torrentId =
+            m_torrentsRepository.findWhere<Presenter::FirstId>({{"hash", hash}},
+                                                               {{"id"}});
+    if (torrentId)
+        ;
+    const auto torrentId1 =
+            m_torrentsRepository.findWhere({{"hash", hash}},
+                                           {{"id"}});
+
+//    QStringList ll;
+//    ll << "id" << "hash";
+    auto vv = m_torrentsRepository.findWhereIn<Presenter::TorrentIdByInfoHash, TorrentId>(
+                "id",
+                {{269, 268, 267}});
+    qDebug() << "vv :" << vv;
+    auto [zzok, zzquery] = m_torrentsRepository.findWhereIn<void, TorrentId>(
+                "id",
+                {{269, 268, 267}});
+    qDebug() << "zzok :" << zzok;
+
+    qt_noop();
+
+presenters with data test code ✨🚀, wtf 😂💪:
+--
+    QHash<BitTorrent::InfoHash, QString> data {
+        {BitTorrent::InfoHash("6948503d484853cc6380374268daac161d4139cb"), QString("dvasestdevet")},
+        {BitTorrent::InfoHash("bf9661defa3daecacfde5bde0214c4a439351d4d"), QString("jedna")},
+        {BitTorrent::InfoHash("d3fc13dc12d8d7a58e7ae87295e93dbaddb5d36b"), QString("pjet")},
+    };
+    auto xx = m_torrentsRepository.findWhere<Presenter::TorrentHandleByInfoHashData>(
+                  {{"id", 269, "=", "OR"}, {"id", 5, "=", "OR"}, {"id", 1, "="}},
+                  data, {"id", "hash"});
+    qDebug() << "xx :" << xx;
+    auto yy = m_torrentsRepository.findWhereIn<Presenter::TorrentHandleByInfoHashData, quint64>(
+                  "id", {269, 1, 5},
+                  data, {"id", "hash"});
+    qDebug() << "yy :" << yy;
+
+prepareWhere() test code:
+--
+BaseRepository::BaseRepository(EntityManager &em)
+    : m_em(em)
+{
+    auto xx = prepareWhereClause({
+                                        {"name", "peto"},
+                                        {"name", "andrej", "<>"},
+                                        {"index", 10}
+                                    });
+    auto yy = prepareWhereCondClause({
+                                     {"name", "peto"},
+                                     {"name", "andrej", "<>", "OR"},
+                                     {"index", 10, "=", ""}
+                                 });
+    qDebug() << "xx :" << xx;
+    qDebug() << "yy :" << yy;
+    qt_noop();
+}
+
+
+Prototype store:
+----------------
+
+ - I no longer remember how this was intended.
+
+struct StoreItem
+{
+    std::function<void()> service;
+    StoreItem(std::function<void()> service_)
+        : service(service_)
+    {}
+};
+struct StoreItemHandle : public StoreItem
+{
+    BitTorrent::TorrentHandle *const torrent;
+    StoreItemHandle(std::function<void()> service_, BitTorrent::TorrentHandle *const torrent_)
+        : StoreItem(service_)
+        , torrent(torrent_)
+    {}
+};
+struct StoreItemHash final : public StoreItem
+{
+    BitTorrent::InfoHash infoHash;
+};
+struct StoreItemPath final : public StoreItemHandle
+{
+    QString newPath;
+};
+
+QQueue<StoreItem> m_changedPropertiesStore;
+
+
+constructor copy/move snippet:
+------------------------------
+
+Torrent(const Torrent &torrent)
+    : BaseModel(torrent)
+{
+    qDebug() << "Torrent copy ctor";
+}
+Torrent &operator=(const Torrent &torrent)
+{
+    BaseModel::operator=(torrent);
+    qDebug() << "Torrent copy assign";
+    return *this;
+}
+Torrent(Torrent &&torrent)
+    : BaseModel(std::move(torrent))
+{
+    qDebug() << "Torrent move ctor";
+}
+Torrent &operator=(Torrent &&torrent)
+{
+    BaseModel::operator=(std::move(torrent));
+    qDebug() << "Torrent move assign";
+    return *this;
+}
+
+
+conversions:
+------------
+
+Makes possible to assign QVector<AttributeItem> to the Model,
+or implicitly converts a QVector<AttributeItem> to Model:
+
+BaseModel(const QVector<AttributeItem> &attributes);
+BaseModel(QVector<AttributeItem> &&attributes);
+
+--
+Allows initialize the Model with QVector<AttributeItem>:
+
+BaseModel(std::initializer_list<AttributeItem> attributes)
+    : BaseModel(QVector<AttributeItem> {attributes.begin(), attributes.end()})
+{}
+
+--
+Makes possible to assign the Model to the QVector<AttributeItem>,
+or converts the Model to the QVector<AttributeItem>:
+
+operator QVector<AttributeItem>() const;
