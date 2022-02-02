@@ -92,11 +92,13 @@ tiny_version_numbers()
 # Windows resource and manifest files
 # ---
 
+# Find version.h
+tinyRcIncludepath = $$quote($$PWD/)
+# Find Windows manifest
+mingw: tinyRcIncludepath += $$quote($$PWD/resources/)
+
 load(tiny_resource_and_manifest)
-tiny_resource_and_manifest(                    \
-    # RC_INCLUDEPATH - find icons, Windows manifest on MinGW and orm/version.hpp
-    $$quote($$PWD/) $$quote($$PWD/resources/), \
-)
+tiny_resource_and_manifest($$tinyRcIncludepath)
 
 # Use Precompiled headers (PCH)
 # ---
