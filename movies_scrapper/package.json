@@ -1,6 +1,6 @@
 {
   "name": "movies_scrapper",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Scrap movie info from čsfd and imdb for qMedia application",
   "main": "src/index.js",
   "engines": {
@@ -14,6 +14,6 @@
   "author": "Silver Zachara <silver.zachara@gmail.com> (https://github.com/silverqx)",
   "license": "MIT",
   "dependencies": {
-    "csfd-api": "^1.1.4"
+    "node-csfd-api": "^2.0.1"
   }
 }

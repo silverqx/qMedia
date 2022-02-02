@@ -1,4 +1,5 @@
-const csfd = require('csfd-api')
+// const csfd = require('csfd-api')
+const { csfd } = require('node-csfd-api')
 
 const CSFD_SEARCH_MOVIE_DETAIL = 'csfd-search'
 const CSFD_GET_MOVIE_DETAIL    = 'csfd-get'
@@ -6,6 +7,7 @@ const IMDB_SEARCH_MOVIE_DETAIL = 'imdb-search'
 
 /**
  * Number of items to slice from search result.
+ *
  * @type {number}
  */
 const SEARCH_RESULT_SLICE = 15
@@ -70,8 +72,8 @@ async function main() {
 async function searchCsfdMovieDetail(searchQueryString) {
     const searchResult = await csfd.search(searchQueryString)
     return {
-        search: searchResult.films.slice(0, SEARCH_RESULT_SLICE),
-        detail: await csfd.film(searchResult.films[0].id),
+        search: searchResult.movies.slice(0, SEARCH_RESULT_SLICE),
+        detail: await csfd.movie(searchResult.movies[0].id),
     }
 }
 
@@ -80,7 +82,7 @@ async function searchCsfdMovieDetail(searchQueryString) {
  * @return {Promise<Object>}
  */
 async function getCsfdMovieDetail(filmId) {
-    return await csfd.film(filmId)
+    return await csfd.movie(filmId)
 }
 
 async function searchImdbMovieDetail(searchQueryString) {
@@ -89,6 +91,7 @@ async function searchImdbMovieDetail(searchQueryString) {
 
 /**
  * Bad parameters passed on the command line.
+ *
  * @return {number}
  */
 function badParameters() {
@@ -99,6 +102,7 @@ function badParameters() {
 
 /**
  * Contains process.argv this parameter?
+ *
  * @param {string|string[]} param Command line parameter to search.
  * @return {boolean}
  */
@@ -111,6 +115,7 @@ function containsParam(param) {
 
 /**
  * Output result to the console.
+ *
  * @param {Object} data Data to output.
  */
 function output(data) {

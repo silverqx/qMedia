@@ -141,8 +141,8 @@ namespace
     }
 
     /*! Join QStringList, exclude empty or null values. */
-    const auto joinStringList = [](const QStringList &stringList, const QString &delimiter)
-                                -> QString
+    const auto joinStringList =
+            [](const QStringList &stringList, const QString &delimiter) -> QString
     {
         QString result = "";
         int count = 0;
@@ -359,13 +359,13 @@ void MovieDetailDialog::populateUi()
     prepareMovieInfoSection();
     // Score section
     // TODO tune score QLabel color silverqx
-    ui->score->setText(QString::number(m_movieDetail["score"].toInt()) + QStringLiteral("%"));
+    ui->score->setText(QString::number(m_movieDetail["rating"].toInt()) + QStringLiteral("%"));
     // Imdb link
     prepareImdbLink();
     // Creators section
     prepareCreatorsSection();
     // Storyline section
-    ui->storyline->setText(m_movieDetail["content"].toString());
+    ui->storyline->setText(m_movieDetail["descriptions"].toArray().first().toString());
 
     if (!m_initialPopulate)
         return;
@@ -413,10 +413,19 @@ void MovieDetailDialog::prepareMoviePosterSection()
 {
     // TODO handle errors silverqx
     // TODO add empty poster, if poster missing silverqx
-    QUrl url(m_movieDetail["poster"].toString(), QUrl::StrictMode);
-    url.setQuery(QUrlQuery({{"w250", nullptr}}));
+    auto poster = m_movieDetail["poster"].toString();
+    Q_ASSERT_X(poster.count("/resized/w1080/") == 1,
+               "prepareMoviePosterSection()",
+               "poster url doesn't contain 'resized/w1080/'");
+
+    // 220px width is enough
+    poster.replace("/resized/w1080/", "/resized/w220/");
+
+    QUrl url(poster, QUrl::StrictMode);
+
     QNetworkRequest request(url);
-    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
+                         QNetworkRequest::PreferCache);
     m_networkManager.get(request);
 }
 
@@ -454,7 +463,7 @@ void MovieDetailDialog::prepareTitlesSection()
         wipeOutLayout(*m_gridLayoutTitles);
 
     // Nothing to render
-    if (m_movieDetail["titles"].toArray().isEmpty()) {
+    if (m_movieDetail["titlesOther"].toArray().isEmpty()) {
         qDebug() << "Empty titles for movie :"
                  << m_movieDetail["title"].toString();
         return;
@@ -466,15 +475,15 @@ void MovieDetailDialog::prepareTitlesSection()
 
 void MovieDetailDialog::renderTitlesSection(const int maxLines) const
 {
-    auto titlesArr = m_movieDetail["titles"].toArray();
+    auto titlesOtherArr = m_movieDetail["titlesOther"].toArray();
     // My preferred sort
-    std::sort(titlesArr.begin(), titlesArr.end(), compareTitlesByLang);
+    std::sort(titlesOtherArr.begin(), titlesOtherArr.end(), compareTitlesByLang);
 
     // Populate grid layout with flags and titles
     QLabel *labelFlag;
     QLabel *labelTitle;
     QJsonObject titleObject;
-    QString titleLanguage;
+    QString titleCountry;
     QIcon flagIcon;
     QPixmap flag;
     QFont titlesFont = this->font();
@@ -484,22 +493,22 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
     titlesFont.setKerning(true);
     const auto paginateEnabled = (maxLines != 0);
     auto showMoreLink = false;
-    const auto titlesArrSize = titlesArr.size();
+    const auto titlesArrSize = titlesOtherArr.size();
     int i = 0;
     for (; i < titlesArrSize ; ++i) {
-        titleObject = titlesArr[i].toObject();
-        titleLanguage = titleObject["language"].toString();
+        titleObject = titlesOtherArr[i].toObject();
+        titleCountry = titleObject["country"].toString();
         // Flag
         labelFlag = new QLabel;
-        if (titlesHash().contains(titleLanguage)) {
-            flagIcon = getFlagIcon(titlesHash().value(titleLanguage).flag);
+        if (titlesHash().contains(titleCountry)) {
+            flagIcon = getFlagIcon(titlesHash().value(titleCountry).flag);
             flag = flagIcon.pixmap(flagIcon.actualSize(QSize(flagWidth, 16)));
             labelFlag->setPixmap(flag);
         } else {
             qDebug() << "titlesHash doesn't contain this language :"
-                     << titleLanguage;
+                     << titleCountry;
         }
-        labelFlag->setToolTip(titleLanguage);
+        labelFlag->setToolTip(titleCountry);
         labelFlag->setToolTipDuration(2000);
         // Title
         labelTitle = new QLabel;
@@ -545,7 +554,7 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
 void MovieDetailDialog::prepareImdbLink() const
 {
     const auto imdbIdRaw = m_movieDetail["imdbId"];
-    if (imdbIdRaw.isNull()) {
+    if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
         ui->imdbLink->setEnabled(false);
         ui->imdbLink->hide();
         return;
@@ -563,28 +572,32 @@ void MovieDetailDialog::prepareMovieInfoSection() const
     // Movie info section - genre, shot places, year and length
     // Line 1
     // Genre
-    const auto genre = joinJsonStringArray(m_movieDetail["genre"].toArray(), delimiterSlash);
+    const auto genres = joinJsonStringArray(m_movieDetail["genres"].toArray(), delimiterSlash);
     // Line 2
     // Shot places
-    const auto shotPlaces = joinJsonStringArray(m_movieDetail["shotPlaces"].toArray(),
+    const auto origins = joinJsonStringArray(m_movieDetail["origins"].toArray(),
             delimiterSlash);
     // Length
-    const auto lengthValue = m_movieDetail["length"].toInt();
-    const auto lengthString = (lengthValue > 180)
-        ? Utils::Misc::userFriendlyDuration(
-              lengthValue, Utils::Misc::DURATION_INPUT::MINUTES)
-        : QString::number(lengthValue) + " min";
-    const auto length = "<span style='color: palette(link);'>" +
-                        lengthString + "</span>";
+    QString length;
+    if (const auto duration = m_movieDetail["duration"];
+        !duration.isNull()
+    ) {
+        const auto durationValue = duration.toInt();
+        const auto lengthString = (durationValue > 180)
+            ? Utils::Misc::userFriendlyDuration(
+                  durationValue, Utils::Misc::DURATION_INPUT::MINUTES)
+            : QString::number(durationValue) + " min";
+        length = "<span style='color: palette(link);'>" + lengthString + "</span>";
+    }
     QStringList movieInfoLine2List;
-    movieInfoLine2List << shotPlaces
+    movieInfoLine2List << origins
                        << QString::number(m_movieDetail["year"].toInt())
                        << length;
     const auto movieInfoLine2 = joinStringList(movieInfoLine2List, delimiterComma);
 
     // Assemble movie info section
     QStringList movieInfoList;
-    movieInfoList << genre
+    movieInfoList << genres
                   << movieInfoLine2;
     const auto movieInfo = joinStringList(movieInfoList, delimiterHtmlNewLine);
     ui->movieInfo->setText(movieInfo);
@@ -597,7 +610,7 @@ namespace
     enum CREATOR_NAMES
     {
         NAMES_DIRECTORS,
-        NAMES_SCREENPLAY,
+        NAMES_WRITERS,
         NAMES_MUSIC,
         NAMES_ACTORS,
     };
@@ -611,7 +624,7 @@ namespace
     static const CreatorsValue creatorsMap[]
     {
         {QLatin1String("directors"),  QStringLiteral("<strong>Réžia: </strong>%1")},
-        {QLatin1String("screenplay"), QStringLiteral("<strong>Scenár: </strong>%1")},
+        {QLatin1String("writers"),    QStringLiteral("<strong>Scenár: </strong>%1")},
         {QLatin1String("music"),      QStringLiteral("<strong>Hudba: </strong>%1")},
         {QLatin1String("actors"),     QStringLiteral("<strong>Herci: </strong>%1")},
     };
@@ -629,22 +642,24 @@ void MovieDetailDialog::prepareCreatorsSection()
     // TODO compute dynamically by width silverqx
     static const auto maxLetters = 105;
 
+    const auto creators = m_movieDetail["creators"].toObject();
+
     // Directors
     const auto directors = joinJsonObjectArrayWithWrapPaged(
-            m_movieDetail[creatorsMap[NAMES_DIRECTORS].keyName].toArray(),
+            creators[creatorsMap[NAMES_DIRECTORS].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Screenplay
     const auto screenplay = joinJsonObjectArrayWithWrapPaged(
-            m_movieDetail[creatorsMap[NAMES_SCREENPLAY].keyName].toArray(),
+            creators[creatorsMap[NAMES_WRITERS].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // TODO camera is missing silverqx
     // Music
     const auto music = joinJsonObjectArrayWithWrapPaged(
-            m_movieDetail[creatorsMap[NAMES_MUSIC].keyName].toArray(),
+            creators[creatorsMap[NAMES_MUSIC].keyName].toArray(),
             delimiterComma, wrapInLink, maxLetters, keyName, keyId);
     // Actors
     const auto actors = joinJsonObjectArrayWithWrapPaged(
-            m_movieDetail[creatorsMap[NAMES_ACTORS].keyName].toArray(),
+            creators[creatorsMap[NAMES_ACTORS].keyName].toArray(),
             // 200 for 960px
             // 320 for 1316px
             delimiterComma, wrapInLink, 320, keyName, keyId);
@@ -708,7 +723,8 @@ void MovieDetailDialog::prepareCreatorsSection()
         label->setOpenExternalLinks(false);
         label->setText(creatorsMap[i].label.arg(creatorsList[i]));
         label->connect(label, &QLabel::linkActivated, this,
-                       [this, label, wrapInLink, keyName, keyId, i](const QString &link)
+                       [creators, label, wrapInLink, keyName, keyId, i]
+                       (const QString &link)
         {
             // Open URL with external browser
             if (link != QLatin1String("#show-more")) {
@@ -718,7 +734,7 @@ void MovieDetailDialog::prepareCreatorsSection()
 
             // Re-populate label
             const auto joinedText = joinJsonObjectArrayWithWrap(
-                    m_movieDetail[creatorsMap[i].keyName].toArray(), delimiterComma,
+                    creators[creatorsMap[i].keyName].toArray(), delimiterComma,
                     wrapInLink, keyName, keyId);
             label->setText(creatorsMap[i].label.arg(joinedText));
         });
@@ -744,13 +760,13 @@ void MovieDetailDialog::prepareMovieDetailComboBox()
 
 void MovieDetailDialog::populateMovieDetailComboBox() const
 {
-    for (const auto &searchItem : qAsConst(m_movieSearchResult)) {
+    for (const auto &searchItem : std::as_const(m_movieSearchResult)) {
         const auto itemObject = searchItem.toObject();
-        const auto name = itemObject["name"].toString();
+        const auto title = itemObject["title"].toString();
         const auto year = itemObject["year"].toInt();
         const auto typeRaw = itemObject["type"];
         // Compose item
-        auto item = QStringLiteral("%1 (%2)").arg(name).arg(year);
+        auto item = QStringLiteral("%1 (%2)").arg(title).arg(year);
         if (!typeRaw.isNull())
             item += " - " + typeRaw.toString();
 
