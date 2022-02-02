@@ -72,7 +72,7 @@ win32-msvc* {
     QMAKE_TARGET_PRODUCT = qMedia
     QMAKE_TARGET_DESCRIPTION = qMedia media library for qBittorrent
     QMAKE_TARGET_COMPANY = Crystal Studio
-    QMAKE_TARGET_COPYRIGHT = Copyright (©) 2020 Crystal Studio
+    QMAKE_TARGET_COPYRIGHT = Copyright (ï¿½) 2020 Crystal Studio
     RC_ICONS = images/qMedia.ico
     RC_LANG = 1033
 }
@@ -142,7 +142,6 @@ SOURCES += \
 HEADERS += \
     abstractmoviedetailservice.h \
     common.h \
-    config.h \
     csfddetailservice.h \
     maineventfilter_win.h \
     mainwindow.h \

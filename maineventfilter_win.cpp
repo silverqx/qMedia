@@ -4,7 +4,6 @@
 
 #include "common.h"
 #include "commonglobal.h"
-#include "config.h"
 #include "mainwindow.h"
 
 MainEventFilter::MainEventFilter(MainWindow *const mainWindow)
@@ -64,7 +63,7 @@ bool MainEventFilter::nativeEventFilter(const QByteArray &eventType, void *messa
             torrentInfoHashes << QString::fromLatin1(begin + (i * ::INFOHASH_SIZE),
                                                      ::INFOHASH_SIZE);
 
-#if LOG_CHANGED_TORRENTS
+#ifdef LOG_CHANGED_TORRENTS
         qDebug() << "IPC qBittorrent : Changed torrents copyData size :"
                  << dataSize;
         qDebug() << "IPC qBittorrent : Changed torrents info hashes :"

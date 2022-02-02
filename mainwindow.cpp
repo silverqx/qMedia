@@ -251,7 +251,7 @@ void MainWindow::applicationStateChanged(Qt::ApplicationState state) const
 
 void MainWindow::setGeometry(const bool initial)
 {
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
     qDebug("setGeometry(initial = %s)", initial ? "true" : "false");
 #endif
 

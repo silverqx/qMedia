@@ -99,7 +99,7 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
     hideColumn(TR_STATUS);
     hideColumn(TR_MOVIE_DETAIL_INDEX);
     hideColumn(TR_SAVE_PATH);
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
     qDebug() << "TorrentTransferTableView() ctor";
 #endif
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
@@ -174,7 +174,7 @@ void TorrentTransferTableView::showEvent(QShowEvent *event)
     if (event->spontaneous())
         return QTableView::showEvent(event);
 
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
     qDebug() << "showEvent(), m_showEventInitialized ="
              << (m_showEventInitialized ? "true" : "false");
 #endif
@@ -737,7 +737,7 @@ void TorrentTransferTableView::updateChangedTorrents(const QVector<QString> &tor
 
 void TorrentTransferTableView::resizeColumns() const
 {
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
     qDebug() << "resizeColumns(), m_showEventInitialized ="
              << (m_showEventInitialized ? "true" : "false");
 #endif
@@ -798,13 +798,13 @@ void TorrentTransferTableView::togglePeerColumns()
     setColumnHidden(TR_LEECHERS, !isQBittorrentUp());
 
     if (m_showEventInitialized == false) {
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
         qDebug() << "togglePeerColumns(), m_showEventInitialized = false";
 #endif
         return;
     }
 
-#if LOG_GEOMETRY
+#ifdef LOG_GEOMETRY
     qDebug() << "togglePeerColumns(), m_showEventInitialized = true";
 #endif
     resizeColumns();
