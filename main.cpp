@@ -11,9 +11,14 @@
 #endif
 #include "mainwindow.h"
 
+// TODO check portable msvc compiler options /permissive- and /Za silverqx
+// TODO enable DEFINES += QT_USE_QSTRINGBUILDER, qBittorent has it enabled byd default silverqx
+// TODO disable copy constructors when appropriate, see pattern in qBittorrent silverqx
+// TODO enable QT_NO_CAST_FROM/TO, code is prepared for this silverqx
 // TODO unify viewbox and width / height for all svg icons silverqx
 // TODO remove version from all svg icons silverqx
 // TODO detect qBittorrent crashes and do something like TorrentExporter::correctTorrentStatusesOnExit() silverqx
+// TODO sort includes in pch.h, look at TinyOrm pch.h file silverqx
 void enableDarkTheme(QApplication &a);
 void applicationCleanup();
 
