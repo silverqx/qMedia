@@ -455,9 +455,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
         listMenu->addAction(actionOpenFolder);
     }
     // Force recheck, Preview and Delete torrent
-    if (!statusProperties.isAllocating() || !statusProperties.isChecking()
-        || !statusProperties.isMoving()
-    ) {
+    if (!statusProperties.isChecking() || !statusProperties.isMoving()) {
         listMenu->addAction(actionForceRecheck);
         listMenu->addSeparator();
         listMenu->addAction(actionPreviewTorrent);
@@ -492,11 +490,9 @@ void TorrentTransferTableView::deleteSelectedTorrent()
         return;
 
     const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
-    if (statusProperties.isAllocating() || statusProperties.isChecking()
-        || statusProperties.isMoving()
-    ) {
+    if (statusProperties.isChecking() || statusProperties.isMoving()) {
         QMessageBox::information(this, QStringLiteral("Delete impossible"),
-                QStringLiteral("Torrent is in a allocating, checking or moving state."));
+                QStringLiteral("Torrent is in the checking or moving state."));
         return;
     }
 
@@ -631,8 +627,9 @@ void TorrentTransferTableView::forceRecheckSelectedTorrent()
     }
 
     const auto statusProperties = (*m_statusHash)[torrent.value("status").toString()];
-    if (!isQBittorrentUp() || statusProperties.isAllocating() || statusProperties.isChecking()
-        || statusProperties.isMoving())
+    if (!isQBittorrentUp() ||
+        statusProperties.isChecking() || statusProperties.isMoving()
+    )
         return;
 
     qDebug() << "Force recheck selected torrent :"

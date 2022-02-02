@@ -135,9 +135,6 @@ void StatusHash::freeInstance()
 QHash<QString, StatusProperties> &StatusHash::getStatusHash() const
 {
     static QHash<QString, StatusProperties> cached {
-        {QStringLiteral("Allocating"),
-            {TorrentStatus::Allocating, getStalledColor, getStalledIcon,
-                QStringLiteral("Allocating Files Storage")}},
         {QStringLiteral("Checking"),
             {TorrentStatus::Checking, getCheckingColor, getCheckingIcon,
                 QStringLiteral("Checking Torrent Files")}},

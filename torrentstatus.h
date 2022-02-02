@@ -1,11 +1,13 @@
 #ifndef TORRENTSTATUS_H
 #define TORRENTSTATUS_H
 
+#include <QHash>
+#include <QIcon>
+
 // Starts from 1 because of MySQL enums starts from 1
 enum struct TorrentStatus
 {
-    Allocating = 1,
-    Checking,
+    Checking = 1,
     CheckingResumeData,
     Downloading,
     Error,
@@ -28,7 +30,6 @@ struct StatusProperties
 
     inline bool isPaused() const       { return status == TorrentStatus::Paused; }
     inline bool isForced() const       { return status == TorrentStatus::ForcedDownloading; }
-    inline bool isAllocating() const   { return status == TorrentStatus::Allocating; }
     inline bool isMoving() const       { return status == TorrentStatus::Moving; }
     inline bool isFinished() const     { return status == TorrentStatus::Finished; }
     inline bool isMissingFiles() const { return status == TorrentStatus::MissingFiles; }
@@ -51,7 +52,7 @@ struct StatusProperties
 
 class StatusHash final
 {
-    Q_DISABLE_COPY(StatusHash);
+    Q_DISABLE_COPY(StatusHash)
 
 public:
     static StatusHash *instance();
