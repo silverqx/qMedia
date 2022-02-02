@@ -59,10 +59,8 @@ void TorrentTableDelegate::paintProgressBar(QPainter *painter, const QStyleOptio
     newopt.minimum = 0;
     newopt.state = option.state;
     newopt.textVisible = true;
-    // Setup color for progressbar
-    auto progressBarColor = newopt.palette.color(QPalette::Highlight);
-    // Remove transparency
-    progressBarColor.setAlpha(255);
+    // Progressbar color
+    QColor progressBarColor(54, 115, 157, 235);
     newopt.palette.setColor(QPalette::Highlight, progressBarColor);
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
