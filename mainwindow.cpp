@@ -157,6 +157,11 @@ MainWindow::MainWindow(QWidget *parent)
             m_tableView, &TorrentTransferTableView::updateChangedTorrents);
 
     // Hotkeys
+    // global
+    const auto *const quitShortcut =
+            new QShortcut(Qt::CTRL + Qt::Key_Q, this, nullptr, nullptr, Qt::ApplicationShortcut);
+    connect(quitShortcut, &QShortcut::activated,
+            qApp, &QCoreApplication::quit, Qt::QueuedConnection);
     // filterTorrentsLineEdit
     const auto *const doubleClickHotkeyF2 =
             new QShortcut(Qt::Key_F2, this, nullptr, nullptr, Qt::WindowShortcut);
