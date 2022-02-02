@@ -14,14 +14,17 @@ public:
     static void freeInstance();
 
 protected:
-    MovieDetail searchMovieDetail(const QSqlRecord &torrent) const override;
-    MovieDetail obtainMovieDetail(quint64 filmId) const override;
-    inline QString getMovieDetailColumnName() const noexcept override
-    { return QStringLiteral("csfd_movie_detail"); }
+    MovieDetail searchMovieDetail(const QSqlRecord &torrent) const final;
+    MovieDetail obtainMovieDetail(quint64 filmId) const final;
+    QString getMovieDetailColumnName() const noexcept final;
 
 private:
     explicit CsfdDetailService(TorrentSqlTableModel *const model);
-    ~CsfdDetailService();
+    // WARNING debug changing access of virtual destructor silverqx
+    // https://en.cppreference.com/w/cpp/language/virtual#Virtual_destructor
+    // A useful guideline is that the destructor of any base class must be public and virtual or protected and non-virtual.
+    // https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#Rc-dtor-virtual
+    inline ~CsfdDetailService() final = default;
 
     const QString m_movieScrapperPath;
 

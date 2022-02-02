@@ -14,9 +14,6 @@ AbstractMovieDetailService::AbstractMovieDetailService(TorrentSqlTableModel *con
     , m_model(model)
 {}
 
-AbstractMovieDetailService::~AbstractMovieDetailService()
-{}
-
 MovieDetail AbstractMovieDetailService::getMovieDetail(const QSqlRecord &torrent) const
 {
     const auto torrentId = torrent.value("id").toULongLong();

@@ -9,9 +9,6 @@ CsfdDetailService::CsfdDetailService(TorrentSqlTableModel *const model)
     , m_movieScrapperPath(getMovieScrapperPath())
 {}
 
-CsfdDetailService::~CsfdDetailService()
-{}
-
 void CsfdDetailService::initInstance(TorrentSqlTableModel *const model)
 {
     if (!m_instance)
@@ -76,4 +73,9 @@ MovieDetail CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
     qDebug() << "Obtained movie detail obtained from čsfd.cz";
 
     return parseMovieDetail(movieDetailRaw);
+}
+
+QString CsfdDetailService::getMovieDetailColumnName() const noexcept
+{
+    return QStringLiteral("csfd_movie_detail");
 }

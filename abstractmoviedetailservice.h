@@ -8,7 +8,7 @@ class QSqlTableModel;
 class TorrentSqlTableModel;
 
 // TODO have hard feeling that this have to be class, normal value object silverqx
-typedef QJsonDocument MovieDetail;
+using MovieDetail = QJsonDocument;
 
 class AbstractMovieDetailService : public QObject
 {
@@ -17,14 +17,14 @@ class AbstractMovieDetailService : public QObject
 public:
     explicit AbstractMovieDetailService(TorrentSqlTableModel *const model,
                                         QObject *parent = nullptr);
-    virtual ~AbstractMovieDetailService();
+    inline ~AbstractMovieDetailService() override = default;
 
     MovieDetail getMovieDetail(const QSqlRecord &torrent) const;
     MovieDetail getMovieDetail(quint64 filmId) const;
-    int updateObtainedMovieDetailInDb(const QSqlRecord &torrent,
-                                       const QJsonObject &movieDetail,
-                                       const QJsonArray &movieSearchResult,
-                                       int movieDetailComboBoxIndex) const;
+
+    int updateObtainedMovieDetailInDb(
+            const QSqlRecord &torrent, const QJsonObject &movieDetail,
+            const QJsonArray &movieSearchResult, int movieDetailComboBoxIndex) const;
 
 protected:
     /*! Search a movie detail and obtain search results and also movie detail at once,
@@ -34,7 +34,7 @@ protected:
     virtual MovieDetail obtainMovieDetail(quint64 filmId) const = 0;
     /*! Column name for a movie detail in torrents table, currently csfd_movie_detail and
         imdb_movie_detail. */
-    virtual QString getMovieDetailColumnName() const = 0;
+    virtual QString getMovieDetailColumnName() const noexcept = 0;
 
     /*! String used to search a movie detail on the internet. */
     QString prepareSearchQueryString(const QSqlRecord &torrent) const;
