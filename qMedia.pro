@@ -79,53 +79,7 @@ include(../qMediaCommon/qmediacommon.pri)
 # qMedia header and source files
 # ---
 
-SOURCES += \
-    abstractmoviedetailservice.cpp \
-    csfddetailservice.cpp \
-    main.cpp \
-    maineventfilter_win.cpp \
-    mainwindow.cpp \
-    moviedetaildialog.cpp \
-    previewlistdelegate.cpp \
-    previewselectdialog.cpp \
-    torrentsqltablemodel.cpp \
-    torrentstatus.cpp \
-    torrenttabledelegate.cpp \
-    torrenttablesortmodel.cpp \
-    torrenttransfertableview.cpp \
-    utils/fs.cpp \
-    utils/gui.cpp \
-    utils/misc.cpp \
-    utils/string.cpp \
-
-HEADERS += \
-    abstractmoviedetailservice.h \
-    common.h \
-    csfddetailservice.h \
-    maineventfilter_win.h \
-    mainwindow.h \
-    moviedetaildialog.h \
-    pch.h \
-    previewlistdelegate.h \
-    previewselectdialog.h \
-    torrentsqltablemodel.h \
-    torrentstatus.h \
-    torrenttabledelegate.h \
-    torrenttablesortmodel.h \
-    torrenttransfertableview.h \
-    utils/fs.h \
-    utils/gui.h \
-    utils/misc.h \
-    utils/string.h \
-    version.h \
-
-FORMS += \
-    mainwindow.ui \
-    moviedetaildialog.ui \
-    previewselectdialog.ui \
-
-RESOURCES += \
-    images/qMedia.qrc \
+include(src.pri)
 
 # File version
 # ---
@@ -147,11 +101,7 @@ tiny_resource_and_manifest(                    \
 # Use Precompiled headers (PCH)
 # ---
 
-PRECOMPILED_HEADER = $$quote($$PWD/pch.h)
-HEADERS += $$PRECOMPILED_HEADER
-
-precompile_header: \
-    DEFINES *= USING_PCH
+include(pch.pri)
 
 # Stacktrace support
 # ---
