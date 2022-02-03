@@ -29,14 +29,14 @@ CONFIG(debug, debug|release): DEFINES *= QMEDIA_DEBUG
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 # Disables all the APIs deprecated before Qt 6.0.0
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
 
 #DEFINES *= QT_ASCII_CAST_WARNINGS
 #DEFINES += QT_NO_CAST_FROM_ASCII
 #DEFINES += QT_RESTRICTED_CAST_FROM_ASCII
 DEFINES += QT_NO_CAST_TO_ASCII
 DEFINES += QT_NO_CAST_FROM_BYTEARRAY
-DEFINES += QT_USE_QSTRINGBUILDER
+#DEFINES += QT_USE_QSTRINGBUILDER
 DEFINES += QT_STRICT_ITERATORS
 
 # WinApi

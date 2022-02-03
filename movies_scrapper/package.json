@@ -14,6 +14,6 @@
   "author": "Silver Zachara <silver.zachara@gmail.com> (https://github.com/silverqx)",
   "license": "MIT",
   "dependencies": {
-    "node-csfd-api": "^2.0.1"
+    "node-csfd-api": "^2.1.0-next.1"
   }
 }
