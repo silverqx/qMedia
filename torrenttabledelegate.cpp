@@ -7,11 +7,8 @@
 #include <QProxyStyle>
 #endif
 
+#include "macros/likely.h"
 #include "torrentsqltablemodel.h"
-
-TorrentTableDelegate::TorrentTableDelegate(QObject *parent)
-    : QStyledItemDelegate(parent)
-{}
 
 void TorrentTableDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                                  const QModelIndex &index) const
@@ -19,20 +16,23 @@ void TorrentTableDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
     Q_ASSERT(index.isValid());
 
     // Selected item
-    if ((index.column() != TorrentSqlTableModel::TR_PROGRESS) &&
-        (option.state & QStyle::State_Selected))
-        return paintSelectedItem(painter, option, index);
+    if (index.column() != TorrentSqlTableModel::TR_PROGRESS &&
+        option.state.testFlag(QStyle::State_Selected)
+    )
+        paintSelectedItem(painter, option, index);
 
     // Default behavior
-    if (index.column() != TorrentSqlTableModel::TR_PROGRESS)
-        return QStyledItemDelegate::paint(painter, option, index);
+    else if (index.column() != TorrentSqlTableModel::TR_PROGRESS) T_LIKELY
+        QStyledItemDelegate::paint(painter, option, index);
 
     // Custom progressbar
-    return paintProgressBar(painter, option, index);
+    else
+        paintProgressBar(painter, option, index);
 }
 
-void TorrentTableDelegate::paintSelectedItem(QPainter *painter, const QStyleOptionViewItem &option,
-                                             const QModelIndex &index) const
+void TorrentTableDelegate::paintSelectedItem(
+        QPainter *painter, const QStyleOptionViewItem &option,
+        const QModelIndex &index) const
 {
     QStyleOptionViewItem itemOption(option);
     initStyleOption(&itemOption, index);
@@ -40,21 +40,27 @@ void TorrentTableDelegate::paintSelectedItem(QPainter *painter, const QStyleOpti
     itemOption.palette.setColor(QPalette::HighlightedText,
                                 index.data(Qt::ForegroundRole).value<QColor>());
 
-    const QWidget *widget = option.widget;
-    QStyle *style = widget ? widget->style() : QApplication::style();
+    const auto *const widget = option.widget;
+    const auto *const style =
+            widget != nullptr ? widget->style()
+                              : QApplication::style();
 
     painter->save();
     style->drawControl(QStyle::CE_ItemViewItem, &itemOption, painter, widget);
     painter->restore();
 }
 
-void TorrentTableDelegate::paintProgressBar(QPainter *painter, const QStyleOptionViewItem &option,
-                                            const QModelIndex &index) const
+void TorrentTableDelegate::paintProgressBar(
+        QPainter *painter, const QStyleOptionViewItem &option,
+        const QModelIndex &index) const
 {
     QStyleOptionProgressBar newopt;
     newopt.rect = option.rect;
     newopt.text = index.data().toString();
-    newopt.progress = static_cast<int>(index.data(TorrentSqlTableModel::UnderlyingDataRole).toReal() / 10);
+    // UnderlyingDataRole contains a raw value from db
+    newopt.progress =
+            static_cast<int>(
+                index.data(TorrentSqlTableModel::UnderlyingDataRole).toReal() / 10);
     newopt.maximum = 100;
     newopt.minimum = 0;
     newopt.state = option.state;
@@ -77,8 +83,10 @@ void TorrentTableDelegate::paintProgressBar(QPainter *painter, const QStyleOptio
     painter->restore();
 }
 
-QWidget *TorrentTableDelegate::createEditor(QWidget *, const QStyleOptionViewItem &,
-                                            const QModelIndex &) const
+QWidget *TorrentTableDelegate::createEditor(
+        QWidget */*unused*/, const QStyleOptionViewItem &/*unused*/,
+        const QModelIndex &/*unused*/) const
 {
+    // No editor here
     return nullptr;
 }
