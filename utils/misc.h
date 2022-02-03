@@ -1,15 +1,26 @@
-#ifndef MISC_H
-#define MISC_H
+#pragma once
+#ifndef UTILS_MISC_H
+#define UTILS_MISC_H
 
 #include <QString>
 
-namespace Utils {
-    namespace Misc {
-        /**
-         * Use binary prefix standards from IEC 60027-2
-         * see http://en.wikipedia.org/wiki/Kilobyte
-         */
-        enum class SizeUnit
+namespace Utils
+{
+
+    /*! Miscellaneous library class. */
+    class Misc
+    {
+        Q_DISABLE_COPY(Misc)
+
+    public:
+        /*! Deleted default constructor, this is a pure library class. */
+        Misc() = delete;
+        /*! Deleted destructor. */
+        ~Misc() = delete;
+
+        /*! Binary prefix standards from IEC 60027-2.
+            See http://en.wikipedia.org/wiki/Kilobyte. */
+        enum struct SizeUnit
         {
             Byte,       // 1024^0,
             KibiByte,   // 1024^1,
@@ -23,28 +34,30 @@ namespace Utils {
             // YobiByte,   // 1024^8
         };
 
-        QString unitString(SizeUnit unit, bool isSpeed = false);
+        static QString unitString(SizeUnit unit, bool isSpeed = false);
 
-        /**
-         * Return the best user friendly storage unit (B, KiB, MiB, GiB, TiB),
-         * value must be given in bytes.
-         */
-        QString friendlyUnit(qint64 bytesValue, bool isSpeed = false);
-        int friendlyUnitPrecision(SizeUnit unit);
+        /*! Return the best user friendly storage unit (B, KiB, MiB, GiB, TiB),
+            value must be given in bytes. */
+        static QString friendlyUnit(qint64 bytesValue, bool isSpeed = false);
+        static int friendlyUnitPrecision(SizeUnit unit);
 
-        bool isPreviewable(const QString &extension);
+        static bool isPreviewable(const QString &extension);
 
-        enum class DURATION_INPUT
+        enum struct DURATION_INPUT
         {
             SECONDS,
             MINUTES,
         };
-        /*! Take a number of seconds and return a user-friendly time duration like "1d 2h 10m". */
-        QString userFriendlyDuration(qlonglong duration, qlonglong maxCap = -1,
-                                     DURATION_INPUT input = DURATION_INPUT::SECONDS);
-        QString userFriendlyDuration(qlonglong duration,
-                                     DURATION_INPUT input = DURATION_INPUT::SECONDS);
-    }
-}
+        /*! Take a number of seconds and return a user-friendly time duration
+            like '1d 2h 10m'. */
+        static QString
+        userFriendlyDuration(qlonglong duration, qlonglong maxCap = -1,
+                             DURATION_INPUT input = DURATION_INPUT::SECONDS);
+        static QString
+        userFriendlyDuration(qlonglong duration,
+                             DURATION_INPUT input = DURATION_INPUT::SECONDS);
+    };
 
-#endif // MISC_H
+} // namespace Utils
+
+#endif // UTILS_MISC_H

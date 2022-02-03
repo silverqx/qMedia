@@ -1,14 +1,26 @@
-#ifndef STRING_H
-#define STRING_H
+#pragma once
+#ifndef UTILS_STRING_H
+#define UTILS_STRING_H
 
-class QString;
+#include <QString>
 
 namespace Utils
 {
-    namespace String
-    {
-        QString fromDouble(double n, int precision);
-    }
-}
 
-#endif // STRING_H
+    /*! Miscellaneous library class. */
+    class String
+    {
+        Q_DISABLE_COPY(String)
+
+    public:
+        /*! Deleted default constructor, this is a pure library class. */
+        String() = delete;
+        /*! Deleted destructor. */
+        ~String() = delete;
+
+        static QString fromDouble(double n, int precision);
+    };
+
+} // namespace Utils
+
+#endif // UTILS_STRING_H

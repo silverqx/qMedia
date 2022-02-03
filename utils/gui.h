@@ -1,16 +1,31 @@
-#ifndef GUI_H
-#define GUI_H
+#pragma once
+#ifndef UTILS_GUI_H
+#define UTILS_GUI_H
+
+#include <QtGlobal>
 
 class QString;
 class QWidget;
 
 namespace Utils {
-    namespace Gui {
-        /*! Open the given path with an appropriate application. */
-        bool openPath(const QString &absolutePath);
-        /*! Center on main desktop screen. */
-        void centerDialog(QWidget *const widget);
-    }
-}
 
-#endif // GUI_H
+    /*! Gui library class. */
+    class Gui
+    {
+        Q_DISABLE_COPY(Gui)
+
+    public:
+        /*! Deleted default constructor, this is a pure library class. */
+        Gui() = delete;
+        /*! Deleted destructor. */
+        ~Gui() = delete;
+
+        /*! Open the given path with an appropriate application. */
+        static bool openPath(const QString &absolutePath);
+        /*! Center on main desktop screen. */
+        static void centerDialog(QWidget *widget);
+    };
+
+} // namespace Utils
+
+#endif // UTILS_GUI_H

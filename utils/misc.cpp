@@ -1,60 +1,68 @@
-#include "misc.h"
+#include "utils/misc.h"
 
 #include <QSet>
+
+#include <array>
 
 #include "common.h"
 #include "utils/string.h"
 
+namespace Utils
+{
+
 namespace
 {
-    const struct { const char *source; const char *comment; } units[]
-    {
-        { "B",   "bytes" },
-        { "KiB", "kibibytes (1024 bytes)" },
-        { "MiB", "mebibytes (1024 kibibytes)" },
-        { "GiB", "gibibytes (1024 mibibytes)" },
-        { "TiB", "tebibytes (1024 gibibytes)" },
-        { "PiB", "pebibytes (1024 tebibytes)" },
-        { "EiB", "exbibytes (1024 pebibytes)" }
+    struct units_t {
+        const char *name;
+        const char *comment;
     };
 
-    /**
-     * Return best userfriendly storage unit (B, KiB, MiB, GiB, TiB, ...).
-     * Use Binary prefix standards from IEC 60027-2
-     * see http://en.wikipedia.org/wiki/Kilobyte
-     * Value must be given in bytes.
-     * to send numbers instead of strings with suffixes
-     */
-    bool splitToFriendlyUnit(const qint64 sizeInBytes, qreal &val, Utils::Misc::SizeUnit &unit)
+    std::array<units_t, 7> units {{
+        {"B",   "bytes"},
+        {"KiB", "kibibytes (1024 bytes)"},
+        {"MiB", "mebibytes (1024 kibibytes)"},
+        {"GiB", "gibibytes (1024 mibibytes)"},
+        {"TiB", "tebibytes (1024 gibibytes)"},
+        {"PiB", "pebibytes (1024 tebibytes)"},
+        {"EiB", "exbibytes (1024 pebibytes)"},
+    }};
+
+    /*! Return best userfriendly storage unit (B, KiB, MiB, GiB, TiB, ...).
+        Use Binary prefix standards from IEC 60027-2
+        see http://en.wikipedia.org/wiki/Kilobyte
+        Value must be given in bytes. */
+    bool splitToFriendlyUnit(const qint64 sizeInBytes, qreal &value, Misc::SizeUnit &unit)
     {
-        if (sizeInBytes < 0) return false;
+        if (sizeInBytes < 0)
+            return false;
 
         int i = 0;
-        val = static_cast<qreal>(sizeInBytes);
+        value = static_cast<qreal>(sizeInBytes);
 
-        while ((val >= 1024.) && (i <= static_cast<int>(Utils::Misc::SizeUnit::ExbiByte))) {
-            val /= 1024.;
+        while ((value >= 1024.) && (i <= static_cast<int>(Misc::SizeUnit::ExbiByte))) {
+            value /= 1024.;
             ++i;
         }
 
-        unit = static_cast<Utils::Misc::SizeUnit>(i);
+        unit = static_cast<Misc::SizeUnit>(i);
         return true;
     }
-}
+} // namespace
 
-QString Utils::Misc::friendlyUnit(const qint64 bytesValue, const bool isSpeed)
+QString Misc::friendlyUnit(const qint64 bytesValue, const bool isSpeed)
 {
     SizeUnit unit;
-    qreal friendlyVal;
-    if (!splitToFriendlyUnit(bytesValue, friendlyVal, unit))
+    qreal friendlyValue = 0.0;
+
+    if (!splitToFriendlyUnit(bytesValue, friendlyValue, unit))
         return QStringLiteral("Unknown");
 
-    return Utils::String::fromDouble(friendlyVal, friendlyUnitPrecision(unit))
-           + QString::fromUtf8(::C_NON_BREAKING_SPACE)
-           + unitString(unit, isSpeed);
+    return Utils::String::fromDouble(friendlyValue, friendlyUnitPrecision(unit)) +
+           ::C_NON_BREAKING_SPACE +
+           unitString(unit, isSpeed);
 }
 
-int Utils::Misc::friendlyUnitPrecision(const SizeUnit unit)
+int Misc::friendlyUnitPrecision(const SizeUnit unit)
 {
     // friendlyUnit's number of digits after the decimal point
     switch (unit) {
@@ -70,20 +78,19 @@ int Utils::Misc::friendlyUnitPrecision(const SizeUnit unit)
     }
 }
 
-QString Utils::Misc::unitString(const SizeUnit unit, const bool isSpeed)
+QString Misc::unitString(const SizeUnit unit, const bool isSpeed)
 {
-    const auto &unitString = units[static_cast<int>(unit)];
-    QString ret = unitString.source;
-    if (isSpeed)
-        ret += QStringLiteral("/s");
+    const auto &unitName = units.at(static_cast<int>(unit)).name;
 
-    return ret;
+    if (!isSpeed)
+        return unitName;
+
+    return QStringLiteral("%1/s").arg(unitName);
 }
 
-bool Utils::Misc::isPreviewable(const QString &extension)
+bool Misc::isPreviewable(const QString &extension)
 {
     static const QSet<QString> multimediaExtensions = {
-        // TODO really investigate QStringLiteral and QLatin1String and defines which controls behaviors, make some note soomewhere about investigation result silverqx
         QStringLiteral("3GP"),
         QStringLiteral("AAC"),
         QStringLiteral("AC3"),
@@ -127,22 +134,23 @@ bool Utils::Misc::isPreviewable(const QString &extension)
         QStringLiteral("WMA"),
         QStringLiteral("WMV"),
     };
+
     return multimediaExtensions.contains(extension.toUpper());
 }
 
-QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlonglong maxCap,
-                                          const DURATION_INPUT input)
+QString Misc::userFriendlyDuration(const qlonglong duration, const qlonglong maxCap,
+                                   const DURATION_INPUT input)
 {
     if (duration == 0)
-        return QString::fromUtf8(::C_INFINITY);
+        return ::C_INFINITY;
     if ((maxCap >= 0) && (duration >= maxCap))
-        return QString::fromUtf8(::C_INFINITY);
+        return ::C_INFINITY;
 
-    qlonglong seconds;
-    qlonglong minutes;
+    qlonglong seconds = 0;
+    qlonglong minutes = 0;
 
     switch (input) {
-    case DURATION_INPUT::SECONDS:
+    case DURATION_INPUT::SECONDS: {
         seconds = duration;
         if (seconds < 60)
             return QStringLiteral("< 1m");
@@ -151,6 +159,7 @@ QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlongl
         if (minutes < 60)
             return QStringLiteral("%1m").arg(QString::number(minutes));
         break;
+    }
     case DURATION_INPUT::MINUTES:
         minutes = duration;
         break;
@@ -159,13 +168,15 @@ QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlongl
     qlonglong hours = (minutes / 60);
     if (hours < 24) {
         minutes -= (hours * 60);
-        return QStringLiteral("%1h %2m").arg(QString::number(hours), QString::number(minutes));
+        return QStringLiteral("%1h %2m").arg(QString::number(hours),
+                                             QString::number(minutes));
     }
 
     qlonglong days = (hours / 24);
     if (days < 365) {
         hours -= (days * 24);
-        return QStringLiteral("%1d %2h").arg(QString::number(days), QString::number(hours));
+        return QStringLiteral("%1d %2h").arg(QString::number(days),
+                                             QString::number(hours));
     }
 
     const qlonglong years = (days / 365);
@@ -173,8 +184,10 @@ QString Utils::Misc::userFriendlyDuration(const qlonglong duration, const qlongl
     return QStringLiteral("%1y %2d").arg(QString::number(years), QString::number(days));
 }
 
-QString Utils::Misc::userFriendlyDuration(const qlonglong duration,
-                                          const Utils::Misc::DURATION_INPUT input)
+QString Misc::userFriendlyDuration(const qlonglong duration,
+                                   const Misc::DURATION_INPUT input)
 {
     return userFriendlyDuration(duration, -1, input);
 }
+
+} // namespace Utils

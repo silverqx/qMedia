@@ -1,59 +1,68 @@
-#include "fs.h"
+#include "utils/fs.h"
 
 #include <QDir>
 
 #include "common.h"
 
-QString Utils::Fs::toNativePath(const QString &path)
+namespace Utils
+{
+
+QString Fs::toNativePath(const QString &path)
 {
     return QDir::toNativeSeparators(path);
 }
 
-QString Utils::Fs::toUniformPath(const QString &path)
+QString Fs::toUniformPath(const QString &path)
 {
     return QDir::fromNativeSeparators(path);
 }
 
-QString Utils::Fs::fileExtension(const QString &filename)
+QString Fs::fileExtension(const QString &filename)
 {
     const auto ext = QString(filename).remove(::QB_EXT);
-    const auto pointIndex = ext.lastIndexOf('.');
+    const auto pointIndex = ext.lastIndexOf(QChar('.'));
+
     if (pointIndex == -1)
         return {};
 
     return ext.mid(pointIndex + 1);
 }
 
-QString Utils::Fs::fileName(const QString &filePath)
+QString Fs::fileName(const QString &filePath)
 {
-    const auto path = toUniformPath(filePath);
-    const auto slashIndex = path.lastIndexOf('/');
+    auto path = toUniformPath(filePath);
+    const auto slashIndex = path.lastIndexOf(QChar('/'));
+
     if (slashIndex == -1)
         return path;
 
     return path.mid(slashIndex + 1);
 }
 
-QString Utils::Fs::folderName(const QString &filePath)
+QString Fs::folderName(const QString &filePath)
 {
-    const auto path = toUniformPath(filePath);
-    const auto slashIndex = path.lastIndexOf('/');
+    auto path = toUniformPath(filePath);
+    const auto slashIndex = path.lastIndexOf(QChar('/'));
+
     if (slashIndex == -1)
         return path;
 
     return path.left(slashIndex);
 }
 
-QString Utils::Fs::expandPath(const QString &path)
+QString Fs::expandPath(const QString &path)
 {
-    const auto ret = path.trimmed();
-    if (ret.isEmpty())
-        return ret;
+    auto result = path.trimmed();
 
-    return QDir::cleanPath(ret);
+    if (result.isEmpty())
+        return result;
+
+    return QDir::cleanPath(result);
 }
 
-QString Utils::Fs::expandPathAbs(const QString &path)
+QString Fs::expandPathAbs(const QString &path)
 {
     return QDir(expandPath(path)).absolutePath();
 }
+
+} // namespace Utils
