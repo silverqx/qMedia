@@ -9,14 +9,18 @@ class PreviewListDelegate final : public QItemDelegate
     Q_DISABLE_COPY(PreviewListDelegate)
 
 public:
-    explicit PreviewListDelegate(QObject *parent = nullptr);
+    /*! Inherit constructors. */
+    using QItemDelegate::QItemDelegate;
 
 private:
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
-               const QModelIndex &index) const override;
-    QWidget *createEditor(QWidget *, const QStyleOptionViewItem &,
-                          const QModelIndex &) const override;
-    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+               const QModelIndex &index) const final;
+
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const final;
+
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const final;
 };
 
 #endif // PREVIEWLISTDELEGATE_H

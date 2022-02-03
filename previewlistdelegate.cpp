@@ -13,10 +13,6 @@
 #include "utils/misc.h"
 #include "utils/string.h"
 
-PreviewListDelegate::PreviewListDelegate(QObject *parent)
-    : QItemDelegate(parent)
-{}
-
 void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                                 const QModelIndex &index) const
 {
@@ -25,8 +21,7 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     QStyleOptionViewItem opt = QItemDelegate::setOptions(index, option);
     drawBackground(painter, opt, index);
 
-    const auto column = index.column();
-    switch (column) {
+    switch (index.column()) {
     case PreviewSelectDialog::TR_SIZE:
         opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;
         QItemDelegate::drawDisplay(painter, opt, option.rect,
@@ -35,19 +30,19 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     case PreviewSelectDialog::TR_PROGRESS: {
         const auto progress = index.data().toReal() / 10;
+        const auto progressText =
+                progress == 100 ? QStringLiteral("100")
+                                : Utils::String::fromDouble(progress, 1);
 
         QStyleOptionProgressBar newopt;
         newopt.rect = opt.rect;
-        newopt.text = ((progress == 100) ? QStringLiteral("100%")
-                                         : (Utils::String::fromDouble(progress, 1) + '%'));
+        newopt.text = QStringLiteral("%1%").arg(progressText);
         newopt.progress = static_cast<int>(progress);
         newopt.maximum = 100;
         newopt.minimum = 0;
         newopt.textVisible = true;
-        // Setup color for progressbar
-        auto progressBarColor = newopt.palette.color(QPalette::Highlight);
-        // Remove transparency
-        progressBarColor.setAlpha(255);
+        // Progressbar color
+        QColor progressBarColor(54, 115, 157, 235);
         newopt.palette.setColor(QPalette::Highlight, progressBarColor);
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
@@ -69,8 +64,9 @@ void PreviewListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     painter->restore();
 }
 
-QWidget *PreviewListDelegate::createEditor(QWidget *, const QStyleOptionViewItem &,
-                                           const QModelIndex &) const
+QWidget *PreviewListDelegate::createEditor(
+        QWidget */*unused*/, const QStyleOptionViewItem &/*unused*/,
+        const QModelIndex &/*unused*/) const
 {
     // No editor here
     return nullptr;
@@ -81,7 +77,8 @@ QSize PreviewListDelegate::sizeHint(const QStyleOptionViewItem &option,
 {
     // Increase line size to 28px, looks much nicer
     auto size = QItemDelegate::sizeHint(option, index);
-    size.setHeight(28);
-    return size;
 
+    size.setHeight(28);
+
+    return size;
 }
