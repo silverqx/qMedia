@@ -101,11 +101,11 @@ bool TorrentTableSortModel::sortSeedsAndLeechers( // NOLINT(misc-no-recursion)
 
     const auto leftValueTotal =
             left.sibling(left.row(),
-                         TorrentSqlTableModel::mapToTotal.value(sortColumn))
+                         TorrentSqlTableModel::mapPeersToTotal().value(sortColumn))
             .data(TorrentSqlTableModel::UnderlyingDataRole).toInt();
     const auto rightValueTotal =
             right.sibling(right.row(),
-                          TorrentSqlTableModel::mapToTotal.value(sortColumn))
+                          TorrentSqlTableModel::mapPeersToTotal().value(sortColumn))
             .data(TorrentSqlTableModel::UnderlyingDataRole).toInt();
 
     if (leftValueTotal != rightValueTotal)

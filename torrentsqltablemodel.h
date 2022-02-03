@@ -40,18 +40,22 @@ public:
         UnderlyingDataRole = Qt::UserRole,
     };
 
-    explicit TorrentSqlTableModel(TorrentTransferTableView *parent = nullptr,
-                                  const QSqlDatabase db = QSqlDatabase());
+    explicit TorrentSqlTableModel(
+            TorrentTransferTableView *parent = nullptr,
+            QSqlDatabase db = QSqlDatabase());
 
-    QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex &modelIndex, int role = Qt::DisplayRole) const final;
+
     int getTorrentRowByInfoHash(const QString &infoHash) const;
     quint64 getTorrentIdByInfoHash(const QString &infoHash) const;
     // TODO implement rowCount() and columnCount() and may be some others, look qbt model class as reference silverqx
 
     /*! Map seeds/leechers column to total seeds/leechers counterparts. */
-    static const QHash<int, int> mapToTotal;
+    static const QHash<int, int> &mapPeersToTotal();
+
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 public slots:
-    bool select() override;
+    bool select() final;
 
 private:
     QString displayValue(const QModelIndex &modelIndex, int column) const;
