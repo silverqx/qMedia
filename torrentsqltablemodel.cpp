@@ -50,7 +50,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
         // TODO get decorationSize from QStyledItemDelegate ( see NOTES.txt ) silverqx
         static const auto iconWidth = 24;
         if (postitionX <= iconWidth)
-            return (*m_statusHash)[record(row).value("status").toString()].text;
+            return (*m_statusHash)[record(row).value("status").toString()].title;
 
         return displayValue(modelIndex, column);
     };
@@ -67,7 +67,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
 
     switch (role) {
     case Qt::ForegroundRole:
-        return (*m_statusHash)[record(row).value("status").toString()].getColor();
+        return (*m_statusHash)[record(row).value("status").toString()].color();
     case Qt::DisplayRole:
         return displayValue(modelIndex, column);
     case UnderlyingDataRole:
@@ -100,7 +100,7 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex,
         switch (column) {
         case TR_NAME:
             return (*m_statusHash)[record(row).value("status").toString()]
-                    .getIcon();
+                    .icon();
         }
         break;
     case Qt::ToolTipRole:

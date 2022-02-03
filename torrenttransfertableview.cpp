@@ -712,7 +712,7 @@ void TorrentTransferTableView::pauseResumeSelectedTorrent() const
         pauseTorrent(torrent);
     else
         qDebug("Can't pause / resume selected torrent, because status is '%s', torrent : \"%s\"",
-               qUtf8Printable(statusProperties.text),
+               qUtf8Printable(statusProperties.title),
                qUtf8Printable(torrent.value("name").toString()));
 }
 

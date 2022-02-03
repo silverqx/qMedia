@@ -69,7 +69,7 @@ private:
     int m_movieDetailIndex;
     /*! Save button in the buttonBox. */
     QPushButton *m_saveButton;
-    const StatusHash *const m_statusHash;
+    std::shared_ptr<StatusHash> m_statusHash;
 
 private slots:
     void finishedMoviePoster(QNetworkReply *reply) const;

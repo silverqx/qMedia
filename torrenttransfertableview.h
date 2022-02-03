@@ -83,7 +83,7 @@ private:
     mutable QHash<quint64, QSharedPointer<const QVector<QSqlRecord>>> m_torrentFilesCache;
     bool m_showEventInitialized = false;
     HWND m_qBittorrentHwnd = nullptr;
-    const StatusHash *const m_statusHash;
+    std::shared_ptr<StatusHash> m_statusHash;
 
 private slots:
     void previewSelectedTorrent();

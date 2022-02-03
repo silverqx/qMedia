@@ -31,7 +31,7 @@ public slots:
 signals:
     void torrentsAddedOrRemoved();
     void torrentsChanged(const QVector<QString> &torrentInfoHashes);
-    void qBittorrentHwndChanged(const HWND hwnd);
+    void qBittorrentHwndChanged(HWND hwnd);
     void qBittorrentUp(bool initial = false);
     void qBittorrentDown(bool initial = false);
 

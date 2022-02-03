@@ -4,9 +4,9 @@
 #include <QHash>
 #include <QIcon>
 
-// Starts from 1 because of MySQL enums starts from 1
 enum struct TorrentStatus
 {
+    // Starts from 1 because of MySQL enums starts from 1
     Checking = 1,
     CheckingResumeData,
     Downloading,
@@ -21,57 +21,89 @@ enum struct TorrentStatus
     Unknown,
 };
 
+/*! Torrent status properties. */
 struct StatusProperties
 {
-    TorrentStatus status;
-    std::function<const QColor &()> getColor;
-    std::function<const QIcon &()> getIcon;
-    QString text;
+    TorrentStatus status {TorrentStatus::Unknown};
+    std::function<const QColor &()> color;
+    std::function<const QIcon &()> icon;
+    QString title;
 
-    inline bool isPaused() const       { return status == TorrentStatus::Paused; }
-    inline bool isForced() const       { return status == TorrentStatus::ForcedDownloading; }
-    inline bool isMoving() const       { return status == TorrentStatus::Moving; }
-    inline bool isFinished() const     { return status == TorrentStatus::Finished; }
-    inline bool isMissingFiles() const { return status == TorrentStatus::MissingFiles; }
-    inline bool isError() const        { return status == TorrentStatus::Error; }
-
-    inline bool isDownloading() const
-    {
-        return (status == TorrentStatus::Downloading)
-                || (status == TorrentStatus::ForcedDownloading)
-                || (status == TorrentStatus::Stalled)
-                || (status == TorrentStatus::Queued);
-    }
-
-    inline bool isChecking() const
-    {
-        return (status == TorrentStatus::Checking)
-                || (status == TorrentStatus::CheckingResumeData);
-    }
+    inline bool isPaused() const noexcept;
+    inline bool isForced() const noexcept;
+    inline bool isMoving() const noexcept;
+    inline bool isFinished() const noexcept;
+    inline bool isMissingFiles() const noexcept;
+    inline bool isError() const noexcept;
+    inline bool isDownloading() const noexcept;
+    inline bool isChecking() const noexcept;
 };
 
+/*! Maps a TorrentStatus string representation to StatusProperties. */
 class StatusHash final
 {
     Q_DISABLE_COPY(StatusHash)
 
 public:
-    static StatusHash *instance();
+    inline ~StatusHash() = default;
+
+    static std::shared_ptr<StatusHash> instance();
     static void freeInstance();
 
-    inline const StatusProperties &operator[](const QString &key) const
-    {
-        // Cached reference to statusHash, wtf 😂
-        static auto &statusHash {getStatusHash()};
-        return statusHash[key];
-    }
+    const StatusProperties &operator[](const QString &key) const;
 
 private:
     StatusHash() = default;
-    ~StatusHash() = default;
 
-    QHash<QString, StatusProperties> &getStatusHash() const;
+    const QHash<QString, StatusProperties> &getStatusHash() const;
 
-    static StatusHash *m_instance;
+    static std::shared_ptr<StatusHash> m_instance;
 };
+
+/* StatusProperties */
+
+bool StatusProperties::isPaused() const noexcept
+{
+    return status == TorrentStatus::Paused;
+}
+
+bool StatusProperties::isForced() const noexcept
+{
+    return status == TorrentStatus::ForcedDownloading;
+}
+
+bool StatusProperties::isMoving() const noexcept
+{
+    return status == TorrentStatus::Moving;
+}
+
+bool StatusProperties::isFinished() const noexcept
+{
+    return status == TorrentStatus::Finished;
+}
+
+bool StatusProperties::isMissingFiles() const noexcept
+{
+    return status == TorrentStatus::MissingFiles;
+}
+
+bool StatusProperties::isError() const noexcept
+{
+    return status == TorrentStatus::Error;
+}
+
+bool StatusProperties::isDownloading() const noexcept
+{
+    return status == TorrentStatus::Downloading ||
+           status == TorrentStatus::ForcedDownloading ||
+           status == TorrentStatus::Stalled ||
+           status == TorrentStatus::Queued;
+}
+
+bool StatusProperties::isChecking() const noexcept
+{
+    return status == TorrentStatus::Checking ||
+           status == TorrentStatus::CheckingResumeData;
+}
 
 #endif // TORRENTSTATUS_H
