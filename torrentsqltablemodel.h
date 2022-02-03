@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TORRENTSQLTABLEMODEL_H
 #define TORRENTSQLTABLEMODEL_H
 

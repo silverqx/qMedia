@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TORRENTTABLESORTMODEL_H
 #define TORRENTTABLESORTMODEL_H
 

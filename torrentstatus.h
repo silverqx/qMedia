@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TORRENTSTATUS_H
 #define TORRENTSTATUS_H
 

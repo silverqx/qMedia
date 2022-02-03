@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MAINEVENTFILTER_H
 #define MAINEVENTFILTER_H
 

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MOVIEDETAILDIALOG_H
 #define MOVIEDETAILDIALOG_H
 

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CSFDDETAILSERVICE_H
 #define CSFDDETAILSERVICE_H
 

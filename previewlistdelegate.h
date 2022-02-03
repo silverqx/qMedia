@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PREVIEWLISTDELEGATE_H
 #define PREVIEWLISTDELEGATE_H
 

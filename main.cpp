@@ -1,3 +1,7 @@
+#pragma once
+#ifndef QMEDIA_MAIN_H
+#define QMEDIA_MAIN_H
+
 #include <QApplication>
 #include <QStandardPaths>
 
@@ -146,6 +150,8 @@ void cleanupApplication(QApplication &app)
 
     CloseHandle(hMutex);
 }
+
+#endif // QMEDIA_MAIN_H
 
 // TODO check portable msvc compiler options /permissive- and /Za silverqx
 // TODO enable DEFINES += QT_USE_QSTRINGBUILDER, qBittorent has it enabled byd default silverqx
