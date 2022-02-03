@@ -45,16 +45,18 @@ namespace
     };
 
     // Used in pagination
-    const auto moreLinkText = [](const bool withDots = true,
-                                     const bool withParenthesis = true)
+    const auto moreLinkText =
+            [](const bool withDots = true, const bool withParenthesis = true)
     {
-        return (withDots ? QStringLiteral("<strong>...</strong> ") : QStringLiteral("")) +
-            (withParenthesis ? QStringLiteral("(") : QStringLiteral("")) +
-            QStringLiteral("<a href='#show-more' "
-                          "style='font-size: 11pt; text-decoration: none;'"
-                          ">more</a>") +
-            (withParenthesis ? QStringLiteral(")") : QStringLiteral(""));
+        return QStringLiteral("%1%2%3%4").arg(
+                    withDots ? QStringLiteral("<strong>...</strong> ") : "",
+                    withParenthesis ? QStringLiteral("(") : "",
+                    QStringLiteral("<a href='#show-more' "
+                                  "style='font-size: 11pt; text-decoration: none;'"
+                                  ">more</a>"),
+                    withParenthesis ? QStringLiteral(")") : "");
     };
+
     const auto moreLinkSize = QStringLiteral("... (more)").size();
 
     /*! Join QJsonArray, all values in array have to be QJsonObject, values will be searched
