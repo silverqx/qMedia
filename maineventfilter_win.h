@@ -8,12 +8,13 @@ class MainWindow;
 class MainEventFilter final : public QAbstractNativeEventFilter
 {
 public:
-    explicit MainEventFilter(MainWindow *const mainWindow);
+    explicit MainEventFilter(MainWindow *mainWindow);
 
-    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
+    bool nativeEventFilter(
+            const QByteArray &eventType, void *message, long *result) final; // NOLINT(google-runtime-int)
 
 private:
-    MainWindow *const m_mainWindow = nullptr;
+    MainWindow *const m_mainWindow;
 };
 
 #endif // MAINEVENTFILTER_H
