@@ -204,6 +204,7 @@ void TorrentTransferTableView::showEvent(QShowEvent *event)
 
     // Move this as top as possible to prevent race condition
     m_showEventInitialized = true;
+
     resizeColumns();
 }
 

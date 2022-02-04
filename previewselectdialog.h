@@ -3,6 +3,7 @@
 #define PREVIEWSELECTDIALOG_H
 
 #include <QDialog>
+#include <QPointer>
 #include <QtSql/QSqlRecord>
 
 class PreviewListDelegate;
@@ -28,9 +29,11 @@ public:
         NB_COLUMNS
     };
 
-    PreviewSelectDialog(QWidget *parent, QSqlRecord torrent,
+    /*! Contructor. */
+    PreviewSelectDialog(QWidget *parent, const QSqlRecord &torrent,
                         const QSharedPointer<const QVector<QSqlRecord>> &torrentFiles);
-    ~PreviewSelectDialog();
+    /*! Virtual destructor. */
+    inline ~PreviewSelectDialog() final = default;
 
     /*! Assemble absolute file path for torrent file. */
     inline QString getTorrentFileFilePathAbs(const QString &relativePath) const;
@@ -39,17 +42,18 @@ signals:
     void readyToPreviewFile(const QString &filePath);
 
 protected:
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent *event) final;
 
 private:
     void populatePreviewListModel() const;
 
-    Ui::PreviewSelectDialog *m_ui;
-    QStandardItemModel *m_previewListModel;
     const QSqlRecord m_torrent;
     const QSharedPointer<const QVector<QSqlRecord>> m_torrentFiles;
     bool m_showEventInitialized = false;
-    PreviewListDelegate *m_listDelegate;
+
+    std::unique_ptr<Ui::PreviewSelectDialog> m_ui;
+    QPointer<QStandardItemModel> m_previewListModel;
+    QPointer<PreviewListDelegate> m_listDelegate;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:

@@ -17,33 +17,35 @@
 #include "utils/misc.h"
 
 PreviewSelectDialog::PreviewSelectDialog(
-        QWidget *const parent, const QSqlRecord torrent,
+        QWidget *const parent, const QSqlRecord &torrent,
         const QSharedPointer<const QVector<QSqlRecord>> &torrentFiles
 )
     : QDialog(parent)
-    , m_ui(new Ui::PreviewSelectDialog)
     , m_torrent(torrent)
     , m_torrentFiles(torrentFiles)
+    , m_ui(std::make_unique<Ui::PreviewSelectDialog>())
 {
     m_ui->setupUi(this);
 
-    m_ui->infoLabel->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
-                                          "support previewing, please select one of them:")
-                       .arg(m_torrent.value("name").toString()));
+    m_ui->infoLabel->setText(
+                QStringLiteral("The following files from torrent <strong>%1</strong> "
+                               "support previewing, please select one of them:")
+                .arg(m_torrent.value("name").toString()));
 
     m_ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("&Preview"));
 
+    // Events
     connect(m_ui->buttonBox, &QDialogButtonBox::accepted,
             this, &PreviewSelectDialog::previewButtonClicked);
     connect(m_ui->previewList, &QAbstractItemView::doubleClicked,
             this, &PreviewSelectDialog::previewButtonClicked);
 
     // Create and apply delegate
-    m_listDelegate = new PreviewListDelegate(this);
+    m_listDelegate = new PreviewListDelegate(this); // NOLINT(cppcoreguidelines-owning-memory)
     m_ui->previewList->setItemDelegate(m_listDelegate);
 
     // Preview list model
-    m_previewListModel = new QStandardItemModel(0, NB_COLUMNS, this);
+    m_previewListModel = new QStandardItemModel(0, NB_COLUMNS, this); // NOLINT(cppcoreguidelines-owning-memory)
     m_previewListModel->setHeaderData(TR_NAME, Qt::Horizontal, QStringLiteral("Name"));
     m_previewListModel->setHeaderData(TR_SIZE, Qt::Horizontal, QStringLiteral("Size"));
     m_previewListModel->setHeaderData(TR_PROGRESS, Qt::Horizontal, QStringLiteral("Progress"));
@@ -72,17 +74,13 @@ PreviewSelectDialog::PreviewSelectDialog(
                 QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }
 
-PreviewSelectDialog::~PreviewSelectDialog()
-{
-    delete m_ui;
-}
-
 void PreviewSelectDialog::previewButtonClicked()
 {
     // Only one file is allowed to select
     const auto selectedIndexes = m_ui->previewList->selectionModel()->selectedRows(TR_NAME);
     if (selectedIndexes.isEmpty())
         return;
+
     const auto selectedIndex = selectedIndexes.first();
     if (!selectedIndex.isValid())
         return;
@@ -93,29 +91,36 @@ void PreviewSelectDialog::previewButtonClicked()
                               m_previewListModel->data(selectedIndex).toString());
 
     if (!QFile::exists(filePath)) {
+        reject();
         QMessageBox::critical(this, QStringLiteral("Preview impossible"),
                               QStringLiteral("Sorry, we can't preview this file:<br>"
                                              "<strong>%1</strong>")
                               .arg(Utils::Fs::toNativePath(filePath)));
-        reject();
+        return;
     }
 
     emit readyToPreviewFile(filePath);
     accept();
 }
 
-void PreviewSelectDialog::showEvent(QShowEvent *event)
+void PreviewSelectDialog::showEvent(QShowEvent *const event)
 {
     // Event originated from system
-    if (event->spontaneous())
-        return QDialog::showEvent(event);
+    if (event->spontaneous()) {
+        QDialog::showEvent(event);
+        return;
+    }
 
+    // Call only once during intial show
     if (m_showEventInitialized)
         return;
 
-    // Pixel perfectly sized previewList header
-    // Set Name column width to all remaining area
-    // Have to be called after show(), because previewList width is needed
+    // Move this as top as possible to prevent race condition
+    m_showEventInitialized = true;
+
+    /* Pixel perfectly sized previewList header.
+       Set Name column width to all remaining area.
+       Has to be called after the show() because the previewList's width is needed. */
     auto *const previewListHeader = m_ui->previewList->header();
     previewListHeader->resizeSections(QHeaderView::ResizeToContents);
 
@@ -124,45 +129,37 @@ void PreviewSelectDialog::showEvent(QShowEvent *event)
     const auto *const vScrollBar = m_ui->previewList->verticalScrollBar();
     if (vScrollBar->isVisible())
         nameColWidth -= vScrollBar->width();
-    nameColWidth -= previewListHeader->sectionSize(TR_SIZE);
-    nameColWidth -= previewListHeader->sectionSize(TR_PROGRESS);
-    nameColWidth -= 2; // Borders
+    nameColWidth -= previewListHeader->sectionSize(TR_SIZE) +
+                    previewListHeader->sectionSize(TR_PROGRESS) +
+                    2; // Borders
 
     previewListHeader->resizeSection(TR_NAME, nameColWidth);
     m_ui->previewList->header()->setStretchLastSection(true);
-
-    m_showEventInitialized = true;
 }
 
 void PreviewSelectDialog::populatePreviewListModel() const
 {
-    // It is a const iterator
-    QVectorIterator<QSqlRecord> itTorrentFiles(*m_torrentFiles);
-    QString filePath;
-    int rowCount;
-    QSqlRecord torrentFile;
-    while (itTorrentFiles.hasNext()) {
-        torrentFile = itTorrentFiles.next();
-        filePath = torrentFile.value("filepath").toString();
-        // Remove qBittorrent ext when needed
+    for (const auto &torrentFile : *m_torrentFiles) {
+        auto filePath = torrentFile.value("filepath").toString();
+        // Remove qBittorrent extension if needed
         if (filePath.endsWith(::QB_EXT))
             filePath.chop(4);
 
-        // Insert new row
-        rowCount = m_previewListModel->rowCount();
-        m_previewListModel->insertRow(rowCount);
+        // Insert a new row to the model
+        const auto rowIndex = m_previewListModel->rowCount();
+        m_previewListModel->insertRow(rowIndex);
 
         // Setup row data
-        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_NAME),
+        m_previewListModel->setData(m_previewListModel->index(rowIndex, TR_NAME),
                                     filePath);
-        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_NAME),
+        m_previewListModel->setData(m_previewListModel->index(rowIndex, TR_NAME),
                                     getTorrentFileFilePathAbs(filePath),
                                     Qt::ToolTipRole);
-        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_SIZE),
+        m_previewListModel->setData(m_previewListModel->index(rowIndex, TR_SIZE),
                                     torrentFile.value("size").toULongLong());
-        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_PROGRESS),
+        m_previewListModel->setData(m_previewListModel->index(rowIndex, TR_PROGRESS),
                                     torrentFile.value("progress").toUInt());
-        m_previewListModel->setData(m_previewListModel->index(rowCount, TR_FILE_INDEX),
+        m_previewListModel->setData(m_previewListModel->index(rowIndex, TR_FILE_INDEX),
                                     torrentFile.value("id").toULongLong());
     }
 }
