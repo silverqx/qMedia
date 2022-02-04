@@ -130,7 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect events
     connect(this, &MainWindow::qBittorrentHwndChanged, this, &MainWindow::updateQBittorrentHwnd);
     connect(this, &MainWindow::qBittorrentHwndChanged,
-            m_tableView, &TorrentTransferTableView::updateQBittorrentHwnd);
+            m_tableView, &TorrentTransferTableView::updateqBittorrentHwnd);
     // If qBittorrent was closed, reload model to display updated ETA ∞ and seeds/leechs
     // for every torrent.
     // Order is crucial here.
@@ -159,6 +159,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Hotkeys
     // global
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  if __has_warning("-Wdeprecated-enum-enum-conversion")
+#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#  endif
+#endif
     const auto *const quitShortcut =
             new QShortcut(Qt::CTRL + Qt::Key_Q, this, nullptr, nullptr, Qt::ApplicationShortcut);
     connect(quitShortcut, &QShortcut::activated,
@@ -191,6 +197,9 @@ MainWindow::MainWindow(QWidget *parent)
             new QShortcut(Qt::CTRL + Qt::Key_R, this, nullptr, nullptr, Qt::ApplicationShortcut);
     connect(doubleClickCtrlR, &QShortcut::activated,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
     // Tab order
     setTabOrder(m_tableView, ui->filterTorrentsLineEdit);

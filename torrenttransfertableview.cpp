@@ -115,6 +115,12 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
 
     // Hotkeys
     // torrentTransferTableView
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  if __has_warning("-Wdeprecated-enum-enum-conversion")
+#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#  endif
+#endif
     const auto *const doubleClickHotkeyReturn =
             new QShortcut(Qt::Key_Return, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyReturn, &QShortcut::activated,
@@ -159,8 +165,11 @@ TorrentTransferTableView::TorrentTransferTableView(const HWND qBittorrentHwnd, Q
             new QShortcut(Qt::Key_Space, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickPauseResume, &QShortcut::activated,
             this, &TorrentTransferTableView::pauseResumeSelectedTorrent);
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
-    // Resize columns to default state after right click
+    // Resize columns to the default state after right click
     horizontalHeaderTmp->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(horizontalHeaderTmp, &QHeaderView::customContextMenuRequested,
             this, &TorrentTransferTableView::resizeColumns);

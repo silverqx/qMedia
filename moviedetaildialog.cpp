@@ -288,6 +288,12 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     // Hotkeys
     // movieDetailComboBox
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  if __has_warning("-Wdeprecated-enum-enum-conversion")
+#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#  endif
+#endif
     const auto *const doubleClickHotkeyCtrlM =
             new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr,
                           Qt::WindowShortcut);
@@ -298,6 +304,9 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
                           Qt::WindowShortcut);
     connect(doubleClickHotkeyF12, &QShortcut::activated,
             ui->movieDetailComboBox, &QComboBox::showPopup);
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
     // Center on active screen
     Utils::Gui::centerDialog(this);
