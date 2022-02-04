@@ -36,7 +36,7 @@ public:
     inline QString getTorrentFileFilePathAbs(const QString &relativePath) const;
 
 signals:
-    void readyToPreviewFile(QString);
+    void readyToPreviewFile(const QString &filePath);
 
 protected:
     void showEvent(QShowEvent *event) override;

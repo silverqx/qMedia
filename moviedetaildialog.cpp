@@ -354,7 +354,7 @@ void MovieDetailDialog::populateUi()
     // Status icon before movie titles
     if (m_initialPopulate) {
         const auto status = m_selectedTorrent.value("status").toString();
-        const auto statusIcon = (*m_statusHash)[status].icon();
+        const auto &statusIcon = (*m_statusHash)[status].icon();
         const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
         ui->status->setPixmap(statusPixmap);
         ui->status->setToolTip((*m_statusHash)[status].title);

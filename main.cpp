@@ -125,8 +125,12 @@ void enableDarkTheme(QApplication &app)
 
     QApplication::setStyle("fusion");
     QApplication::setPalette(darkPalette);
-    app.setStyleSheet("QToolTip { color: black; background-color: #ffffe1; "
-                      "border: 1px solid black; }");
+    app.setStyleSheet(R"T(QToolTip {
+    color: black;
+    background-color: #ffffe1;
+    border: 1px solid black;
+}
+)T");
 #endif
 }
 
