@@ -22,7 +22,7 @@ bool MainEventFilter::nativeEventFilter(
     case ::MSG_QBITTORRENT_UP: {
         qDebug() << "IPC qBittorrent : qBittorrent started";
         HWND qBittorrentHwndNew = reinterpret_cast<HWND>(msg->wParam); // NOLINT(performance-no-int-to-ptr)
-        if (m_mainWindow->getQBittorrentHwnd() != qBittorrentHwndNew)
+        if (m_mainWindow->qBittorrentHwnd() != qBittorrentHwndNew)
             emit m_mainWindow->qBittorrentHwndChanged(qBittorrentHwndNew);
         // WARNING Qt docs: We recommend to only emit them from the class that defines the signal and its subclasses silverqx
         emit m_mainWindow->qBittorrentUp();
@@ -30,7 +30,7 @@ bool MainEventFilter::nativeEventFilter(
     }
     case ::MSG_QBITTORRENT_DOWN:
         qDebug() << "IPC qBittorrent : qBittorrent closed";
-        if (m_mainWindow->getQBittorrentHwnd() != nullptr)
+        if (m_mainWindow->qBittorrentHwnd() != nullptr)
             emit m_mainWindow->qBittorrentHwndChanged(nullptr);
         emit m_mainWindow->qBittorrentDown();
         return true;

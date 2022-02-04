@@ -17,7 +17,7 @@
 #include "utils/misc.h"
 
 PreviewSelectDialog::PreviewSelectDialog(
-        QWidget *parent, const QSqlRecord torrent,
+        QWidget *const parent, const QSqlRecord torrent,
         const QSharedPointer<const QVector<QSqlRecord>> &torrentFiles
 )
     : QDialog(parent)

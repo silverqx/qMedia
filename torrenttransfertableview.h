@@ -31,7 +31,7 @@ public slots:
     void updateChangedTorrents(const QVector<QString> &torrentInfoHashes);
     void resizeColumns() const;
     inline void updateqBittorrentHwnd(HWND hwnd) noexcept;
-    /*! Show/hide seeds/leechs column by isQBittorrentUp() */
+    /*! Show/hide seeds/leechs column by isqBittorrentUp() */
     void togglePeerColumns();
 
 protected:

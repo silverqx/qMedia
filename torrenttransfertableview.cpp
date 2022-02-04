@@ -27,7 +27,9 @@
 #include "utils/fs.h"
 #include "utils/gui.h"
 
-TorrentTransferTableView::TorrentTransferTableView(HWND qBittorrentHwnd, QWidget *parent)
+TorrentTransferTableView::TorrentTransferTableView(
+        HWND qBittorrentHwnd, QWidget *const parent
+)
     : QTableView(parent)
     , m_qBittorrentHwnd(qBittorrentHwnd)
     , m_statusHash(StatusHash::instance())

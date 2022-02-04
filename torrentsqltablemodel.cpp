@@ -14,7 +14,8 @@
 #include "utils/misc.h"
 
 TorrentSqlTableModel::TorrentSqlTableModel(
-        TorrentTransferTableView *parent, const QSqlDatabase db // NOLINT(performance-unnecessary-value-param)
+        TorrentTransferTableView *const parent,
+        const QSqlDatabase db // NOLINT(performance-unnecessary-value-param)
 )
     : QSqlTableModel(parent, db)
     , m_torrentTableView(parent)

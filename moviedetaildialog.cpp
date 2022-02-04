@@ -229,7 +229,7 @@ void swap(QJsonValueRef v1, QJsonValueRef v2)
     v2 = temp;
 }
 
-MovieDetailDialog::MovieDetailDialog(QWidget *parent)
+MovieDetailDialog::MovieDetailDialog(QWidget *const parent)
     : QDialog(parent)
     , m_ui(new Ui::MovieDetailDialog)
     , m_statusHash(StatusHash::instance())

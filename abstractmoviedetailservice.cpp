@@ -9,7 +9,7 @@
 #include "utils/fs.h"
 
 AbstractMovieDetailService::AbstractMovieDetailService(TorrentSqlTableModel *const model,
-                                                       QObject *parent)
+                                                       QObject *const parent)
     : QObject(parent)
     , m_model(model)
 {}
@@ -153,7 +153,7 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
 
     QSqlQuery query;
     query.setForwardOnly(true);
-    query.prepare(QStringLiteral("SELECT CAST(%1 AS CHAR) FROM torrents WHERE id = ?")
+    query.prepare(QStringLiteral("SELECT CAST(%1 AS CHAR) as detail FROM torrents WHERE id = ?")
                   .arg(getMovieDetailColumnName()));
     query.addBindValue(id);
 
@@ -175,7 +175,7 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
 
     // Get movie detail
     query.first();
-    const auto movieDetailRaw = query.record().value(0);
+    const auto movieDetailRaw = query.record().value("detail");
     if (!movieDetailRaw.isValid() || movieDetailRaw.isNull())
         return {};
 

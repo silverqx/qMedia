@@ -3,6 +3,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPointer>
 
 class QLabel;
 class QToolButton;
@@ -19,13 +20,12 @@ class MainWindow final : public QMainWindow
     Q_DISABLE_COPY(MainWindow)
 
 public:
+    /*! Constructor. */
     explicit MainWindow(QWidget *parent = nullptr);
     /*! Virtual destructor. */
-    ~MainWindow() final;
+    ~MainWindow() noexcept final;
 
-    inline HWND getQBittorrentHwnd() const noexcept { return m_qBittorrentHwnd; }
-
-    static MainWindow *instance();
+    inline HWND qBittorrentHwnd() const noexcept;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 public slots:
@@ -44,25 +44,41 @@ private:
     void createStatusBar();
     quint64 selectTorrentsCount() const;
     quint64 selectTorrentFilesCount() const;
-    inline bool isQBittorrentUp() const noexcept { return (m_qBittorrentHwnd != nullptr); };
+    inline bool isqBittorrentUp() const noexcept;
 
-    Ui::MainWindow *m_ui;
-    QLabel *m_torrentsCountLabel;
-    QLabel *m_torrentFilesCountLabel;
-    QLabel *m_qBittorrentConnectedLabel;
-    QToolButton *m_searchButton;
     HWND m_qBittorrentHwnd = nullptr;
-    TorrentTransferTableView *m_tableView;
+
+    std::unique_ptr<Ui::MainWindow> m_ui;
+    QPointer<QLabel> m_torrentsCountLabel;
+    QPointer<QLabel> m_torrentFilesCountLabel;
+    QPointer<QLabel> m_qBittorrentConnectedLabel;
+    QPointer<QToolButton> m_searchButton;
+    QPointer<TorrentTransferTableView> m_tableView;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
     void focusTorrentsFilterLineEdit() const;
     void refreshStatusBar() const;
-    void updateQBittorrentHwnd(const HWND hwnd) noexcept { m_qBittorrentHwnd = hwnd; };
+    inline void updateqBittorrentHwnd(HWND hwnd) noexcept;
     void applicationStateChanged(Qt::ApplicationState state) const;
     void setGeometry(bool initial = false);
     void qBittorrentConnected() const;
     void qBittorrentDisconnected() const;
 };
+
+HWND MainWindow::qBittorrentHwnd() const noexcept
+{
+    return m_qBittorrentHwnd;
+}
+
+bool MainWindow::isqBittorrentUp() const noexcept
+{
+    return m_qBittorrentHwnd != nullptr;
+}
+
+void MainWindow::updateqBittorrentHwnd(HWND hwnd) noexcept
+{
+    m_qBittorrentHwnd = hwnd;
+}
 
 #endif // MAINWINDOW_H
