@@ -231,10 +231,10 @@ void swap(QJsonValueRef v1, QJsonValueRef v2)
 
 MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     : QDialog(parent)
-    , ui(new Ui::MovieDetailDialog)
+    , m_ui(new Ui::MovieDetailDialog)
     , m_statusHash(StatusHash::instance())
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
     // Override design values
 #ifdef VISIBLE_CONSOLE
@@ -246,13 +246,13 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     resize(1316, height);
 
     // Initialize ui widgets
-    ui->saveButton->setEnabled(false);
-    ui->saveButton->hide();
+    m_ui->saveButton->setEnabled(false);
+    m_ui->saveButton->hide();
     // Preview button
-    const auto previewButton = ui->buttonBox->button(QDialogButtonBox::Ok);
+    const auto previewButton = m_ui->buttonBox->button(QDialogButtonBox::Ok);
     previewButton->setText(QStringLiteral("&Preview"));
     // Save button
-    m_saveButton = ui->buttonBox->button(QDialogButtonBox::Save);
+    m_saveButton = m_ui->buttonBox->button(QDialogButtonBox::Save);
     m_saveButton->setEnabled(false);
     m_saveButton->hide();
     m_saveButton->setText(QStringLiteral("&Save"));
@@ -263,7 +263,7 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
                              "</body></html>");
     m_saveButton->setToolTipDuration(2500);
     // Close button
-    ui->buttonBox->button(QDialogButtonBox::Close)->setText(QStringLiteral("&Close"));
+    m_ui->buttonBox->button(QDialogButtonBox::Close)->setText(QStringLiteral("&Close"));
 
     // Ensure recenter of the dialog after resize
     m_resizeTimer = new QTimer(this);
@@ -280,12 +280,12 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
     connect(&m_networkManager, &QNetworkAccessManager::finished,
             this, &MovieDetailDialog::finishedMoviePoster);
     // saveButton
-    connect(ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
+    connect(m_ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
     // buttonBox
     connect(m_saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
     connect(previewButton, &QPushButton::clicked, this, &MovieDetailDialog::previewButtonClicked);
     // Order important, have to be last
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     // Hotkeys
     // movieDetailComboBox
 #ifdef __clang__
@@ -295,15 +295,15 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
 #  endif
 #endif
     const auto *const doubleClickHotkeyCtrlM =
-            new QShortcut(Qt::CTRL + Qt::Key_M, ui->movieDetailComboBox, nullptr, nullptr,
+            new QShortcut(Qt::CTRL + Qt::Key_M, m_ui->movieDetailComboBox, nullptr, nullptr,
                           Qt::WindowShortcut);
     connect(doubleClickHotkeyCtrlM, &QShortcut::activated,
-            ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
+            m_ui->movieDetailComboBox, qOverload<>(&QComboBox::setFocus));
     const auto *const doubleClickHotkeyF12 =
-            new QShortcut(Qt::Key_F12, ui->movieDetailComboBox, nullptr, nullptr,
+            new QShortcut(Qt::Key_F12, m_ui->movieDetailComboBox, nullptr, nullptr,
                           Qt::WindowShortcut);
     connect(doubleClickHotkeyF12, &QShortcut::activated,
-            ui->movieDetailComboBox, &QComboBox::showPopup);
+            m_ui->movieDetailComboBox, &QComboBox::showPopup);
 #ifdef __clang__
 #  pragma clang diagnostic pop
 #endif
@@ -316,7 +316,7 @@ MovieDetailDialog::MovieDetailDialog(QWidget *parent)
 
 MovieDetailDialog::~MovieDetailDialog()
 {
-    delete ui;
+    delete m_ui;
 }
 
 void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
@@ -356,9 +356,9 @@ void MovieDetailDialog::populateUi()
         const auto status = m_selectedTorrent.value("status").toString();
         const auto &statusIcon = (*m_statusHash)[status].icon();
         const auto statusPixmap = statusIcon.pixmap(statusIcon.actualSize(QSize(30, 20)));
-        ui->status->setPixmap(statusPixmap);
-        ui->status->setToolTip((*m_statusHash)[status].title);
-        ui->status->setToolTipDuration(2500);
+        m_ui->status->setPixmap(statusPixmap);
+        m_ui->status->setToolTip((*m_statusHash)[status].title);
+        m_ui->status->setToolTipDuration(2500);
     }
     // Title
     // QLabel width needed, it's called from showEvent() during first show
@@ -370,19 +370,19 @@ void MovieDetailDialog::populateUi()
     prepareMovieInfoSection();
     // Score section
     // TODO tune score QLabel color silverqx
-    ui->score->setText(QString::number(m_movieDetail["rating"].toInt()) + QStringLiteral("%"));
+    m_ui->score->setText(QString::number(m_movieDetail["rating"].toInt()) + QStringLiteral("%"));
     // Imdb link
     prepareImdbLink();
     // Creators section
     prepareCreatorsSection();
     // Storyline section
-    ui->storyline->setText(m_movieDetail["descriptions"].toArray().first().toString());
+    m_ui->storyline->setText(m_movieDetail["descriptions"].toArray().first().toString());
 
     if (!m_initialPopulate)
         return;
 
     // Fill empty space
-    ui->verticalLayoutInfo->addStretch(1);
+    m_ui->verticalLayoutInfo->addStretch(1);
     // Search results in ComboBox
     prepareMovieDetailComboBox();
 }
@@ -443,12 +443,12 @@ void MovieDetailDialog::prepareMoviePosterSection()
 void MovieDetailDialog::renderTitleSection() const
 {
     const auto movieTitle = m_movieDetail["title"].toString();
-    const auto movieTitleElided = ui->title->fontMetrics()
-                                  .elidedText(movieTitle, Qt::ElideRight, ui->title->width());
-    ui->title->setText(movieTitleElided);
-    ui->title->setToolTip(QStringLiteral("Torrent name<br><strong>%1</strong>")
+    const auto movieTitleElided = m_ui->title->fontMetrics()
+                                  .elidedText(movieTitle, Qt::ElideRight, m_ui->title->width());
+    m_ui->title->setText(movieTitleElided);
+    m_ui->title->setToolTip(QStringLiteral("Torrent name<br><strong>%1</strong>")
                           .arg(m_selectedTorrent.value("name").toString()));
-    ui->title->setToolTipDuration(8500);
+    m_ui->title->setToolTipDuration(8500);
 }
 
 namespace
@@ -466,7 +466,7 @@ void MovieDetailDialog::prepareTitlesSection()
         m_gridLayoutTitles->setColumnStretch(1, 1);
         m_gridLayoutTitles->setHorizontalSpacing(9);
         m_gridLayoutTitles->setVerticalSpacing(0);
-        ui->verticalLayoutInfoLeft->addLayout(m_gridLayoutTitles);
+        m_ui->verticalLayoutInfoLeft->addLayout(m_gridLayoutTitles);
     }
 
     // Remove all items from grid layout
@@ -566,16 +566,16 @@ void MovieDetailDialog::prepareImdbLink() const
 {
     const auto imdbIdRaw = m_movieDetail["imdbId"];
     if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
-        ui->imdbLink->setEnabled(false);
-        ui->imdbLink->hide();
+        m_ui->imdbLink->setEnabled(false);
+        m_ui->imdbLink->hide();
         return;
     }
 
-    ui->imdbLink->setText(QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
+    m_ui->imdbLink->setText(QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
                                          "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
                           .arg(imdbIdRaw.toString()));
-    ui->imdbLink->setEnabled(true);
-    ui->imdbLink->show();
+    m_ui->imdbLink->setEnabled(true);
+    m_ui->imdbLink->show();
 }
 
 void MovieDetailDialog::prepareMovieInfoSection() const
@@ -611,7 +611,7 @@ void MovieDetailDialog::prepareMovieInfoSection() const
     movieInfoList << genres
                   << movieInfoLine2;
     const auto movieInfo = joinStringList(movieInfoList, delimiterHtmlNewLine);
-    ui->movieInfo->setText(movieInfo);
+    m_ui->movieInfo->setText(movieInfo);
     // TODO create logging system silverqx
     // TODO log empty movieInfo, to know how often it happens silverqx
 }
@@ -690,7 +690,7 @@ void MovieDetailDialog::prepareCreatorsSection()
     if (m_verticalLayoutCreators == nullptr) {
         m_verticalLayoutCreators = new QVBoxLayout;
         m_verticalLayoutCreators->setSpacing(2);
-        ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
+        m_ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
     }
 
     // Remove all items from box layout
@@ -758,14 +758,14 @@ void MovieDetailDialog::prepareMovieDetailComboBox()
 {
     // Nothing to render
     if (m_movieSearchResult.isEmpty()) {
-        ui->movieDetailComboBox->setEnabled(false);
-        ui->movieDetailComboBox->setVisible(false);
+        m_ui->movieDetailComboBox->setEnabled(false);
+        m_ui->movieDetailComboBox->setVisible(false);
         return;
     }
 
     populateMovieDetailComboBox();
 
-    connect(ui->movieDetailComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
+    connect(m_ui->movieDetailComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
             this, &MovieDetailDialog::movieDetailComboBoxChanged);
 }
 
@@ -781,11 +781,11 @@ void MovieDetailDialog::populateMovieDetailComboBox() const
         if (!typeRaw.isNull())
             item += " - " + typeRaw.toString();
 
-        ui->movieDetailComboBox->addItem(item, itemObject["id"].toVariant());
+        m_ui->movieDetailComboBox->addItem(item, itemObject["id"].toVariant());
     }
 
     // Preselect right movie detail
-    ui->movieDetailComboBox->setCurrentIndex(
+    m_ui->movieDetailComboBox->setCurrentIndex(
                 m_selectedTorrent.value("movie_detail_index").toInt());
 }
 
@@ -813,8 +813,8 @@ void MovieDetailDialog::finishedMoviePoster(QNetworkReply *reply) const
     QPixmap moviePoster;
     moviePoster.loadFromData(moviePosterData);
     // TODO try to avoid this, best would be scaled at loadFromData() right away silverqx
-    moviePoster = moviePoster.scaledToWidth(ui->poster->maximumWidth(), Qt::SmoothTransformation);
-    ui->poster->setPixmap(moviePoster);
+    moviePoster = moviePoster.scaledToWidth(m_ui->poster->maximumWidth(), Qt::SmoothTransformation);
+    m_ui->poster->setPixmap(moviePoster);
 }
 
 void MovieDetailDialog::resizeTimeout()
@@ -827,7 +827,7 @@ void MovieDetailDialog::resizeTimeout()
 
 void MovieDetailDialog::saveButtonClicked()
 {
-    const auto movieDetailIndex = ui->movieDetailComboBox->currentIndex();
+    const auto movieDetailIndex = m_ui->movieDetailComboBox->currentIndex();
     const auto result =
             CsfdDetailService::instance()->updateObtainedMovieDetailInDb(
                 m_selectedTorrent, m_movieDetail, m_movieSearchResult,
@@ -836,9 +836,9 @@ void MovieDetailDialog::saveButtonClicked()
         return;
 
     m_movieDetailIndex = movieDetailIndex;
-    ui->saveButton->setEnabled(false);
+    m_ui->saveButton->setEnabled(false);
     m_saveButton->setEnabled(false);
-    ui->saveButton->hide();
+    m_ui->saveButton->hide();
     m_saveButton->hide();
 }
 
@@ -849,7 +849,7 @@ void MovieDetailDialog::previewButtonClicked()
 
 void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
 {
-    const auto filmId = ui->movieDetailComboBox->currentData().toULongLong();
+    const auto filmId = m_ui->movieDetailComboBox->currentData().toULongLong();
     qDebug() << "Movie detail ComboBox changed, current csfd id :"
              << filmId;
     qDebug() << "Selected movie detail index :"
@@ -858,15 +858,15 @@ void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
     prepareData(filmId);
 
     if (index != m_movieDetailIndex) {
-        ui->saveButton->setEnabled(true);
+        m_ui->saveButton->setEnabled(true);
         m_saveButton->setEnabled(true);
-        ui->saveButton->show();
+        m_ui->saveButton->show();
         m_saveButton->show();
         return;
     }
 
-    ui->saveButton->setEnabled(false);
+    m_ui->saveButton->setEnabled(false);
     m_saveButton->setEnabled(false);
-    ui->saveButton->hide();
+    m_ui->saveButton->hide();
     m_saveButton->hide();
 }

@@ -107,11 +107,11 @@ namespace
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , m_ui(new Ui::MainWindow)
 {
     l_mainWindow = this;
 
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
     // MainWindow
     setWindowTitle(QStringLiteral(" qMedia %1").arg(QMEDIA_VERSION_STR_2));
@@ -121,8 +121,8 @@ MainWindow::MainWindow(QWidget *parent)
     connectToDb();
 
     // Create and initialize widgets
-    m_tableView = new TorrentTransferTableView(m_qBittorrentHwnd, ui->centralwidget);
-    ui->verticalLayout->addWidget(m_tableView);
+    m_tableView = new TorrentTransferTableView(m_qBittorrentHwnd, m_ui->centralwidget);
+    m_ui->verticalLayout->addWidget(m_tableView);
     initFilterTorrentsLineEdit();
     // StatusBar
     createStatusBar();
@@ -148,9 +148,9 @@ MainWindow::MainWindow(QWidget *parent)
     // End of crucial order
     connect(qApp, &QGuiApplication::applicationStateChanged,
             this, &MainWindow::applicationStateChanged);
-    connect(ui->filterTorrentsLineEdit, &QLineEdit::textChanged,
+    connect(m_ui->filterTorrentsLineEdit, &QLineEdit::textChanged,
             m_tableView, &TorrentTransferTableView::filterTextChanged);
-    connect(ui->reloadTorrentsButton, &QPushButton::clicked,
+    connect(m_ui->reloadTorrentsButton, &QPushButton::clicked,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::torrentsAddedOrRemoved,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
@@ -179,15 +179,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(switchSearchFilterShortcut, &QShortcut::activated,
             this, &MainWindow::focusTorrentsFilterLineEdit);
     const auto *const doubleClickHotkeyDown =
-            new QShortcut(Qt::Key_Down, ui->filterTorrentsLineEdit, nullptr, nullptr,
+            new QShortcut(Qt::Key_Down, m_ui->filterTorrentsLineEdit, nullptr, nullptr,
                           Qt::WidgetShortcut);
     connect(doubleClickHotkeyDown, &QShortcut::activated,
             m_tableView, qOverload<>(&TorrentTransferTableView::setFocus));
     const auto *const doubleClickHotkeyEsc =
-            new QShortcut(Qt::Key_Escape, ui->filterTorrentsLineEdit, nullptr, nullptr,
+            new QShortcut(Qt::Key_Escape, m_ui->filterTorrentsLineEdit, nullptr, nullptr,
                           Qt::WidgetShortcut);
     connect(doubleClickHotkeyEsc, &QShortcut::activated,
-            ui->filterTorrentsLineEdit, &QLineEdit::clear);
+            m_ui->filterTorrentsLineEdit, &QLineEdit::clear);
     // Reload model from DB
     const auto *const doubleClickHotkeyF5 =
             new QShortcut(Qt::Key_F5, this, nullptr, nullptr, Qt::ApplicationShortcut);
@@ -202,8 +202,8 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
 
     // Tab order
-    setTabOrder(m_tableView, ui->filterTorrentsLineEdit);
-    setTabOrder(ui->filterTorrentsLineEdit, ui->reloadTorrentsButton);
+    setTabOrder(m_tableView, m_ui->filterTorrentsLineEdit);
+    setTabOrder(m_ui->filterTorrentsLineEdit, m_ui->reloadTorrentsButton);
 
     // Initial focus
     m_tableView->setFocus();
@@ -216,7 +216,7 @@ MainWindow::~MainWindow()
     if (isQBittorrentUp())
         ::PostMessage(m_qBittorrentHwnd, ::MSG_QMEDIA_DOWN, NULL, NULL);
 
-    delete ui;
+    delete m_ui;
 }
 
 MainWindow *MainWindow::instance()
@@ -306,7 +306,7 @@ void MainWindow::connectToDb() const
 
 void MainWindow::initFilterTorrentsLineEdit()
 {
-    m_searchButton = new QToolButton(ui->filterTorrentsLineEdit);
+    m_searchButton = new QToolButton(m_ui->filterTorrentsLineEdit);
     const QIcon searchIcon(QStringLiteral(":/icons/search_w.svg"));
     m_searchButton->setIcon(searchIcon);
     m_searchButton->setCursor(Qt::ArrowCursor);
@@ -315,15 +315,15 @@ void MainWindow::initFilterTorrentsLineEdit()
     m_searchButton->setFocusPolicy(Qt::NoFocus);
 
     // Padding between text and widget borders
-    ui->filterTorrentsLineEdit->setStyleSheet(QStringLiteral("QLineEdit {padding-left: %1px;}")
+    m_ui->filterTorrentsLineEdit->setStyleSheet(QStringLiteral("QLineEdit {padding-left: %1px;}")
                                               .arg(m_searchButton->sizeHint().width()));
 
-    const int frameWidth = ui->filterTorrentsLineEdit->style()
+    const int frameWidth = m_ui->filterTorrentsLineEdit->style()
                            ->pixelMetric(QStyle::PM_DefaultFrameWidth);
-    ui->filterTorrentsLineEdit->setMaximumHeight(
-                std::max(ui->filterTorrentsLineEdit->sizeHint().height(),
+    m_ui->filterTorrentsLineEdit->setMaximumHeight(
+                std::max(m_ui->filterTorrentsLineEdit->sizeHint().height(),
                          m_searchButton->sizeHint().height()) + (frameWidth * 2));
-    ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 }
 
 namespace
@@ -417,8 +417,8 @@ quint64 MainWindow::selectTorrentFilesCount() const
 
 void MainWindow::focusTorrentsFilterLineEdit() const
 {
-    ui->filterTorrentsLineEdit->setFocus();
-    ui->filterTorrentsLineEdit->selectAll();
+    m_ui->filterTorrentsLineEdit->setFocus();
+    m_ui->filterTorrentsLineEdit->selectAll();
 }
 
 void MainWindow::qBittorrentConnected() const

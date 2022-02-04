@@ -44,7 +44,7 @@ private:
     quint64 selectTorrentFilesCount() const;
     inline bool isQBittorrentUp() const noexcept { return (m_qBittorrentHwnd != nullptr); };
 
-    Ui::MainWindow *ui;
+    Ui::MainWindow *m_ui;
     QLabel *m_torrentsCountLabel;
     QLabel *m_torrentFilesCountLabel;
     QLabel *m_qBittorrentConnectedLabel;

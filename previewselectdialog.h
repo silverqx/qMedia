@@ -44,7 +44,7 @@ protected:
 private:
     void populatePreviewListModel() const;
 
-    Ui::PreviewSelectDialog *ui;
+    Ui::PreviewSelectDialog *m_ui;
     QStandardItemModel *m_previewListModel;
     const QSqlRecord m_torrent;
     const QSharedPointer<const QVector<QSqlRecord>> m_torrentFiles;

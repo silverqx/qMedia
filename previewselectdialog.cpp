@@ -21,26 +21,26 @@ PreviewSelectDialog::PreviewSelectDialog(
         const QSharedPointer<const QVector<QSqlRecord>> &torrentFiles
 )
     : QDialog(parent)
-    , ui(new Ui::PreviewSelectDialog)
+    , m_ui(new Ui::PreviewSelectDialog)
     , m_torrent(torrent)
     , m_torrentFiles(torrentFiles)
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
-    ui->infoLabel->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
+    m_ui->infoLabel->setText(QStringLiteral("The following files from torrent <strong>%1</strong> "
                                           "support previewing, please select one of them:")
                        .arg(m_torrent.value("name").toString()));
 
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("&Preview"));
+    m_ui->buttonBox->button(QDialogButtonBox::Ok)->setText(QStringLiteral("&Preview"));
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted,
+    connect(m_ui->buttonBox, &QDialogButtonBox::accepted,
             this, &PreviewSelectDialog::previewButtonClicked);
-    connect(ui->previewList, &QAbstractItemView::doubleClicked,
+    connect(m_ui->previewList, &QAbstractItemView::doubleClicked,
             this, &PreviewSelectDialog::previewButtonClicked);
 
     // Create and apply delegate
     m_listDelegate = new PreviewListDelegate(this);
-    ui->previewList->setItemDelegate(m_listDelegate);
+    m_ui->previewList->setItemDelegate(m_listDelegate);
 
     // Preview list model
     m_previewListModel = new QStandardItemModel(0, NB_COLUMNS, this);
@@ -49,38 +49,38 @@ PreviewSelectDialog::PreviewSelectDialog(
     m_previewListModel->setHeaderData(TR_PROGRESS, Qt::Horizontal, QStringLiteral("Progress"));
 
     // Preview list
-    ui->previewList->setModel(m_previewListModel);
-    ui->previewList->hideColumn(TR_FILE_INDEX);
-    ui->previewList->setAlternatingRowColors(true);
+    m_ui->previewList->setModel(m_previewListModel);
+    m_ui->previewList->hideColumn(TR_FILE_INDEX);
+    m_ui->previewList->setAlternatingRowColors(true);
 
     populatePreviewListModel();
 
     // Setup initial sorting
     m_previewListModel->sort(TR_NAME);
-    ui->previewList->header()->setSortIndicator(0, Qt::AscendingOrder);
+    m_ui->previewList->header()->setSortIndicator(0, Qt::AscendingOrder);
 
     // Header alignment
-    ui->previewList->header()->setDefaultAlignment(Qt::AlignCenter);
+    m_ui->previewList->header()->setDefaultAlignment(Qt::AlignCenter);
 
     // TODO set height on the base of num rows, set min. and max. height silverqx
 
     // Initial focus
-    ui->previewList->setFocus();
+    m_ui->previewList->setFocus();
     // Preselect first line
-    ui->previewList->selectionModel()->select(
+    m_ui->previewList->selectionModel()->select(
                 m_previewListModel->index(0, TR_NAME),
                 QItemSelectionModel::Select | QItemSelectionModel::Rows);
 }
 
 PreviewSelectDialog::~PreviewSelectDialog()
 {
-    delete ui;
+    delete m_ui;
 }
 
 void PreviewSelectDialog::previewButtonClicked()
 {
     // Only one file is allowed to select
-    const auto selectedIndexes = ui->previewList->selectionModel()->selectedRows(TR_NAME);
+    const auto selectedIndexes = m_ui->previewList->selectionModel()->selectedRows(TR_NAME);
     if (selectedIndexes.isEmpty())
         return;
     const auto selectedIndex = selectedIndexes.first();
@@ -116,12 +116,12 @@ void PreviewSelectDialog::showEvent(QShowEvent *event)
     // Pixel perfectly sized previewList header
     // Set Name column width to all remaining area
     // Have to be called after show(), because previewList width is needed
-    auto *const previewListHeader = ui->previewList->header();
+    auto *const previewListHeader = m_ui->previewList->header();
     previewListHeader->resizeSections(QHeaderView::ResizeToContents);
 
     // Compute name column width
-    auto nameColWidth = ui->previewList->width();
-    const auto *const vScrollBar = ui->previewList->verticalScrollBar();
+    auto nameColWidth = m_ui->previewList->width();
+    const auto *const vScrollBar = m_ui->previewList->verticalScrollBar();
     if (vScrollBar->isVisible())
         nameColWidth -= vScrollBar->width();
     nameColWidth -= previewListHeader->sectionSize(TR_SIZE);
@@ -129,7 +129,7 @@ void PreviewSelectDialog::showEvent(QShowEvent *event)
     nameColWidth -= 2; // Borders
 
     previewListHeader->resizeSection(TR_NAME, nameColWidth);
-    ui->previewList->header()->setStretchLastSection(true);
+    m_ui->previewList->header()->setStretchLastSection(true);
 
     m_showEventInitialized = true;
 }

@@ -54,7 +54,7 @@ private:
     void prepareData(quint64 filmId);
     void populateUi();
 
-    Ui::MovieDetailDialog *ui;
+    Ui::MovieDetailDialog *m_ui;
     QJsonObject m_movieDetail;
     QJsonArray m_movieSearchResult;
     QNetworkAccessManager m_networkManager;
