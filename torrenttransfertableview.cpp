@@ -12,7 +12,9 @@
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
 
+#ifdef Q_OS_WIN
 #include <qt_windows.h>
+#endif
 
 #include "commonglobal.h"
 #include "csfddetailservice.h"

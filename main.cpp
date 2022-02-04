@@ -11,7 +11,7 @@
 #include "mainwindow.h"
 #include "torrentstatus.h"
 
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
 #include "maineventfilter_win.h"
 #endif
 
@@ -132,7 +132,7 @@ void enableDarkTheme(QApplication &app)
 
 void installMainEventFilter(QApplication &app, MainWindow &mainWindow)
 {
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
     mainEventFilter = std::make_unique<MainEventFilter>(&mainWindow);
     app.installNativeEventFilter(mainEventFilter.get());
 #endif
@@ -143,7 +143,7 @@ void cleanupApplication(QApplication &app)
     CsfdDetailService::freeInstance();
     StatusHash::freeInstance();
 
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
     app.removeNativeEventFilter(mainEventFilter.get());
     mainEventFilter.reset();
 #endif
