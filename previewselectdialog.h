@@ -51,6 +51,7 @@ private:
     bool m_showEventInitialized = false;
     PreviewListDelegate *m_listDelegate;
 
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
     void previewButtonClicked();
 };

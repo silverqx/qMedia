@@ -72,6 +72,7 @@ private:
     QPushButton *m_saveButton;
     std::shared_ptr<StatusHash> m_statusHash;
 
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
     void finishedMoviePoster(QNetworkReply *reply) const;
     void resizeTimeout();

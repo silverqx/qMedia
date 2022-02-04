@@ -20,12 +20,14 @@ class MainWindow final : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    /*! Virtual destructor. */
+    ~MainWindow() final;
 
     inline HWND getQBittorrentHwnd() const noexcept { return m_qBittorrentHwnd; }
 
     static MainWindow *instance();
 
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 public slots:
     void show();
 
@@ -52,6 +54,7 @@ private:
     HWND m_qBittorrentHwnd = nullptr;
     TorrentTransferTableView *m_tableView;
 
+// NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
     void focusTorrentsFilterLineEdit() const;
     void refreshStatusBar() const;
