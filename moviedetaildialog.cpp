@@ -260,13 +260,13 @@ namespace
             delete layoutItem; // NOLINT(cppcoreguidelines-owning-memory)
         }
     };
-}
+} // namespace
 
 void MovieDetailDialog::prepareTitlesSection()
 {
     // Create grid for flags and titles
     // Create even when there is nothing to render, so I don't have to manage positioning
-    if (m_gridLayoutTitles == nullptr) {
+    if (m_gridLayoutTitles.isNull()) {
         m_gridLayoutTitles = new QGridLayout(this); // NOLINT(cppcoreguidelines-owning-memory)
         m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
         m_gridLayoutTitles->setColumnStretch(1, 1);
@@ -569,7 +569,7 @@ namespace
     const auto moreLinkSize = QStringLiteral("... (more)").size();
 
     /*! Join QJsonArray, all values in the array have to be QJsonObject, values will be
-        searched in the jsonArray by keys stored in the args pack and wrapped in the wrapIn.
+        searched in the QJsonObject by keys stored in the args pack and wrapped in the wrapIn.
         If the maxLetters argument contains a value greater than 0, then the result will be
         cut and the more link will be shown at the end. Letters will be counted only during
         the first substitution (first key in the args pack). The resulting string can
@@ -585,9 +585,8 @@ namespace
             qCritical() << "Empty argsSize in joinJsonObjectArrayWithWrap()";
 
         QString result;
-        int count = 0;
-        int lettersCount = 0;
-        int lettersCountTmp = 0;
+        int itemsCounter = 0;
+        int lettersCounter = 0;
         const auto paginateEnabled = (maxLetters != 0);
         auto showMoreLink = false;
         const auto delimiterSize = delimiter.size();
@@ -597,11 +596,13 @@ namespace
             if (!jsonValue.isObject() || jsonValue.isNull() || jsonValue.isUndefined())
                 continue;
 
-            auto wrapInTmp = wrappIn;
-            // Replace all occurences
+            auto wrapped = wrappIn;
+
+            // Obtain a value from QJsonObject by arg and replace tokens in wrapped
             for (const auto &arg : argsList) {
                 const auto jsonValueInner = jsonValue[arg];
                 const auto jsonValueType = jsonValueInner.type();
+
                 QString value;
                 switch (jsonValueType) {
                 case QJsonValue::String:
@@ -611,49 +612,54 @@ namespace
                     value = QString::number(jsonValueInner.toDouble());
                     break;
                 default:
-                    value = "";
                     qWarning().noquote()
                             << QStringLiteral("Unsupported jsonValueType '%1' in "
                                               "joinJsonObjectArrayWithWrap()")
                                .arg(jsonValueType);
                     break;
                 }
-                // Letters are counted only for first substitution
+
+                // Letters are counted only for the first substitution
                 if (paginateEnabled && (arg == argsList[0]))
-                    lettersCount += value.size() + delimiterSize;
-                wrapInTmp = wrapInTmp.arg(value);
+                    lettersCounter += value.size() + delimiterSize;
+
+                wrapped = wrapped.arg(value);
             }
+
             /* Last delimiter will never be in the result, also take a more text
                link size into account. */
-            lettersCountTmp = lettersCount - delimiterSize + moreLinkSize;
+            const auto lettersCount = lettersCounter - delimiterSize + moreLinkSize;
+
             // lettersCount overflowed 😎
-            if (paginateEnabled && (lettersCountTmp >= maxLetters)) {
+            if (paginateEnabled && (lettersCount >= maxLetters)) {
                 showMoreLink = true;
                 break;
             }
-            result += wrapInTmp + delimiter;
-            ++count;
+
+            result += wrapped.append(delimiter);
+            ++itemsCounter;
         }
 
-        if (count > 0)
+        if (itemsCounter > 0)
             result.chop(delimiter.size());
 
         // Append show more link if needed
         if (showMoreLink)
-            result += moreLinkText();
+            result.append(moreLinkText());
 
         return result;
     };
 
-    /*! Join QJsonArray, all values in an array have to be QJsonObject, values will be
-        searched in the jsonArray by keys stored in the args pack and wrapped in wrapIn. */
+    /*! Join QJsonArray without pagination. All values in an array have to be QJsonObject,
+        values will be searched in the jsonArray by keys stored in the args pack and
+        wrapped in wrapIn. */
     const auto joinJsonObjectArrayWithWrap =
             []<typename ...Args>
             (const QJsonArray &jsonArray, const QString &delimiter,
              const QString &wrappIn, Args &&...args)
     {
-        return joinJsonObjectArrayWithWrapPaged(jsonArray, delimiter, wrappIn, 0,
-                                                std::forward<Args>(args)...);
+        return joinJsonObjectArrayWithWrapPaged(
+                jsonArray, delimiter, wrappIn, 0, std::forward<Args>(args)...);
     };
 } // namespace
 
@@ -661,8 +667,8 @@ void MovieDetailDialog::prepareCreatorsSection()
 {
     // Creators section
     const auto keyName    = QStringLiteral("name");
-    const auto keyId      = QStringLiteral("id");
-    const auto wrapInLink = QStringLiteral("<a href='https://www.csfd.cz/tvurce/%2' "
+    const auto keyUrl     = QStringLiteral("url");
+    const auto wrapInLink = QStringLiteral("<a href='%2' "
                                            "style='text-decoration: none;'>%1</a>");
     // 60 for 960px
     // 105 for 1316px
@@ -675,25 +681,25 @@ void MovieDetailDialog::prepareCreatorsSection()
     const auto directors =
             joinJsonObjectArrayWithWrapPaged(
                 creators[creatorsMap[NAMES_DIRECTORS].keyName].toArray(),
-                delimiterComma, wrapInLink, maxLetters, keyName, keyId);
+                delimiterComma, wrapInLink, maxLetters, keyName, keyUrl);
     // Screenplay
     const auto screenplay =
             joinJsonObjectArrayWithWrapPaged(
                 creators[creatorsMap[NAMES_WRITERS].keyName].toArray(),
-                delimiterComma, wrapInLink, maxLetters, keyName, keyId);
+                delimiterComma, wrapInLink, maxLetters, keyName, keyUrl);
     // TODO camera is missing silverqx
     // Music
     const auto music =
             joinJsonObjectArrayWithWrapPaged(
                 creators[creatorsMap[NAMES_MUSIC].keyName].toArray(),
-                delimiterComma, wrapInLink, maxLetters, keyName, keyId);
+                delimiterComma, wrapInLink, maxLetters, keyName, keyUrl);
     // Actors
     const auto actors =
             joinJsonObjectArrayWithWrapPaged(
                 creators[creatorsMap[NAMES_ACTORS].keyName].toArray(),
                 // 200 for 960px
                 // 320 for 1316px
-                delimiterComma, wrapInLink, 320, keyName, keyId);
+                delimiterComma, wrapInLink, 320, keyName, keyUrl);
 
     // Assemble creators section
     // TODO fix the same width for every section title silverqx
@@ -755,7 +761,7 @@ void MovieDetailDialog::prepareCreatorsSection()
         label->setText(creatorsMap.at(i).label.arg(creatorsList[i]));
         // Connect click event
         QObject::connect(label, &QLabel::linkActivated, this,
-                         [creators, label, wrapInLink, keyName, keyId, i]
+                         [creators, label, wrapInLink, keyName, keyUrl, i]
                          (const QString &link)
         {
             // Open URL with external browser
@@ -769,7 +775,7 @@ void MovieDetailDialog::prepareCreatorsSection()
             const auto joinedText =
                     joinJsonObjectArrayWithWrap(
                         creators[creatorValue.keyName].toArray(), delimiterComma,
-                        wrapInLink, keyName, keyId);
+                        wrapInLink, keyName, keyUrl);
 
             label->setText(creatorValue.label.arg(joinedText));
         });

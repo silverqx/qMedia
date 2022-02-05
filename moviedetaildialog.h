@@ -70,7 +70,7 @@ private:
 
     std::unique_ptr<Ui::MovieDetailDialog> m_ui;
     QPointer<QTimer> m_resizeTimer;
-    QGridLayout *m_gridLayoutTitles = nullptr; // QPointer causes clang-tidy freeze 😕 silverqx
+    QPointer<QGridLayout> m_gridLayoutTitles;
     QPointer<QVBoxLayout> m_verticalLayoutCreators;
     /*! Save button in the buttonBox. */
     QPointer<QPushButton> m_saveButton;
