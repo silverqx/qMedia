@@ -16,223 +16,6 @@
 #include "utils/gui.h"
 #include "utils/misc.h"
 
-namespace
-{
-    // Common delimiters
-    const auto delimiterSlash       = QStringLiteral(" / ");
-    const auto delimiterNewLine     = QStringLiteral("\n");
-    const auto delimiterComma       = QStringLiteral(", ");
-    const auto delimiterHtmlNewLine = QStringLiteral("<br>");
-
-    /*! Join QJsonArray, all values in array have to be strings. */
-    const auto joinJsonStringArray =
-            [](const QJsonArray &jsonArray, const auto &delimiter)
-    {
-        QStringList result;
-
-        for (const auto &jsonValue : jsonArray) {
-            if (!jsonValue.isString() || jsonValue.isNull() || jsonValue.isUndefined())
-                continue;
-
-            const auto value = jsonValue.toString();
-            if (value.isEmpty())
-                continue;
-
-            result << value;
-        }
-
-        return result.join(delimiter);
-    };
-
-    /*! Create a more link, used in the pagination. */
-    const auto moreLinkText =
-            [](const bool withDots = true, const bool withParenthesis = true)
-    {
-        return QStringLiteral("%1%2%3%4").arg(
-                    withDots ? QStringLiteral("<strong>...</strong> ") : "",
-                    withParenthesis ? QStringLiteral("(") : "",
-                    QStringLiteral("<a href='#show-more' "
-                                  "style='font-size: 11pt; text-decoration: none;'"
-                                  ">more</a>"),
-                    withParenthesis ? QStringLiteral(")") : "");
-    };
-
-    const auto moreLinkSize = QStringLiteral("... (more)").size();
-
-    /*! Join QJsonArray, all values in the array have to be QJsonObject, values will be
-        searched in the jsonArray by keys stored in the args pack and wrapped in the wrapIn.
-        If the maxLetters argument contains a value greater than 0, then the result will be
-        cut and the more link will be shown at the end. Letters will be counted only during
-        the first substitution (first key in the args pack). The resulting string can
-        contain fewer letters, because when the maxLetters limit will be hit or overflowed,
-        then the currently processed string will not be included at all. */
-    const auto joinJsonObjectArrayWithWrapPaged =
-            []<typename ...Args>
-            (const QJsonArray &jsonArray, const QString &delimiter,
-             const QString &wrappIn, const int maxLetters, const Args &...args)
-    {
-        const auto argsSize = sizeof ...(args);
-        if (argsSize == 0)
-            qCritical() << "Empty argsSize in joinJsonObjectArrayWithWrap()";
-
-        QString result;
-        int count = 0;
-        int lettersCount = 0;
-        int lettersCountTmp = 0;
-        const auto paginateEnabled = (maxLetters != 0);
-        auto showMoreLink = false;
-        const auto delimiterSize = delimiter.size();
-        const QStringList argsList {(args)...};
-
-        for (const auto &jsonValue : jsonArray) {
-            if (!jsonValue.isObject() || jsonValue.isNull() || jsonValue.isUndefined())
-                continue;
-
-            auto wrapInTmp = wrappIn;
-            // Replace all occurences
-            for (const auto &arg : argsList) {
-                const auto jsonValueInner = jsonValue[arg];
-                const auto jsonValueType = jsonValueInner.type();
-                QString value;
-                switch (jsonValueType) {
-                case QJsonValue::String:
-                    value = jsonValueInner.toString();
-                    break;
-                case QJsonValue::Double:
-                    value = QString::number(jsonValueInner.toDouble());
-                    break;
-                default:
-                    value = "";
-                    qWarning().noquote()
-                            << QStringLiteral("Unsupported jsonValueType '%1' in "
-                                              "joinJsonObjectArrayWithWrap()")
-                               .arg(jsonValueType);
-                    break;
-                }
-                // Letters are counted only for first substitution
-                if (paginateEnabled && (arg == argsList[0]))
-                    lettersCount += value.size() + delimiterSize;
-                wrapInTmp = wrapInTmp.arg(value);
-            }
-            /* Last delimiter will never be in the result, also take a more text
-               link size into account. */
-            lettersCountTmp = lettersCount - delimiterSize + moreLinkSize;
-            // lettersCount overflowed 😎
-            if (paginateEnabled && (lettersCountTmp >= maxLetters)) {
-                showMoreLink = true;
-                break;
-            }
-            result += wrapInTmp + delimiter;
-            ++count;
-        }
-
-        if (count > 0)
-            result.chop(delimiter.size());
-
-        // Append show more link if needed
-        if (showMoreLink)
-            result += moreLinkText();
-
-        return result;
-    };
-
-    /*! Join QJsonArray, all values in an array have to be QJsonObject, values will be
-        searched in the jsonArray by keys stored in the args pack and wrapped in wrapIn. */
-    const auto joinJsonObjectArrayWithWrap =
-            []<typename ...Args>
-            (const QJsonArray &jsonArray, const QString &delimiter,
-             const QString &wrappIn, Args &&...args)
-    {
-        return joinJsonObjectArrayWithWrapPaged(jsonArray, delimiter, wrappIn, 0,
-                                                std::forward<Args>(args)...);
-    };
-
-    /*! Join QStringList, exclude empty or null values. */
-    const auto joinStringList = [](const auto &stringList, const auto &delimiter)
-    {
-        QString result = "";
-        int count = 0;
-
-        for (const auto &value : stringList) {
-            if (value.isEmpty() || value.isNull())
-                continue;
-
-            result += (value + delimiter);
-            ++count;
-        }
-
-        if (count > 0)
-            result.chop(delimiter.size());
-
-        return result;
-    };
-
-    // Code below is for my prefered sorting of the movie titles and for a flag lookup
-    /*! Title value used in titles sorting. */
-    struct TitleValue
-    {
-        uint priority = 0;
-        QString flag;
-    };
-
-    // TODO populate missing flags silverqx
-    /*! Maps countries to positions, determines how countries will be sorted. */
-    const auto titlesHash = []() -> const QHash<QString, TitleValue> &
-    {
-        static const QHash<QString, TitleValue> cached {
-            {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
-            {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
-            {QStringLiteral("USA"),            { 3, QStringLiteral("us")}},
-            {QStringLiteral("Slovensko"),      { 4, QStringLiteral("sk")}},
-            {QStringLiteral("Velká Británie"), { 5, QStringLiteral("gb")}},
-            {QStringLiteral("Kanada"),         { 6, QStringLiteral("ca")}},
-            {QStringLiteral("Německo"),        { 7, QStringLiteral("de")}},
-            {QStringLiteral("Francie"),        { 8, QStringLiteral("fr")}},
-            {QStringLiteral("Nový Zéland"),    { 9, QStringLiteral("nz")}},
-            {QStringLiteral("Austrálie"),      {10, QStringLiteral("au")}},
-        };
-
-        return cached;
-    };
-    /*! Position in sorting if country was not found in the titlesHash, the position
-        will be after the last title, so at the end. */
-    const auto titlesPriorityHashNew = titlesHash().size() + 1;
-
-    /*! Compare titles callback, used by std::sort(). */
-    const auto compareTitlesByLang = [](const QJsonValue &left, const QJsonValue &right)
-    {
-        // TODO if two keys are same and one is pracovní název, so flag it and give him titlesPriorityHashNew priority, see eg how to train dragon 3 silverqx
-        const auto leftTmp = titlesHash().value(left["country"].toString()).priority;
-        const auto rightTmp = titlesHash().value(right["country"].toString()).priority;
-
-        return (leftTmp == 0 ? titlesPriorityHashNew : leftTmp) <
-                (rightTmp == 0 ? titlesPriorityHashNew : rightTmp);
-    };
-
-    /*! Remove all items from passed layout. */
-    const auto wipeOutLayout = [](QLayout &layout)
-    {
-        // Nothing to remove
-        if (layout.count() == 0)
-            return;
-
-        QLayoutItem *layoutItem = nullptr;
-        while ((layoutItem = layout.takeAt(0)) != nullptr) {
-            delete layoutItem->widget(); // NOLINT(cppcoreguidelines-owning-memory)
-            delete layoutItem; // NOLINT(cppcoreguidelines-owning-memory)
-        }
-    };
-} // namespace
-
-// Needed when sorting QJsonArray.
-// I need it only here, so I defined it in the cpp file.
-void swap(QJsonValueRef v1, QJsonValueRef v2)
-{
-    QJsonValue temp(v1);
-    v1 = QJsonValue(v2);
-    v2 = temp;
-}
-
 MovieDetailDialog::MovieDetailDialog(QWidget *const parent)
     : QDialog(parent)
     , m_statusHash(StatusHash::instance())
@@ -463,6 +246,20 @@ void MovieDetailDialog::renderTitleSection() const
 namespace
 {
     const int flagWidth = 21;
+
+    /*! Remove all items from passed layout. */
+    const auto wipeOutLayout = [](QLayout &layout)
+    {
+        // Nothing to remove
+        if (layout.count() == 0)
+            return;
+
+        QLayoutItem *layoutItem = nullptr;
+        while ((layoutItem = layout.takeAt(0)) != nullptr) {
+            delete layoutItem->widget(); // NOLINT(cppcoreguidelines-owning-memory)
+            delete layoutItem; // NOLINT(cppcoreguidelines-owning-memory)
+        }
+    };
 }
 
 void MovieDetailDialog::prepareTitlesSection()
@@ -491,6 +288,72 @@ void MovieDetailDialog::prepareTitlesSection()
 
     // Populate grid layout with flags and titles
     renderTitlesSection(3);
+}
+
+namespace
+{
+    // Code below is for my prefered sorting of the movie titles and for a flag lookup
+    /*! Title value used in titles sorting. */
+    struct TitleValue
+    {
+        uint priority = 0;
+        QString flag;
+    };
+
+    // TODO populate missing flags silverqx
+    /*! Maps countries to positions, determines how countries will be sorted. */
+    const auto titlesHash = []() -> const QHash<QString, TitleValue> &
+    {
+        static const QHash<QString, TitleValue> cached {
+            {QStringLiteral("Československo"), { 1, QStringLiteral("cz")}},
+            {QStringLiteral("Česko"),          { 2, QStringLiteral("cz")}},
+            {QStringLiteral("USA"),            { 3, QStringLiteral("us")}},
+            {QStringLiteral("Slovensko"),      { 4, QStringLiteral("sk")}},
+            {QStringLiteral("Velká Británie"), { 5, QStringLiteral("gb")}},
+            {QStringLiteral("Kanada"),         { 6, QStringLiteral("ca")}},
+            {QStringLiteral("Německo"),        { 7, QStringLiteral("de")}},
+            {QStringLiteral("Francie"),        { 8, QStringLiteral("fr")}},
+            {QStringLiteral("Nový Zéland"),    { 9, QStringLiteral("nz")}},
+            {QStringLiteral("Austrálie"),      {10, QStringLiteral("au")}},
+        };
+
+        return cached;
+    };
+    /*! Position in sorting if country was not found in the titlesHash, the position
+        will be after the last title, so at the end. */
+    const auto titlesPriorityHashNew = titlesHash().size() + 1;
+
+    /*! Compare titles callback, used by std::sort(). */
+    const auto compareTitlesByLang = [](const QJsonValue &left, const QJsonValue &right)
+    {
+        // TODO if two keys are same and one is pracovní název, so flag it and give him titlesPriorityHashNew priority, see eg how to train dragon 3 silverqx
+        const auto leftTmp = titlesHash().value(left["country"].toString()).priority;
+        const auto rightTmp = titlesHash().value(right["country"].toString()).priority;
+
+        return (leftTmp == 0 ? titlesPriorityHashNew : leftTmp) <
+                (rightTmp == 0 ? titlesPriorityHashNew : rightTmp);
+    };
+
+    /*! Create a more link, used in the pagination. */
+    const auto moreLinkText =
+            [](const bool withDots = true, const bool withParenthesis = true)
+    {
+        return QStringLiteral("%1%2%3%4").arg(
+                    withDots ? QStringLiteral("<strong>...</strong> ") : "",
+                    withParenthesis ? QStringLiteral("(") : "",
+                    QStringLiteral("<a href='#show-more' "
+                                  "style='font-size: 11pt; text-decoration: none;'"
+                                  ">more</a>"),
+                    withParenthesis ? QStringLiteral(")") : "");
+    };
+} // namespace
+
+/*! swap function for QJsonValueRef, needed for sorting QJsonArray. */
+void swap(QJsonValueRef v1, QJsonValueRef v2)
+{
+    QJsonValue temp(v1);
+    v1 = QJsonValue(v2);
+    v2 = temp;
 }
 
 void MovieDetailDialog::renderTitlesSection(const int maxLines) const
@@ -586,6 +449,54 @@ void MovieDetailDialog::prepareImdbLink() const
     m_ui->imdbLink->show();
 }
 
+namespace
+{
+    // Common delimiters
+    const auto delimiterSlash       = QStringLiteral(" / ");
+    const auto delimiterComma       = QStringLiteral(", ");
+    const auto delimiterHtmlNewLine = QStringLiteral("<br>");
+
+    /*! Join QJsonArray, all values in array have to be strings. */
+    const auto joinJsonStringArray =
+            [](const QJsonArray &jsonArray, const auto &delimiter)
+    {
+        QStringList result;
+
+        for (const auto &jsonValue : jsonArray) {
+            if (!jsonValue.isString() || jsonValue.isNull() || jsonValue.isUndefined())
+                continue;
+
+            const auto value = jsonValue.toString();
+            if (value.isEmpty())
+                continue;
+
+            result << value;
+        }
+
+        return result.join(delimiter);
+    };
+
+    /*! Join QStringList, exclude empty or null values. */
+    const auto joinStringList = [](const auto &stringList, const auto &delimiter)
+    {
+        QString result = "";
+        int count = 0;
+
+        for (const auto &value : stringList) {
+            if (value.isEmpty() || value.isNull())
+                continue;
+
+            result += (value + delimiter);
+            ++count;
+        }
+
+        if (count > 0)
+            result.chop(delimiter.size());
+
+        return result;
+    };
+} // namespace
+
 void MovieDetailDialog::prepareMovieInfoSection() const
 {
     // Movie info section - genres, origins, year and length
@@ -654,6 +565,96 @@ namespace
         {QStringLiteral("music"),     QStringLiteral("<strong>Hudba: </strong>%1")},
         {QStringLiteral("actors"),    QStringLiteral("<strong>Herci: </strong>%1")},
     }};
+
+    const auto moreLinkSize = QStringLiteral("... (more)").size();
+
+    /*! Join QJsonArray, all values in the array have to be QJsonObject, values will be
+        searched in the jsonArray by keys stored in the args pack and wrapped in the wrapIn.
+        If the maxLetters argument contains a value greater than 0, then the result will be
+        cut and the more link will be shown at the end. Letters will be counted only during
+        the first substitution (first key in the args pack). The resulting string can
+        contain fewer letters, because when the maxLetters limit will be hit or overflowed,
+        then the currently processed string will not be included at all. */
+    const auto joinJsonObjectArrayWithWrapPaged =
+            []<typename ...Args>
+            (const QJsonArray &jsonArray, const QString &delimiter,
+             const QString &wrappIn, const int maxLetters, const Args &...args)
+    {
+        const auto argsSize = sizeof ...(args);
+        if (argsSize == 0)
+            qCritical() << "Empty argsSize in joinJsonObjectArrayWithWrap()";
+
+        QString result;
+        int count = 0;
+        int lettersCount = 0;
+        int lettersCountTmp = 0;
+        const auto paginateEnabled = (maxLetters != 0);
+        auto showMoreLink = false;
+        const auto delimiterSize = delimiter.size();
+        const QStringList argsList {(args)...};
+
+        for (const auto &jsonValue : jsonArray) {
+            if (!jsonValue.isObject() || jsonValue.isNull() || jsonValue.isUndefined())
+                continue;
+
+            auto wrapInTmp = wrappIn;
+            // Replace all occurences
+            for (const auto &arg : argsList) {
+                const auto jsonValueInner = jsonValue[arg];
+                const auto jsonValueType = jsonValueInner.type();
+                QString value;
+                switch (jsonValueType) {
+                case QJsonValue::String:
+                    value = jsonValueInner.toString();
+                    break;
+                case QJsonValue::Double:
+                    value = QString::number(jsonValueInner.toDouble());
+                    break;
+                default:
+                    value = "";
+                    qWarning().noquote()
+                            << QStringLiteral("Unsupported jsonValueType '%1' in "
+                                              "joinJsonObjectArrayWithWrap()")
+                               .arg(jsonValueType);
+                    break;
+                }
+                // Letters are counted only for first substitution
+                if (paginateEnabled && (arg == argsList[0]))
+                    lettersCount += value.size() + delimiterSize;
+                wrapInTmp = wrapInTmp.arg(value);
+            }
+            /* Last delimiter will never be in the result, also take a more text
+               link size into account. */
+            lettersCountTmp = lettersCount - delimiterSize + moreLinkSize;
+            // lettersCount overflowed 😎
+            if (paginateEnabled && (lettersCountTmp >= maxLetters)) {
+                showMoreLink = true;
+                break;
+            }
+            result += wrapInTmp + delimiter;
+            ++count;
+        }
+
+        if (count > 0)
+            result.chop(delimiter.size());
+
+        // Append show more link if needed
+        if (showMoreLink)
+            result += moreLinkText();
+
+        return result;
+    };
+
+    /*! Join QJsonArray, all values in an array have to be QJsonObject, values will be
+        searched in the jsonArray by keys stored in the args pack and wrapped in wrapIn. */
+    const auto joinJsonObjectArrayWithWrap =
+            []<typename ...Args>
+            (const QJsonArray &jsonArray, const QString &delimiter,
+             const QString &wrappIn, Args &&...args)
+    {
+        return joinJsonObjectArrayWithWrapPaged(jsonArray, delimiter, wrappIn, 0,
+                                                std::forward<Args>(args)...);
+    };
 } // namespace
 
 void MovieDetailDialog::prepareCreatorsSection()
