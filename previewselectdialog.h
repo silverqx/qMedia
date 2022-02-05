@@ -9,9 +9,10 @@
 class PreviewListDelegate;
 class QStandardItemModel;
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class PreviewSelectDialog; }
-QT_END_NAMESPACE
+namespace Ui
+{
+    class PreviewSelectDialog;
+}
 
 class PreviewSelectDialog final : public QDialog
 {
