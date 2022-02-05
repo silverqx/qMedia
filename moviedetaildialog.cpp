@@ -47,7 +47,7 @@ MovieDetailDialog::MovieDetailDialog(QWidget *const parent)
     m_saveButton->hide();
     m_saveButton->setText(QStringLiteral("&Save"));
     // CUR create tooltip wrapper function for tooltips with shortcuts, also set tooltipduration silverqx
-    m_saveButton->setToolTip("<html><head/><body><p style='white-space:pre;'>"
+    m_saveButton->setToolTip("<html><head/><body><p style='white-space: pre;'>"
                              "Save current movie detail as default "
                              "<br><span style='font-size:7pt; color:#8c8c8c;'>ALT+S</span></p>"
                              "</body></html>");
@@ -121,13 +121,37 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     m_initialPopulate = false;
 }
 
-void MovieDetailDialog::prepareData(const quint64 filmId)
+void MovieDetailDialog::resizeEvent(QResizeEvent *const event)
 {
-    // Used when combobox changed
-    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(filmId);
-    m_movieDetail = movieDetail.object();
+    m_resizeInProgress = true;
 
-    populateUi();
+    QDialog::resizeEvent(event);
+}
+
+void MovieDetailDialog::showEvent(QShowEvent *const /*unused*/)
+{
+    // Title
+    renderTitleSection();
+}
+
+bool MovieDetailDialog::eventFilter(QObject *const watched, QEvent *const event)
+{
+    const auto eventType = event->type();
+    /* We need to check for both types of mouse release, because it can vary on which type
+       happened, when resizing. */
+    if (eventType == QEvent::MouseButtonRelease ||
+        eventType == QEvent::NonClientAreaMouseButtonRelease
+    ) {
+        auto *const mouseEvent = dynamic_cast<QMouseEvent *>(event);
+        if (m_resizeInProgress && mouseEvent->button() == Qt::MouseButton::LeftButton) {
+            m_resizeInProgress = false;
+            qDebug() << "Resizing of the movie detail dialog ended";
+            // I don't delete this timer logic and reuse it, even if it worked without it
+            m_resizeTimer->start();
+        }
+    }
+
+    return QDialog::eventFilter(watched, event);
 }
 
 void MovieDetailDialog::populateUi()
@@ -176,39 +200,6 @@ void MovieDetailDialog::populateUi()
     m_ui->verticalLayoutInfo->addStretch(1);
     // Search results in ComboBox
     prepareMovieDetailComboBox();
-}
-
-void MovieDetailDialog::resizeEvent(QResizeEvent *const event)
-{
-    m_resizeInProgress = true;
-
-    QDialog::resizeEvent(event);
-}
-
-void MovieDetailDialog::showEvent(QShowEvent *const /*unused*/)
-{
-    // Title
-    renderTitleSection();
-}
-
-bool MovieDetailDialog::eventFilter(QObject *const watched, QEvent *const event)
-{
-    const auto eventType = event->type();
-    /* We need to check for both types of mouse release, because it can vary on which type
-       happened, when resizing. */
-    if (eventType == QEvent::MouseButtonRelease ||
-        eventType == QEvent::NonClientAreaMouseButtonRelease
-    ) {
-        auto *const mouseEvent = dynamic_cast<QMouseEvent *>(event);
-        if (m_resizeInProgress && mouseEvent->button() == Qt::MouseButton::LeftButton) {
-            m_resizeInProgress = false;
-            qDebug() << "Resizing of the movie detail dialog ended";
-            // I don't delete this timer logic and reuse it, even if it worked without it
-            m_resizeTimer->start();
-        }
-    }
-
-    return QDialog::eventFilter(watched, event);
 }
 
 void MovieDetailDialog::prepareMoviePosterSection()
@@ -431,24 +422,6 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
     });
 }
 
-void MovieDetailDialog::prepareImdbLink() const
-{
-    // Currently, čsfd provides imdb id for logged users only, so it will always be hidden
-    const auto imdbIdRaw = m_movieDetail["imdbId"];
-    if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
-        m_ui->imdbLink->setEnabled(false);
-        m_ui->imdbLink->hide();
-        return;
-    }
-
-    m_ui->imdbLink->setText(
-                QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
-                               "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
-                .arg(imdbIdRaw.toString()));
-    m_ui->imdbLink->setEnabled(true);
-    m_ui->imdbLink->show();
-}
-
 namespace
 {
     // Common delimiters
@@ -541,6 +514,24 @@ void MovieDetailDialog::prepareMovieInfoSection() const
     m_ui->movieInfo->setText(movieInfo);
     // TODO create logging system silverqx
     // TODO log empty movieInfo, to know how often it happens silverqx
+}
+
+void MovieDetailDialog::prepareImdbLink() const
+{
+    // Currently, čsfd provides imdb id for logged users only, so it will always be hidden
+    const auto imdbIdRaw = m_movieDetail["imdbId"];
+    if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
+        m_ui->imdbLink->setEnabled(false);
+        m_ui->imdbLink->hide();
+        return;
+    }
+
+    m_ui->imdbLink->setText(
+                QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
+                               "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
+                .arg(imdbIdRaw.toString()));
+    m_ui->imdbLink->setEnabled(true);
+    m_ui->imdbLink->show();
 }
 
 namespace
@@ -843,6 +834,29 @@ QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
     return icon;
 }
 
+void MovieDetailDialog::prepareData(const quint64 filmId)
+{
+    // Used when combobox changed
+    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(filmId);
+    m_movieDetail = movieDetail.object();
+
+    populateUi();
+}
+
+void MovieDetailDialog::toggleSaveButton(const bool enable)
+{
+    m_ui->saveButton->setEnabled(enable);
+    m_saveButton->setEnabled(enable);
+
+    if (enable) {
+        m_ui->saveButton->show();
+        m_saveButton->show();
+    } else {
+        m_ui->saveButton->hide();
+        m_saveButton->hide();
+    }
+}
+
 void MovieDetailDialog::finishedMoviePoster(QNetworkReply *const reply) const
 {
     // TODO handle network errors silverqx
@@ -868,6 +882,7 @@ void MovieDetailDialog::resizeTimeout()
 void MovieDetailDialog::saveButtonClicked()
 {
     const auto movieDetailIndex = m_ui->movieDetailComboBox->currentIndex();
+
     const auto result =
             CsfdDetailService::instance()->updateObtainedMovieDetailInDb(
                 m_selectedTorrent, m_movieDetail, m_movieSearchResults,
@@ -876,10 +891,9 @@ void MovieDetailDialog::saveButtonClicked()
         return;
 
     m_movieDetailIndex = movieDetailIndex;
-    m_ui->saveButton->setEnabled(false);
-    m_saveButton->setEnabled(false);
-    m_ui->saveButton->hide();
-    m_saveButton->hide();
+
+    // Disable save button
+    toggleSaveButton(false);
 }
 
 void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
@@ -893,16 +907,10 @@ void MovieDetailDialog::movieDetailComboBoxChanged(const int index)
 
     // Enable save buttons if a new movie detail was selected
     if (index != m_movieDetailIndex) {
-        m_ui->saveButton->setEnabled(true);
-        m_saveButton->setEnabled(true);
-        m_ui->saveButton->show();
-        m_saveButton->show();
+        toggleSaveButton(true);
         return;
     }
 
     // Hide if it is the same movie as saved in db
-    m_ui->saveButton->setEnabled(false);
-    m_saveButton->setEnabled(false);
-    m_ui->saveButton->hide();
-    m_saveButton->hide();
+    toggleSaveButton(false);
 }

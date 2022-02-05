@@ -42,6 +42,7 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) final;
 
 private:
+    void populateUi();
     void prepareMoviePosterSection();
     void renderTitleSection() const;
     void prepareTitlesSection();
@@ -54,7 +55,8 @@ private:
     QIcon getFlagIcon(const QString &countryIsoCode) const;
     /*! Prepare data by movie id and populate ui with them. */
     void prepareData(quint64 filmId);
-    void populateUi();
+    /*! Enable/disable the save button. */
+    void toggleSaveButton(bool enable);
 
     QJsonObject m_movieDetail;
     QJsonArray m_movieSearchResults;
