@@ -7,7 +7,7 @@ CsfdDetailService::CsfdDetailService(TorrentSqlTableModel *const model)
     , m_movieScrapperPath(getMovieScrapperPath())
 {}
 
-MovieDetail CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) const
+SearchMovieResult CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) const
 {
     // TODO handle errors in std::cerr silverqx
     QProcess movieScrapper;
@@ -30,7 +30,7 @@ MovieDetail CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) cons
     return parseSearchedMovieDetail(movieDetailRaw);
 }
 
-MovieDetail CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
+MovieDetailResult CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
 {
     // TODO handle errors in std::cerr silverqx
     QProcess movieScrapper;

@@ -118,7 +118,7 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     m_movieDetailIndex = torrent.value("movie_detail_index").toInt();
 
     // Obtain movie detail from čsfd
-    const auto movieDetail = m_csfdDetailService->getMovieDetail(torrent);
+    const auto movieDetail = m_csfdDetailService->getSearchMovieDetail(torrent);
     m_movieDetail = movieDetail["detail"].toObject();
     m_movieSearchResults = movieDetail["search"].toArray();
 
@@ -263,7 +263,7 @@ void MovieDetailDialog::prepareTitlesSection()
     // Create grid for flags and titles
     // Create even when there is nothing to render, so I don't have to manage positioning
     if (m_gridLayoutTitles.isNull()) {
-        m_gridLayoutTitles = new QGridLayout(this); // NOLINT(cppcoreguidelines-owning-memory)
+        m_gridLayoutTitles = new QGridLayout; // NOLINT(cppcoreguidelines-owning-memory)
         m_gridLayoutTitles->setColumnMinimumWidth(0, flagWidth);
         m_gridLayoutTitles->setColumnStretch(1, 1);
         m_gridLayoutTitles->setHorizontalSpacing(9);
@@ -710,7 +710,7 @@ void MovieDetailDialog::prepareCreatorsSection()
     // Create a layout for creators
     // Create even when there is nothing to render, so I don't have to manage positioning
     if (m_verticalLayoutCreators.isNull()) {
-        m_verticalLayoutCreators = new QVBoxLayout(this); // NOLINT(cppcoreguidelines-owning-memory)
+        m_verticalLayoutCreators = new QVBoxLayout; // NOLINT(cppcoreguidelines-owning-memory)
         m_verticalLayoutCreators->setSpacing(2);
         m_ui->verticalLayoutInfo->addLayout(m_verticalLayoutCreators);
     }
@@ -889,7 +889,7 @@ void MovieDetailDialog::saveButtonClicked()
     const auto movieDetailIndex = m_ui->movieDetailComboBox->currentIndex();
 
     const auto result =
-            m_csfdDetailService->updateObtainedMovieDetailInDb(
+            m_csfdDetailService->updateSearchMovieDetailInDb(
                 m_selectedTorrent, m_movieDetail, m_movieSearchResults,
                 movieDetailIndex);
     if (result != 0)

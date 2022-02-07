@@ -15,8 +15,8 @@ public:
     inline ~CsfdDetailService() final = default;
 
 protected:
-    MovieDetail searchMovieDetail(const QSqlRecord &torrent) const final;
-    MovieDetail obtainMovieDetail(quint64 filmId) const final;
+    SearchMovieResult searchMovieDetail(const QSqlRecord &torrent) const final;
+    MovieDetailResult obtainMovieDetail(quint64 filmId) const final;
     QString getMovieDetailColumnName() const noexcept final;
 
 private:

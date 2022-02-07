@@ -6,6 +6,7 @@
 #include <QtSql/QSqlQuery>
 
 #include "torrentsqltablemodel.h"
+#include "types/moviedetail.h"
 #include "utils/fs.h"
 
 AbstractMovieDetailService::AbstractMovieDetailService(TorrentSqlTableModel *const model,
@@ -14,13 +15,14 @@ AbstractMovieDetailService::AbstractMovieDetailService(TorrentSqlTableModel *con
     , m_model(model)
 {}
 
-MovieDetail AbstractMovieDetailService::getMovieDetail(const QSqlRecord &torrent) const
+SearchMovieResult
+AbstractMovieDetailService::getSearchMovieDetail(const QSqlRecord &torrent) const
 {
     const auto torrentId = torrent.value("id").toULongLong();
 
     // Try to fetch from DB
     {
-        auto movieDetail = selectMovieDetailByTorrentId(torrentId);
+        auto movieDetail = selectSearchedMovieDetailByTorrentId(torrentId);
         if (!movieDetail.isEmpty())
             return movieDetail;
     }
@@ -28,9 +30,9 @@ MovieDetail AbstractMovieDetailService::getMovieDetail(const QSqlRecord &torrent
     auto movieDetail = searchMovieDetail(torrent);
 
     // Save movie detail to the cache
-    m_movieDetailsCache.insert(torrentId, movieDetail);
+    m_searchMovieCache.insert(torrentId, movieDetail);
     // Also save to obtained movie detail cache make sense
-    m_obtainedMovieDetailsCache.insert(
+    m_movieDetailsCache.insert(
                 movieDetail["detail"]["id"].toInt(),
                 QJsonDocument(movieDetail["detail"].toObject()));
 
@@ -40,34 +42,31 @@ MovieDetail AbstractMovieDetailService::getMovieDetail(const QSqlRecord &torrent
     return movieDetail;
 }
 
-MovieDetail AbstractMovieDetailService::getMovieDetail(quint64 filmId) const
+MovieDetailResult AbstractMovieDetailService::getMovieDetail(quint64 filmId) const
 {
     // Return from cache
-    if (m_obtainedMovieDetailsCache.contains(filmId)) {
+    if (m_movieDetailsCache.contains(filmId)) {
         qDebug() << "Obtained movie detail obtained from cache, film :" << filmId;
 
-        return m_obtainedMovieDetailsCache.value(filmId);
+        return m_movieDetailsCache.value(filmId);
     }
 
     auto movieDetail = obtainMovieDetail(filmId);
 
     // Save movie detail to cache
-    m_obtainedMovieDetailsCache.insert(movieDetail["id"].toInt(), movieDetail);
+    m_movieDetailsCache.insert(movieDetail["id"].toInt(), movieDetail);
 
     return movieDetail;
 }
 
 // TODO run operation like this in thread, QtConcurent::run() is ideal silverqx
-int AbstractMovieDetailService::updateObtainedMovieDetailInDb(
-    const QSqlRecord &torrent,
-    const QJsonObject &movieDetail,
-    const QJsonArray &movieSearchResult,
-    const int movieDetailComboBoxIndex
-) const
+int AbstractMovieDetailService::updateSearchMovieDetailInDb(
+    const QSqlRecord &torrent, const MovieDetail &movieDetail,
+    const MovieSearchResults &movieSearchResult, const int movieDetailComboBoxIndex) const
 {
     const auto torrentId = torrent.value("id").toULongLong();
     // Prepare movie detail json as QString
-    auto movieDetailNew = QJsonObject({
+    auto movieDetailNew = SearchMovieResult({
         {"detail", movieDetail},
         {"search", movieSearchResult}
     });
@@ -77,7 +76,7 @@ int AbstractMovieDetailService::updateObtainedMovieDetailInDb(
                                        .toStdString());
 
     // Save to cache
-    m_movieDetailsCache.insert(torrentId, movieDetailDocument);
+    m_searchMovieCache.insert(torrentId, movieDetailDocument);
 
     const auto torrentRow = m_model->getTorrentRowByInfoHash(torrent.value("hash").toString());
     m_model->setData(m_model->index(torrentRow,
@@ -100,7 +99,8 @@ int AbstractMovieDetailService::updateObtainedMovieDetailInDb(
     return 0;
 }
 
-MovieDetail AbstractMovieDetailService::parseMovieDetail(const QByteArray &movieDetailRaw) const
+MovieDetailResult
+AbstractMovieDetailService::parseMovieDetail(const QByteArray &movieDetailRaw) const
 {
     auto movieDetail = QJsonDocument::fromJson(movieDetailRaw);
 
@@ -110,7 +110,7 @@ MovieDetail AbstractMovieDetailService::parseMovieDetail(const QByteArray &movie
     return movieDetail;
 }
 
-MovieDetail
+SearchMovieResult
 AbstractMovieDetailService::parseSearchedMovieDetail(const QByteArray &movieDetailRaw) const
 {
     auto movieDetail = QJsonDocument::fromJson(movieDetailRaw);
@@ -142,13 +142,13 @@ QString AbstractMovieDetailService::prepareSearchQueryString(const QSqlRecord &t
             .replace(QRegularExpression(" {2,}"), QLatin1String(" "));
 }
 
-MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint64 id) const
+SearchMovieResult
+AbstractMovieDetailService::selectSearchedMovieDetailByTorrentId(const quint64 id) const
 {
-    // Return from cache
-    if (m_movieDetailsCache.contains(id)) {
-        qDebug() << "Searched movie detail obtained from cache, torrent :"
-                 << id;
-        return m_movieDetailsCache.value(id);
+    // Return from the cache
+    if (m_searchMovieCache.contains(id)) {
+        qDebug() << "Searched movie detail obtained from cache, torrent :" << id;
+        return m_searchMovieCache.value(id);
     }
 
     QSqlQuery query;
@@ -157,19 +157,19 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
                   .arg(getMovieDetailColumnName()));
     query.addBindValue(id);
 
-    const auto ok = query.exec();
-    if (!ok) {
-        qDebug("Select of a movie detail for the torrent(ID%llu) failed : %s",
+    if (!query.exec()) {
+        qDebug("Select a movie detail from the database for the torrent(ID%llu) failed : %s",
                id, qUtf8Printable(query.lastError().text()));
         return {};
     }
 
-    const auto querySize = query.size();
-    if (querySize != 1) {
+    // Check return query size
+    if (const auto querySize = query.size(); querySize != 1) {
         // TODO decide how to handle this type of situations, asserts vs exceptions, ... silverqx
         qWarning().noquote()
-                << QStringLiteral("Select of a movie detail for the torrent(ID%1) "
-                                  "doesn't have size of 1, current size is : %2")
+                << QStringLiteral(
+                       "Select a movie detail from the databasefor the torrent(ID%1) "
+                       "doesn't have size 1, current size is : %2")
                    .arg(id, querySize);
         return {};
     }
@@ -184,11 +184,11 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
     auto movieDetail = parseSearchedMovieDetail(movieDetailRaw.toByteArray());
 
     // Save movie detail to cache
-    m_movieDetailsCache.insert(id, movieDetail);
+    m_searchMovieCache.insert(id, movieDetail);
     // Also save to obtained movie detail cache make sense
-    m_obtainedMovieDetailsCache.insert(
+    m_movieDetailsCache.insert(
                 movieDetail["detail"]["id"].toInt(),
-                QJsonDocument(movieDetail["detail"].toObject()));
+                MovieDetailResult(movieDetail["detail"].toObject()));
 
     qDebug() << "Searched movie detail obtained from db, torrent :" << id;
 
@@ -196,7 +196,7 @@ MovieDetail AbstractMovieDetailService::selectMovieDetailByTorrentId(const quint
 }
 
 void AbstractMovieDetailService::saveSearchedMovieDetailToDb(
-        const QSqlRecord &torrent, const MovieDetail &movieDetail) const
+        const QSqlRecord &torrent, const SearchMovieResult &movieDetail) const
 {
     const auto movieDetailString = QString::fromStdString(
                                        movieDetail.toJson(QJsonDocument::Compact)

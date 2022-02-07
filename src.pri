@@ -16,6 +16,7 @@ HEADERS += \
     $$PWD/torrenttabledelegate.h \
     $$PWD/torrenttablesortmodel.h \
     $$PWD/torrenttransfertableview.h \
+    $$PWD/types/moviedetail.h \
     $$PWD/utils/fs.h \
     $$PWD/utils/gui.h \
     $$PWD/utils/misc.h \

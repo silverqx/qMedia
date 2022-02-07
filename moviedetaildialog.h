@@ -3,11 +3,11 @@
 #define MOVIEDETAILDIALOG_H
 
 #include <QDialog>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QPointer>
 #include <QtSql/QSqlRecord>
+
+#include "types/moviedetail.h"
 
 class QGridLayout;
 class QSqlRecord;
@@ -60,8 +60,8 @@ private:
     /*! Enable/disable the save button. */
     void toggleSaveButton(bool enable);
 
-    QJsonObject m_movieDetail;
-    QJsonArray m_movieSearchResults;
+    MovieDetail m_movieDetail;
+    MovieSearchResults m_movieSearchResults;
     QNetworkAccessManager m_networkManager;
     bool m_resizeInProgress = false;
     mutable QHash<QString, QIcon> m_flagsCache;
