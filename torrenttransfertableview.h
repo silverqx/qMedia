@@ -10,6 +10,7 @@ class QSortFilterProxyModel;
 class QSqlRecord;
 class QSqlTableModel;
 
+class CsfdDetailService;
 class StatusHash;
 class TorrentTableDelegate;
 
@@ -85,6 +86,7 @@ private:
     bool m_showEventInitialized = false;
     HWND m_qBittorrentHwnd = nullptr;
     std::shared_ptr<StatusHash> m_statusHash;
+    std::shared_ptr<CsfdDetailService> m_csfdDetailService;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:

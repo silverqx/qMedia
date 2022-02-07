@@ -97,8 +97,6 @@ TorrentTransferTableView::TorrentTransferTableView(
     m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
 
-    CsfdDetailService::initInstance(qobject_cast<TorrentSqlTableModel *>(m_model));
-
     setModel(m_proxyModel);
     hideColumn(TR_ID);
     hideColumn(TR_TOTAL_SEEDS);
@@ -109,6 +107,10 @@ TorrentTransferTableView::TorrentTransferTableView(
     hideColumn(TR_MOVIE_DETAIL_INDEX);
     hideColumn(TR_SAVE_PATH);
     sortByColumn(TR_ADDED_ON, Qt::DescendingOrder);
+
+    // Init čsfd service
+    m_csfdDetailService = std::make_shared<CsfdDetailService>(
+                              qobject_cast<TorrentSqlTableModel *>(m_model));
 
     // Init torrent context menu
     setContextMenuPolicy(Qt::DefaultContextMenu);
@@ -241,7 +243,7 @@ TorrentTransferTableView::selectTorrentFilesById(const quint64 id) const
 
     const auto ok = query.exec();
     if (!ok) {
-        qDebug("Select of torrent(ID%llu) files failed : \"%s\"",
+        qDebug("Select of torrent(ID%llu) files failed : %s",
                id, qUtf8Printable(query.lastError().text()));
         return {};
     }
@@ -553,7 +555,7 @@ void TorrentTransferTableView::showCsfdDetail()
                        << torrent.value("name").toString();
 
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-    auto *const dialog = new MovieDetailDialog(this);
+    auto *const dialog = new MovieDetailDialog(m_csfdDetailService, this);
     // TODO measure with and w/o Qt::WA_DeleteOnClose, idea is to reuse dialog and not to create and destroy everytime silverqx
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->prepareData(torrent);

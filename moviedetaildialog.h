@@ -7,13 +7,13 @@
 #include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QPointer>
-
-#include "csfddetailservice.h"
+#include <QtSql/QSqlRecord>
 
 class QGridLayout;
 class QSqlRecord;
 class QVBoxLayout;
 
+class CsfdDetailService;
 class StatusHash;
 
 namespace Ui
@@ -28,7 +28,9 @@ class MovieDetailDialog final : public QDialog
 
 public:
     /*! Constructor. */
-    explicit MovieDetailDialog(QWidget *parent = nullptr);
+    explicit MovieDetailDialog(
+            const std::shared_ptr<CsfdDetailService> &csfdDetailService,
+            QWidget *parent = nullptr);
 
     /*! Prepare data from a torrent and populate UI with them. */
     void prepareData(const QSqlRecord &torrent);
@@ -76,6 +78,7 @@ private:
     QPointer<QVBoxLayout> m_verticalLayoutCreators;
     /*! Save button in the buttonBox. */
     QPointer<QPushButton> m_saveButton;
+    std::shared_ptr<CsfdDetailService> m_csfdDetailService;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:

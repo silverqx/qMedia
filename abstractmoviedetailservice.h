@@ -16,8 +16,10 @@ class AbstractMovieDetailService : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractMovieDetailService(TorrentSqlTableModel *const model,
+    /*! Constructor. */
+    explicit AbstractMovieDetailService(TorrentSqlTableModel *model,
                                         QObject *parent = nullptr);
+    /*! Virtual destructor. */
     inline ~AbstractMovieDetailService() override = default;
 
     MovieDetail getMovieDetail(const QSqlRecord &torrent) const;
@@ -28,7 +30,7 @@ public:
             const QJsonArray &movieSearchResult, int movieDetailComboBoxIndex) const;
 
 protected:
-    /*! Search a movie detail and obtain search results and also movie detail at once,
+    /*! Search a movie detail, it obtains search results and also movie detail at once,
         like descendat wants, json api, call other program, ... */
     virtual MovieDetail searchMovieDetail(const QSqlRecord &torrent) const = 0;
     /*! Obtain only a movie detail like descendat wants, json api, call other program, ... */

@@ -2,32 +2,10 @@
 
 #include <QProcess>
 
-CsfdDetailService *CsfdDetailService::m_instance = nullptr;
-
 CsfdDetailService::CsfdDetailService(TorrentSqlTableModel *const model)
     : AbstractMovieDetailService(model)
     , m_movieScrapperPath(getMovieScrapperPath())
 {}
-
-void CsfdDetailService::initInstance(TorrentSqlTableModel *const model)
-{
-    if (!m_instance)
-        m_instance = new CsfdDetailService(model);
-}
-
-CsfdDetailService *CsfdDetailService::instance()
-{
-    return m_instance;
-}
-
-void CsfdDetailService::freeInstance()
-{
-    if (!m_instance)
-        return;
-
-    delete m_instance;
-    m_instance = nullptr;
-}
 
 MovieDetail CsfdDetailService::searchMovieDetail(const QSqlRecord &torrent) const
 {
@@ -77,5 +55,7 @@ MovieDetail CsfdDetailService::obtainMovieDetail(const quint64 filmId) const
 
 QString CsfdDetailService::getMovieDetailColumnName() const noexcept
 {
-    return QStringLiteral("csfd_movie_detail");
+    static const auto cached = QStringLiteral("csfd_movie_detail");
+
+    return cached;
 }

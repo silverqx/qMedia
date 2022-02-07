@@ -12,14 +12,19 @@
 
 #include <array>
 
+#include "csfddetailservice.h"
 #include "torrentstatus.h"
 #include "utils/gui.h"
 #include "utils/misc.h"
 
-MovieDetailDialog::MovieDetailDialog(QWidget *const parent)
+MovieDetailDialog::MovieDetailDialog(
+        const std::shared_ptr<CsfdDetailService> &csfdDetailService, // NOLINT(modernize-pass-by-value)
+        QWidget *const parent
+)
     : QDialog(parent)
     , m_statusHash(StatusHash::instance())
     , m_ui(std::make_unique<Ui::MovieDetailDialog>())
+    , m_csfdDetailService(csfdDetailService)
 {
     m_ui->setupUi(this);
 
@@ -113,7 +118,7 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     m_movieDetailIndex = torrent.value("movie_detail_index").toInt();
 
     // Obtain movie detail from čsfd
-    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(torrent);
+    const auto movieDetail = m_csfdDetailService->getMovieDetail(torrent);
     m_movieDetail = movieDetail["detail"].toObject();
     m_movieSearchResults = movieDetail["search"].toArray();
 
@@ -837,7 +842,7 @@ QIcon MovieDetailDialog::getFlagIcon(const QString &countryIsoCode) const
 void MovieDetailDialog::prepareData(const quint64 filmId)
 {
     // Used when combobox changed
-    const auto movieDetail = CsfdDetailService::instance()->getMovieDetail(filmId);
+    const auto movieDetail = m_csfdDetailService->getMovieDetail(filmId);
     m_movieDetail = movieDetail.object();
 
     populateUi();
@@ -884,7 +889,7 @@ void MovieDetailDialog::saveButtonClicked()
     const auto movieDetailIndex = m_ui->movieDetailComboBox->currentIndex();
 
     const auto result =
-            CsfdDetailService::instance()->updateObtainedMovieDetailInDb(
+            m_csfdDetailService->updateObtainedMovieDetailInDb(
                 m_selectedTorrent, m_movieDetail, m_movieSearchResults,
                 movieDetailIndex);
     if (result != 0)

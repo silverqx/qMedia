@@ -144,7 +144,6 @@ void installMainEventFilter(QApplication &app, MainWindow &mainWindow)
 
 void cleanupApplication(QApplication &app)
 {
-    CsfdDetailService::freeInstance();
     StatusHash::freeInstance();
 
 #ifdef Q_OS_WIN
