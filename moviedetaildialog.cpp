@@ -159,6 +159,35 @@ bool MovieDetailDialog::eventFilter(QObject *const watched, QEvent *const event)
     return QDialog::eventFilter(watched, event);
 }
 
+namespace
+{
+    // Common delimiters
+    const auto delimiterSlash       = QStringLiteral(" / ");
+    const auto delimiterComma       = QStringLiteral(", ");
+    const auto delimiterHtmlNewLine = QStringLiteral("<br>");
+    const auto delimiterNewLine     = QStringLiteral("\n");
+
+    /*! Join QJsonArray, all values in array have to be strings. */
+    const auto joinJsonStringArray =
+            [](const QJsonArray &jsonArray, const auto &delimiter)
+    {
+        QStringList result;
+
+        for (const auto &jsonValue : jsonArray) {
+            if (!jsonValue.isString() || jsonValue.isNull() || jsonValue.isUndefined())
+                continue;
+
+            const auto value = jsonValue.toString();
+            if (value.isEmpty())
+                continue;
+
+            result << value;
+        }
+
+        return result.join(delimiter);
+    };
+} // namespace
+
 void MovieDetailDialog::populateUi()
 {
     // Movie poster, start as soon as possible, because it's async
@@ -196,7 +225,9 @@ void MovieDetailDialog::populateUi()
     // Creators section
     prepareCreatorsSection();
     // Storyline section
-    m_ui->storyline->setText(m_movieDetail["descriptions"].toArray().first().toString());
+    m_ui->storyline->setText(
+                joinJsonStringArray(m_movieDetail["descriptions"].toArray(),
+                                    delimiterNewLine.repeated(2)));
 
     if (!m_initialPopulate)
         return;
@@ -429,31 +460,6 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
 
 namespace
 {
-    // Common delimiters
-    const auto delimiterSlash       = QStringLiteral(" / ");
-    const auto delimiterComma       = QStringLiteral(", ");
-    const auto delimiterHtmlNewLine = QStringLiteral("<br>");
-
-    /*! Join QJsonArray, all values in array have to be strings. */
-    const auto joinJsonStringArray =
-            [](const QJsonArray &jsonArray, const auto &delimiter)
-    {
-        QStringList result;
-
-        for (const auto &jsonValue : jsonArray) {
-            if (!jsonValue.isString() || jsonValue.isNull() || jsonValue.isUndefined())
-                continue;
-
-            const auto value = jsonValue.toString();
-            if (value.isEmpty())
-                continue;
-
-            result << value;
-        }
-
-        return result.join(delimiter);
-    };
-
     /*! Join QStringList, exclude empty or null values. */
     const auto joinStringList = [](const auto &stringList, const auto &delimiter)
     {
