@@ -59,6 +59,8 @@ private:
     void prepareData(quint64 filmId);
     /*! Enable/disable the save button. */
     void toggleSaveButton(bool enable);
+    /*! Search movie detail on čsfd. */
+    void getSearchMovieDetail(const QSqlRecord &torrent, bool skipCache);
 
     MovieDetail m_movieDetail;
     MovieSearchResults m_movieSearchResults;
@@ -85,6 +87,7 @@ private slots:
     void finishedMoviePoster(QNetworkReply *reply) const;
     void resizeTimeout();
     void saveButtonClicked();
+    void forceReloadButtonClicked();
     void movieDetailComboBoxChanged(int index);
 };
 

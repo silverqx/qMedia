@@ -16,12 +16,13 @@ AbstractMovieDetailService::AbstractMovieDetailService(TorrentSqlTableModel *con
 {}
 
 SearchMovieResult
-AbstractMovieDetailService::getSearchMovieDetail(const QSqlRecord &torrent) const
+AbstractMovieDetailService::getSearchMovieDetail(const QSqlRecord &torrent,
+                                                 const bool skipCache) const
 {
     const auto torrentId = torrent.value("id").toULongLong();
 
     // Try to fetch from DB
-    {
+    if (!skipCache) {
         auto movieDetail = selectSearchedMovieDetailByTorrentId(torrentId);
         if (!movieDetail.isEmpty())
             return movieDetail;
@@ -60,7 +61,7 @@ MovieDetailResult AbstractMovieDetailService::getMovieDetail(quint64 filmId) con
 }
 
 // TODO run operation like this in thread, QtConcurent::run() is ideal silverqx
-int AbstractMovieDetailService::updateSearchMovieDetailInDb(
+bool AbstractMovieDetailService::updateSearchMovieDetailInDb(
     const QSqlRecord &torrent, const MovieDetail &movieDetail,
     const MovieSearchResults &movieSearchResult, const int movieDetailComboBoxIndex) const
 {
@@ -86,17 +87,16 @@ int AbstractMovieDetailService::updateSearchMovieDetailInDb(
                                     TorrentSqlTableModel::TR_CSFD_MOVIE_DETAIL),
                      movieDetailString);
 
-    const auto ok = m_model->submit();
-    if (!ok) {
+    if (!m_model->submit()) {
         qDebug("Update of a movie detail for the torrent(ID%llu) failed : %s",
                torrentId, qUtf8Printable(m_model->lastError().text()));
-        return 1;
+        return false;
     }
 
     qDebug() << "Searched movie detail updated in db, torrent :"
              << torrentId;
 
-    return 0;
+    return true;
 }
 
 MovieDetailResult

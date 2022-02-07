@@ -372,7 +372,7 @@
             <number>12</number>
            </property>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
+            <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0,0">
              <property name="spacing">
               <number>4</number>
              </property>
@@ -413,7 +413,7 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>40</width>
+                 <width>33</width>
                  <height>34</height>
                 </size>
                </property>
@@ -424,7 +424,7 @@
                 </font>
                </property>
                <property name="toolTip">
-                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save current movie detail as default &lt;span style=&quot;font-size:7pt; color:#8c8c8c;&quot;&gt;CTRL+S&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style='white-space: pre;'&gt;Save current movie detail as default &lt;br&gt;&lt;span style='font-size:7pt; color:#8c8c8c;'&gt;CTRL+S&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="toolTipDuration">
                 <number>2500</number>
@@ -438,6 +438,44 @@
                </property>
                <property name="shortcut">
                 <string>Ctrl+S</string>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="forceReloadButton">
+               <property name="minimumSize">
+                <size>
+                 <width>33</width>
+                 <height>34</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Tahoma</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style='white-space: pre;'&gt;Force reload movie detail (without cache) &lt;br&gt;&lt;span style='font-size:7pt; color:#8c8c8c;'&gt;CTRL+R&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="toolTipDuration">
+                <number>2500</number>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="icon">
+                <iconset resource="images/qMedia.qrc">
+                 <normaloff>:/icons/cached_w.svg</normaloff>:/icons/cached_w.svg</iconset>
+               </property>
+               <property name="shortcut">
+                <string>Ctrl+R</string>
                </property>
                <property name="autoDefault">
                 <bool>false</bool>

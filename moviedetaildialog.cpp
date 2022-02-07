@@ -42,6 +42,10 @@ MovieDetailDialog::MovieDetailDialog(
     m_ui->saveButton->setEnabled(false);
     m_ui->saveButton->hide();
 
+    // Force reload movie detail (skip cache)
+    m_ui->forceReloadButton->setEnabled(true);
+    m_ui->forceReloadButton->show();
+
     // Preview button
     auto *const previewButton = m_ui->buttonBox->button(QDialogButtonBox::Ok);
     previewButton->setText(QStringLiteral("&Preview"));
@@ -77,6 +81,9 @@ MovieDetailDialog::MovieDetailDialog(
             this, &MovieDetailDialog::finishedMoviePoster);
     // saveButton
     connect(m_ui->saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
+    // forceReloadButton
+    connect(m_ui->forceReloadButton, &QPushButton::clicked, this,
+            &MovieDetailDialog::forceReloadButtonClicked);
     // buttonBox
     connect(m_saveButton, &QPushButton::clicked, this, &MovieDetailDialog::saveButtonClicked);
     connect(previewButton, &QPushButton::clicked, this, &MovieDetailDialog::readyToPreviewFile);
@@ -118,9 +125,7 @@ void MovieDetailDialog::prepareData(const QSqlRecord &torrent)
     m_movieDetailIndex = torrent.value("movie_detail_index").toInt();
 
     // Obtain movie detail from čsfd
-    const auto movieDetail = m_csfdDetailService->getSearchMovieDetail(torrent);
-    m_movieDetail = movieDetail["detail"].toObject();
-    m_movieSearchResults = movieDetail["search"].toArray();
+    getSearchMovieDetail(m_selectedTorrent, false);
 
     populateUi();
     m_initialPopulate = false;
@@ -868,6 +873,14 @@ void MovieDetailDialog::toggleSaveButton(const bool enable)
     }
 }
 
+void MovieDetailDialog::getSearchMovieDetail(const QSqlRecord &torrent, const bool skipCache)
+{
+    const auto movieDetail = m_csfdDetailService->getSearchMovieDetail(torrent, skipCache);
+
+    m_movieDetail = movieDetail["detail"].toObject();
+    m_movieSearchResults = movieDetail["search"].toArray();
+}
+
 void MovieDetailDialog::finishedMoviePoster(QNetworkReply *const reply) const
 {
     // TODO handle network errors silverqx
@@ -898,13 +911,26 @@ void MovieDetailDialog::saveButtonClicked()
             m_csfdDetailService->updateSearchMovieDetailInDb(
                 m_selectedTorrent, m_movieDetail, m_movieSearchResults,
                 movieDetailIndex);
-    if (result != 0)
+    if (!result)
         return;
 
     m_movieDetailIndex = movieDetailIndex;
 
     // Disable save button
     toggleSaveButton(false);
+}
+
+void MovieDetailDialog::forceReloadButtonClicked()
+{
+    // Search movie detail on čsfd
+    getSearchMovieDetail(m_selectedTorrent, true);
+
+    populateUi();
+
+    qDebug().noquote()
+            << QStringLiteral("Force realod of the movie detail for torrent(%1) : %2")
+               .arg(m_selectedTorrent.value("id").toString(),
+                    m_selectedTorrent.value("name").toString());
 }
 
 void MovieDetailDialog::movieDetailComboBoxChanged(const int index)

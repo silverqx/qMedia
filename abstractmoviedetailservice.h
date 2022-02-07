@@ -23,10 +23,10 @@ public:
     /*! Virtual destructor. */
     inline ~AbstractMovieDetailService() override = default;
 
-    SearchMovieResult getSearchMovieDetail(const QSqlRecord &torrent) const;
+    SearchMovieResult getSearchMovieDetail(const QSqlRecord &torrent, bool skipCache) const;
     MovieDetailResult getMovieDetail(quint64 filmId) const;
 
-    int updateSearchMovieDetailInDb(
+    bool updateSearchMovieDetailInDb(
             const QSqlRecord &torrent, const QJsonObject &movieDetail,
             const QJsonArray &movieSearchResult, int movieDetailComboBoxIndex) const;
 
