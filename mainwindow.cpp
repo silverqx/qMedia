@@ -18,6 +18,7 @@
 
 #include "commonglobal.h"
 
+#include "macros/clangwarnings.h"
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 #include "version.h"
@@ -179,12 +180,7 @@ MainWindow::MainWindow(QWidget *const parent)
 
     // Hotkeys
     // global
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  if __has_warning("-Wdeprecated-enum-enum-conversion")
-#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#  endif
-#endif
+QMEDIA_DISABLE_CLANG_WARNING_ENUM_CONVERSION
     const auto *const quitShortcut =
             new QShortcut(Qt::CTRL + Qt::Key_Q, this, nullptr, nullptr, Qt::ApplicationShortcut);
     connect(quitShortcut, &QShortcut::activated,
@@ -217,9 +213,7 @@ MainWindow::MainWindow(QWidget *const parent)
             new QShortcut(Qt::CTRL + Qt::Key_R, this, nullptr, nullptr, Qt::ApplicationShortcut);
     connect(doubleClickCtrlR, &QShortcut::activated,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
+QMEDIA_RESTORE_CLANG_WARNINGS
 
     // Tab order
     setTabOrder(m_tableView, m_ui->filterTorrentsLineEdit);

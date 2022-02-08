@@ -4,6 +4,7 @@ HEADERS += \
     $$PWD/abstractmoviedetailservice.h \
     $$PWD/common.h \
     $$PWD/csfddetailservice.h \
+    $$PWD/macros/clangwarnings.h \
     $$PWD/macros/likely.h \
     $$PWD/maineventfilter_win.h \
     $$PWD/mainwindow.h \

@@ -18,6 +18,7 @@
 
 #include "commonglobal.h"
 #include "csfddetailservice.h"
+#include "macros/clangwarnings.h"
 #include "moviedetaildialog.h"
 #include "previewselectdialog.h"
 #include "torrentsqltablemodel.h"
@@ -121,12 +122,7 @@ TorrentTransferTableView::TorrentTransferTableView(
 
     // Hotkeys
     // torrentTransferTableView
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  if __has_warning("-Wdeprecated-enum-enum-conversion")
-#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#  endif
-#endif
+QMEDIA_DISABLE_CLANG_WARNING_ENUM_CONVERSION
     const auto *const doubleClickHotkeyReturn =
             new QShortcut(Qt::Key_Return, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickHotkeyReturn, &QShortcut::activated,
@@ -171,9 +167,7 @@ TorrentTransferTableView::TorrentTransferTableView(
             new QShortcut(Qt::Key_Space, this, nullptr, nullptr, Qt::WidgetShortcut);
     connect(doubleClickPauseResume, &QShortcut::activated,
             this, &TorrentTransferTableView::pauseResumeSelectedTorrent);
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
+QMEDIA_RESTORE_CLANG_WARNINGS
 
     // Resize columns to the default state after right click
     horizontalHeaderTmp->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -388,13 +382,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
 )T");
 
     // Create actions
-    // CUR move to own macros file silverqx
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  if __has_warning("-Wdeprecated-enum-enum-conversion")
-#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#  endif
-#endif
+QMEDIA_DISABLE_CLANG_WARNING_ENUM_CONVERSION
     auto *const actionPause =
             createActionForMenu(QIcon(":/icons/media-playback-pause.svg"),
                                 QStringLiteral("&Pause"),
@@ -446,9 +434,7 @@ void TorrentTransferTableView::displayListMenu(const QContextMenuEvent *const ev
                                 QKeySequence::Delete,
                                 &TorrentTransferTableView::deleteSelectedTorrent,
                                 listMenu, isqBittorrentUp());
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
+QMEDIA_RESTORE_CLANG_WARNINGS
 
     // Add actions to the context menu
     // Pause, Resume and Force resume

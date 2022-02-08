@@ -13,6 +13,7 @@
 #include <array>
 
 #include "csfddetailservice.h"
+#include "macros/clangwarnings.h"
 #include "torrentstatus.h"
 #include "utils/gui.h"
 #include "utils/misc.h"
@@ -91,12 +92,7 @@ MovieDetailDialog::MovieDetailDialog(
 
     // Hotkeys
     // movieDetailComboBox
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  if __has_warning("-Wdeprecated-enum-enum-conversion")
-#    pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#  endif
-#endif
+QMEDIA_DISABLE_CLANG_WARNING_ENUM_CONVERSION
     const auto *const doubleClickHotkeyCtrlM =
             new QShortcut(Qt::CTRL + Qt::Key_M, m_ui->movieDetailComboBox, nullptr, nullptr,
                           Qt::WindowShortcut);
@@ -107,9 +103,7 @@ MovieDetailDialog::MovieDetailDialog(
                           Qt::WindowShortcut);
     connect(doubleClickHotkeyF12, &QShortcut::activated,
             m_ui->movieDetailComboBox, &QComboBox::showPopup);
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
+QMEDIA_RESTORE_CLANG_WARNINGS
 
     // Center on an active screen
     Utils::Gui::centerDialog(this);
