@@ -49,6 +49,7 @@ private:
     void renderTitleSection() const;
     void prepareTitlesSection();
     void renderTitlesSection(int maxLines = 0) const;
+    void prepareCsfdLink() const;
     void prepareImdbLink() const;
     void prepareMovieInfoSection() const;
     void prepareCreatorsSection();

@@ -295,7 +295,55 @@
                   </layout>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayoutInfoRightBottom" stretch="1,0">
+                  <layout class="QHBoxLayout" name="horizontalLayoutInfoCsfd" stretch="1,0">
+                   <item>
+                    <widget class="QLabel" name="csfdLink">
+                     <property name="font">
+                      <font>
+                       <family>Tahoma</family>
+                       <pointsize>11</pointsize>
+                      </font>
+                     </property>
+                     <property name="focusPolicy">
+                      <enum>Qt::TabFocus</enum>
+                     </property>
+                     <property name="toolTip">
+                      <string>Open movie detail at čsfd.cz</string>
+                     </property>
+                     <property name="toolTipDuration">
+                      <number>2500</number>
+                     </property>
+                     <property name="text">
+                      <string>čsfd</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                     <property name="openExternalLinks">
+                      <bool>true</bool>
+                     </property>
+                     <property name="textInteractionFlags">
+                      <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacerInfoCsfd">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayoutInfoImdb" stretch="1,0">
                    <item>
                     <widget class="QLabel" name="imdbLink">
                      <property name="font">
@@ -317,7 +365,7 @@
                       <string>imdb</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+                      <set>Qt::AlignCenter</set>
                      </property>
                      <property name="openExternalLinks">
                       <bool>true</bool>
@@ -328,7 +376,7 @@
                     </widget>
                    </item>
                    <item>
-                    <spacer name="horizontalSpacer">
+                    <spacer name="horizontalSpacerInfoImdb">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>

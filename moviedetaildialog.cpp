@@ -225,6 +225,8 @@ void MovieDetailDialog::populateUi()
     // Score section
     // TODO tune score QLabel color silverqx
     m_ui->score->setText(QString::number(m_movieDetail["rating"].toInt()) + QStringLiteral("%"));
+    // čsfd link
+    prepareCsfdLink();
     // Imdb link
     prepareImdbLink();
     // Creators section
@@ -463,6 +465,42 @@ void MovieDetailDialog::renderTitlesSection(const int maxLines) const
     });
 }
 
+void MovieDetailDialog::prepareCsfdLink() const
+{
+    // Currently, čsfd provides imdb id for logged users only, so it will always be hidden
+    const auto urlRaw = m_movieDetail["url"];
+    if (urlRaw.isNull() || urlRaw.isUndefined()) {
+        m_ui->csfdLink->setEnabled(false);
+        m_ui->csfdLink->hide();
+        return;
+    }
+
+    m_ui->csfdLink->setText(
+                QStringLiteral("<a href='%1' "
+                               "style='color: #64a1ac; text-decoration: none;'>csfd</a>")
+                .arg(urlRaw.toString()));
+    m_ui->csfdLink->setEnabled(true);
+    m_ui->csfdLink->show();
+}
+
+void MovieDetailDialog::prepareImdbLink() const
+{
+    // Currently, čsfd provides imdb id for logged users only, so it will always be hidden
+    const auto imdbIdRaw = m_movieDetail["imdbId"];
+    if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
+        m_ui->imdbLink->setEnabled(false);
+        m_ui->imdbLink->hide();
+        return;
+    }
+
+    m_ui->imdbLink->setText(
+                QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
+                               "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
+                .arg(imdbIdRaw.toString()));
+    m_ui->imdbLink->setEnabled(true);
+    m_ui->imdbLink->show();
+}
+
 namespace
 {
     /*! Join QStringList, exclude empty or null values. */
@@ -530,24 +568,6 @@ void MovieDetailDialog::prepareMovieInfoSection() const
     m_ui->movieInfo->setText(movieInfo);
     // TODO create logging system silverqx
     // TODO log empty movieInfo, to know how often it happens silverqx
-}
-
-void MovieDetailDialog::prepareImdbLink() const
-{
-    // Currently, čsfd provides imdb id for logged users only, so it will always be hidden
-    const auto imdbIdRaw = m_movieDetail["imdbId"];
-    if (imdbIdRaw.isNull() || imdbIdRaw.isUndefined()) {
-        m_ui->imdbLink->setEnabled(false);
-        m_ui->imdbLink->hide();
-        return;
-    }
-
-    m_ui->imdbLink->setText(
-                QStringLiteral("<a href='https://www.imdb.com/title/%1/' "
-                               "style='color: #64a1ac; text-decoration: none;'>imdb</a>")
-                .arg(imdbIdRaw.toString()));
-    m_ui->imdbLink->setEnabled(true);
-    m_ui->imdbLink->show();
 }
 
 namespace
