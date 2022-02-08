@@ -37,7 +37,6 @@ MovieDetailDialog::MovieDetailDialog(
 #endif
     resize(1316, height);
 
-    // CUR add force reload without cache button silverqx
     // Initialize ui widgets
     m_ui->saveButton->setEnabled(false);
     m_ui->saveButton->hide();
@@ -948,7 +947,7 @@ void MovieDetailDialog::forceReloadButtonClicked()
     populateUi();
 
     qDebug().noquote()
-            << QStringLiteral("Force realod of the movie detail for torrent(%1) : %2")
+            << QStringLiteral("Force realod of the movie detail for torrent(ID%1) : %2")
                .arg(m_selectedTorrent.value("id").toString(),
                     m_selectedTorrent.value("name").toString());
 }

@@ -72,7 +72,7 @@ private:
     /*! First show. */
     bool m_initialPopulate = true;
     /*! Currently showed movie detail index, used in movie detail combobox. */
-    int m_movieDetailIndex = -1; // CUR check if validate -1 is needed silverqx
+    int m_movieDetailIndex = -1;
     std::shared_ptr<StatusHash> m_statusHash;
 
     std::unique_ptr<Ui::MovieDetailDialog> m_ui;

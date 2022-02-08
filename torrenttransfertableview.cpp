@@ -605,7 +605,6 @@ void TorrentTransferTableView::pauseSelectedTorrent()
 
 void TorrentTransferTableView::resumeTorrent(const QSqlRecord &torrent) const
 {
-    // CUR qDebug noquote silverqx
     qDebug().noquote() << "Resume selected torrent :"
                        << torrent.value("name").toString();
 
