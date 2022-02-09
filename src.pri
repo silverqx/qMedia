@@ -12,6 +12,8 @@ HEADERS += \
     $$PWD/pch.h \
     $$PWD/previewlistdelegate.h \
     $$PWD/previewselectdialog.h \
+    $$PWD/settings/settingsstorage.h \
+    $$PWD/settings/settingvalue.h \
     $$PWD/torrentsqltablemodel.h \
     $$PWD/torrentstatus.h \
     $$PWD/torrenttabledelegate.h \
@@ -33,6 +35,7 @@ SOURCES += \
     $$PWD/moviedetaildialog.cpp \
     $$PWD/previewlistdelegate.cpp \
     $$PWD/previewselectdialog.cpp \
+    $$PWD/settings/settingsstorage.cpp \
     $$PWD/torrentsqltablemodel.cpp \
     $$PWD/torrentstatus.cpp \
     $$PWD/torrenttabledelegate.cpp \
