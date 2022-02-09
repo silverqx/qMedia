@@ -2,7 +2,19 @@
 
 #include <QLocale>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#else
+#include <QRegExp>
+#endif
+
 #include <cmath>
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+/* This is marked as internal in QRegExp.cpp, but is exported. The alternative would be to
+   copy the code from QRegExp::wc2rx(). */
+QString qt_regexp_toCanonical(const QString &pattern, QRegExp::PatternSyntax patternSyntax);
+#endif
 
 namespace Utils
 {
@@ -19,5 +31,18 @@ QString Utils::String::fromDouble(const double n, const int precision)
 
     return QLocale::system().toString(std::floor(n * prec) / prec, 'f', precision);
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+QString String::wildcardToRegexPattern(const QString &pattern)
+{
+    return QRegularExpression::wildcardToRegularExpression(
+                pattern, QRegularExpression::UnanchoredWildcardConversion);
+}
+#else
+QString String::wildcardToRegexPattern(const QString &pattern)
+{
+    return ::qt_regexp_toCanonical(pattern, QRegExp::Wildcard);
+}
+#endif
 
 } // namespace Utils

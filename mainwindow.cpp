@@ -19,6 +19,7 @@
 #include "commonglobal.h"
 
 #include "macros/clangwarnings.h"
+#include "settings/settingvalue.h"
 #include "torrenttransfertableview.h"
 #include "utils/fs.h"
 #include "version.h"
@@ -128,6 +129,7 @@ namespace
 MainWindow::MainWindow(QWidget *const parent)
     : QMainWindow(parent)
     , m_ui(std::make_unique<Ui::MainWindow>())
+    , m_regexTorrentsFilter("regex_torrents_filter", false)
 {
     l_mainWindow = this;
 
@@ -137,8 +139,6 @@ MainWindow::MainWindow(QWidget *const parent)
     setWindowTitle(QStringLiteral(" qMedia %1").arg(QMEDIA_VERSION_STR_2));
     const QIcon appIcon(QStringLiteral(":/icons/qmedia.svg"));
     setWindowIcon(appIcon);
-
-    connectToDb();
 
     // Create and initialize widgets
     // Main torrent transfer view
@@ -171,6 +171,8 @@ MainWindow::MainWindow(QWidget *const parent)
             this, &MainWindow::applicationStateChanged);
     connect(m_ui->filterTorrentsLineEdit, &QLineEdit::textChanged,
             m_tableView, &TorrentTransferTableView::filterTextChanged);
+    connect(m_ui->filterTorrentsLineEdit, &QWidget::customContextMenuRequested,
+            this, &MainWindow::showFilterContextMenu);
     connect(m_ui->reloadTorrentsButton, &QPushButton::clicked,
             m_tableView, &TorrentTransferTableView::reloadTorrentModel);
     connect(this, &MainWindow::torrentsAddedOrRemoved,
@@ -303,25 +305,6 @@ void MainWindow::setGeometry(const bool initial)
     move(screen()->availableSize().width() - width() - 10, 10);
 }
 
-void MainWindow::connectToDb() const
-{
-    // BUG remove from github and use values from env. silverqx
-    QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"));
-    db.setHostName(qEnvironmentVariable("QMEDIA_DB_HOST", QStringLiteral("127.0.0.1")));
-#ifdef QT_DEBUG
-    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE_DEBUG", ""));
-#else
-    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE", ""));
-#endif
-    db.setUserName(qEnvironmentVariable("QMEDIA_DB_USERNAME", ""));
-    db.setPassword(qEnvironmentVariable("QMEDIA_DB_PASSWORD", ""));
-
-    bool ok = db.open();
-    if (!ok)
-        qDebug().noquote() << "Connect to database failed :"
-                           << db.lastError().text();
-}
-
 void MainWindow::initFilterTorrentsLineEdit()
 {
     // Nice icon in the left
@@ -344,6 +327,7 @@ void MainWindow::initFilterTorrentsLineEdit()
                 std::max(m_ui->filterTorrentsLineEdit->sizeHint().height(),
                          m_searchButton->sizeHint().height()) + (frameWidth * 2));
     m_ui->filterTorrentsLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_ui->filterTorrentsLineEdit->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 namespace
@@ -457,4 +441,26 @@ void MainWindow::qBittorrentDisconnected() const
 {
     m_qBittorrentConnectedLabel->setText(QB_CONNECTED_TMPL.arg("#d65645"));
     m_qBittorrentConnectedLabel->setToolTip(QB_CONNECTED_TOOLTIP_TMPL.arg("Disconnected"));
+}
+
+void MainWindow::showFilterContextMenu()
+{
+    auto *const menu = m_ui->filterTorrentsLineEdit->createStandardContextMenu();
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    menu->addSeparator();
+
+    auto *const useRegExAction = menu->addAction("Use regular expressions");
+    useRegExAction->setCheckable(true);
+    useRegExAction->setChecked(m_regexTorrentsFilter);
+
+    connect(useRegExAction, &QAction::toggled, this,
+            [this](const auto checked)
+    {
+        // Save a new value to the settings storage
+        m_regexTorrentsFilter = checked;
+        // Re-apply filter
+        m_tableView->filterTextChanged(m_ui->filterTorrentsLineEdit->text());
+    });
+
+    menu->popup(QCursor::pos());
 }

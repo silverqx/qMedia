@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QShortcut>
 #include <QtSql/QSqlError>
@@ -27,6 +28,7 @@
 #include "torrenttablesortmodel.h"
 #include "utils/fs.h"
 #include "utils/gui.h"
+#include "utils/string.h"
 
 TorrentTransferTableView::TorrentTransferTableView(
         HWND qBittorrentHwnd, QWidget *const parent
@@ -34,6 +36,7 @@ TorrentTransferTableView::TorrentTransferTableView(
     : QTableView(parent)
     , m_qBittorrentHwnd(qBittorrentHwnd)
     , m_statusHash(StatusHash::instance())
+    , m_regexTorrentsFilter("regex_torrents_filter", false)
 {
     // QObject
     setObjectName(QStringLiteral("torrentTransferTableView"));
@@ -295,9 +298,12 @@ void TorrentTransferTableView::removeRecordFromTorrentFilesCache(const quint64 t
 
 void TorrentTransferTableView::filterTextChanged(const QString &name) const
 {
-    m_proxyModel->setFilterRegExp(
-                // CUR port to QRegularExpression silverqx
-                QRegExp(name, Qt::CaseInsensitive, QRegExp::WildcardUnix));
+    const auto pattern = m_regexTorrentsFilter
+                         ? name
+                         : Utils::String::wildcardToRegexPattern(name);
+
+    m_proxyModel->setFilterRegularExpression(
+                QRegularExpression(pattern, QRegularExpression::CaseInsensitiveOption));
 }
 
 void TorrentTransferTableView::previewSelectedTorrent()

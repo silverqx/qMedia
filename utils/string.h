@@ -2,6 +2,7 @@
 #ifndef UTILS_STRING_H
 #define UTILS_STRING_H
 
+#include <QMetaEnum>
 #include <QString>
 
 namespace Utils
@@ -19,6 +20,7 @@ namespace Utils
         ~String() = delete;
 
         static QString fromDouble(double n, int precision);
+        static QString wildcardToRegexPattern(const QString &pattern);
 
         template<typename T, typename std::enable_if_t<std::is_enum_v<T>, int> = 0>
         static QString fromEnum(const T &value);

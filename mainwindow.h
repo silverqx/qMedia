@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QPointer>
 
+#include "settings/settingvalue.h"
+
 class QLabel;
 class QToolButton;
 
@@ -40,7 +42,6 @@ signals:
     void qBittorrentDown(bool initial = false);
 
 private:
-    void connectToDb() const;
     void initFilterTorrentsLineEdit();
     void createStatusBar();
     quint64 selectTorrentsCount() const;
@@ -56,6 +57,8 @@ private:
     QPointer<QToolButton> m_searchButton;
     QPointer<TorrentTransferTableView> m_tableView;
 
+    Settings::CachedSettingValue<bool> m_regexTorrentsFilter;
+
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
     void focusTorrentsFilterLineEdit() const;
@@ -65,6 +68,7 @@ private slots:
     void setGeometry(bool initial = false);
     void qBittorrentConnected() const;
     void qBittorrentDisconnected() const;
+    void showFilterContextMenu();
 };
 
 HWND MainWindow::qBittorrentHwnd() const noexcept

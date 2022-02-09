@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <QStandardPaths>
+#include <QtSql/QSqlError>
 
 #include <qt_windows.h>
 
@@ -19,6 +20,8 @@
 bool oneAppInstanceConstrain();
 /*! Create and initialize QApplication. */
 QApplication &createApplication(int argc, char *argv[]); // NOLINT(modernize-avoid-c-arrays)
+/*! Connect to the database. */
+void connectToDatabase();
 /*! Enable dark theme. */
 void enableDarkTheme(QApplication &app);
 /*! Install main native event filter. */
@@ -39,6 +42,8 @@ int main(int argc, char *argv[])
         return 1;
 
     auto &app = createApplication(argc, argv);
+
+    connectToDatabase();
 
     enableDarkTheme(app);
 
@@ -90,6 +95,24 @@ QApplication &createApplication(int argc, char *argv[]) // NOLINT(modernize-avoi
     QApplication::setFont(font);
 
     return app;
+}
+
+void connectToDatabase()
+{
+    // BUG remove from github and use values from env. silverqx
+    QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"));
+    db.setHostName(qEnvironmentVariable("QMEDIA_DB_HOST", QStringLiteral("127.0.0.1")));
+#ifdef QT_DEBUG
+    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE_DEBUG", ""));
+#else
+    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE", ""));
+#endif
+    db.setUserName(qEnvironmentVariable("QMEDIA_DB_USERNAME", ""));
+    db.setPassword(qEnvironmentVariable("QMEDIA_DB_PASSWORD", ""));
+
+    if (!db.open())
+        qDebug().noquote() << "Connect to database failed :"
+                           << db.lastError().text();
 }
 
 void enableDarkTheme(QApplication &app)
@@ -150,6 +173,8 @@ void cleanupApplication(QApplication &app)
     app.removeNativeEventFilter(mainEventFilter.get());
     mainEventFilter.reset();
 #endif
+
+    Settings::SettingsStorage::freeInstance();
 
     CloseHandle(hMutex);
 }

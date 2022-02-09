@@ -6,6 +6,8 @@
 #include <QPointer>
 #include <QTableView>
 
+#include "settings/settingvalue.h"
+
 class QSortFilterProxyModel;
 class QSqlRecord;
 class QSqlTableModel;
@@ -87,6 +89,8 @@ private:
     HWND m_qBittorrentHwnd = nullptr;
     std::shared_ptr<StatusHash> m_statusHash;
     std::shared_ptr<CsfdDetailService> m_csfdDetailService;
+
+    Settings::CachedSettingValue<bool> m_regexTorrentsFilter;
 
 // NOLINTNEXTLINE(readability-redundant-access-specifiers)
 private slots:
