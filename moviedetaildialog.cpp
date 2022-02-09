@@ -11,6 +11,7 @@
 #include <QUrlQuery>
 
 #include <array>
+#include <chrono>
 
 #include "csfddetailservice.h"
 #include "macros/clangwarnings.h"
@@ -66,9 +67,11 @@ MovieDetailDialog::MovieDetailDialog(
     m_ui->buttonBox->button(QDialogButtonBox::Close)->setText(QStringLiteral("&Close"));
 
     // Ensure recenter of the dialog after resize
+    using namespace std::chrono_literals;
+
     m_resizeTimer = new QTimer(this); // NOLINT(cppcoreguidelines-owning-memory)
     m_resizeTimer->setSingleShot(true);
-    m_resizeTimer->setInterval(100); // clazy:exclude=use-chrono-in-qtimer
+    m_resizeTimer->setInterval(100ms);
     connect(m_resizeTimer, &QTimer::timeout, this, &MovieDetailDialog::resizeTimeout);
 
     // Initialize NetworkAccessManager
