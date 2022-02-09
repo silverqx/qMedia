@@ -99,9 +99,10 @@ QApplication &createApplication(int argc, char *argv[]) // NOLINT(modernize-avoi
 
 void connectToDatabase()
 {
-    // BUG remove from github and use values from env. silverqx
     QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"));
+
     db.setHostName(qEnvironmentVariable("QMEDIA_DB_HOST", QStringLiteral("127.0.0.1")));
+    db.setPort(qEnvironmentVariable("QMEDIA_DB_PORT", QStringLiteral("3306")).toInt());
 #ifdef QT_DEBUG
     db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE_DEBUG", ""));
 #else
