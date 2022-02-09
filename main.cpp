@@ -103,7 +103,7 @@ void connectToDatabase()
 
     db.setHostName(qEnvironmentVariable("QMEDIA_DB_HOST", QStringLiteral("127.0.0.1")));
     db.setPort(qEnvironmentVariable("QMEDIA_DB_PORT", QStringLiteral("3306")).toInt());
-#ifdef QT_DEBUG
+#ifdef QMEDIA_DEBUG
     db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE_DEBUG", ""));
 #else
     db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE", ""));
