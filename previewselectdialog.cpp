@@ -85,7 +85,6 @@ void PreviewSelectDialog::previewButtonClicked()
     if (!selectedIndex.isValid())
         return;
 
-    // BUG can't preview if saveing incomplete directory is provided, I don't even have incomplete folder in torrents table, I have savepath column only 😭 silverqx
     // Get file path to preview
     const auto filePath = getTorrentFileFilePathAbs(
                               m_previewListModel->data(selectedIndex).toString());
