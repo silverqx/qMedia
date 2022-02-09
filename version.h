@@ -3,7 +3,7 @@
 #define QMEDIA_VERSION_H
 
 #define QMEDIA_VERSION_MAJOR 0
-#define QMEDIA_VERSION_MINOR 1
+#define QMEDIA_VERSION_MINOR 2
 #define QMEDIA_VERSION_BUGFIX 0
 
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
