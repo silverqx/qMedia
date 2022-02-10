@@ -6,6 +6,8 @@
 
 #include <chrono>
 
+#include "macros/likely.h"
+
 namespace Settings
 {
 
@@ -29,12 +31,10 @@ SettingsStorage::~SettingsStorage()
 
 std::shared_ptr<SettingsStorage> SettingsStorage::instance()
 {
-    if (m_instance)
+    if (m_instance) T_LIKELY
         return m_instance;
-
-    m_instance = std::shared_ptr<SettingsStorage>(new SettingsStorage());
-
-    return m_instance;
+    else T_UNLIKELY
+        return m_instance = std::shared_ptr<SettingsStorage>(new SettingsStorage());
 }
 
 void SettingsStorage::freeInstance()

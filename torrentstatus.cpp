@@ -1,5 +1,7 @@
 #include "torrentstatus.h"
 
+#include "macros/likely.h"
+
 namespace
 {
     // Icons section
@@ -124,12 +126,10 @@ std::shared_ptr<StatusHash> StatusHash::m_instance;
 
 std::shared_ptr<StatusHash> StatusHash::instance()
 {
-    if (m_instance)
+    if (m_instance) T_LIKELY
         return m_instance;
-
-    m_instance = std::shared_ptr<StatusHash>(new StatusHash());
-
-    return m_instance;
+    else T_UNLIKELY
+        return m_instance = std::shared_ptr<StatusHash>(new StatusHash());
 }
 
 void StatusHash::freeInstance()
