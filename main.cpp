@@ -101,13 +101,15 @@ void connectToDatabase()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"));
 
+#ifdef QMEDIA_DEBUG
+    const auto *const envDatabase = "QMEDIA_DB_DATABASE_DEBUG";
+#else
+    const auto *const envDatabase = "QMEDIA_DB_DATABASE";
+#endif
+
     db.setHostName(qEnvironmentVariable("QMEDIA_DB_HOST", QStringLiteral("127.0.0.1")));
     db.setPort(qEnvironmentVariable("QMEDIA_DB_PORT", QStringLiteral("3306")).toInt());
-#ifdef QMEDIA_DEBUG
-    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE_DEBUG", ""));
-#else
-    db.setDatabaseName(qEnvironmentVariable("QMEDIA_DB_DATABASE", ""));
-#endif
+    db.setDatabaseName(qEnvironmentVariable(envDatabase, ""));
     db.setUserName(qEnvironmentVariable("QMEDIA_DB_USERNAME", ""));
     db.setPassword(qEnvironmentVariable("QMEDIA_DB_PASSWORD", ""));
 
@@ -190,3 +192,5 @@ void cleanupApplication(QApplication &app)
 // TODO remove version from all svg icons silverqx
 // TODO detect qBittorrent crashes and do something like TorrentExporter::correctTorrentStatusesOnExit() silverqx
 // TODO sort includes in pch.h, look at TinyOrm pch.h file silverqx
+// CUR revisit all qDebug()/qWarning()/... silverqx
+// CUR add dot to all throw XyzError messages silverqx
