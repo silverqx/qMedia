@@ -120,6 +120,24 @@ QVariant TorrentSqlTableModel::data(const QModelIndex &modelIndex, const int rol
     return QSqlTableModel::data(modelIndex, role);
 }
 
+QVariant TorrentSqlTableModel::headerData(
+        const int section, const Qt::Orientation orientation, const int role) const
+{
+    switch (role) {
+    // Initial sort order by section
+    case Qt::InitialSortOrderRole:
+        switch (section) {
+        case TR_NAME:
+            return Qt::AscendingOrder;
+        default:
+            return Qt::DescendingOrder;
+        }
+        break;
+    }
+
+    return QSqlTableModel::headerData(section, orientation, role);
+}
+
 int TorrentSqlTableModel::getTorrentRowByInfoHash(const QString &infoHash) const
 {
     if (m_torrentMap.contains(infoHash))

@@ -45,6 +45,10 @@ public:
             QSqlDatabase db = QSqlDatabase());
 
     QVariant data(const QModelIndex &modelIndex, int role = Qt::DisplayRole) const final;
+    /*! Returns the data for the given role and section in the header, used to modify
+        an initial sort order. */
+    QVariant headerData(
+            int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const final;
 
     int getTorrentRowByInfoHash(const QString &infoHash) const;
     quint64 getTorrentIdByInfoHash(const QString &infoHash) const;
