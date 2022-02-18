@@ -176,7 +176,7 @@ QString TorrentSqlTableModel::displayValue(const QModelIndex &modelIndex,
     {
         return value == 0 && total == 0 && ::HIDE_ZERO_VALUES
                 ? QString {}
-                : QStringLiteral("%1 (%2)").arg(value).arg(total);
+                : QStringLiteral("%1 (%2)").arg(value, total);
     };
 
     // Get value from underlying model
